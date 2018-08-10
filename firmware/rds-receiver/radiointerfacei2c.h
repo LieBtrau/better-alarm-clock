@@ -1,5 +1,4 @@
-#ifndef RADIOINTERFACEI2C_H
-#define RADIOINTERFACEI2C_H
+#pragma once
 #include "radiointerface.h"
 
 class RadioInterfaceI2c : public RadioInterface
@@ -14,5 +13,3 @@ public:
 private:
     bool send(byte address, byte* data, byte length, bool bStop);
 };
-
-#endif // RADIOINTERFACEI2C_H

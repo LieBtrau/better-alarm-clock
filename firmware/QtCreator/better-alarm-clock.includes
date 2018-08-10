@@ -1,3 +1,6 @@
 ../rds-receiver
 ../../../Radio/src
 ../../../Radio/examples/TestRDA5807M
+../../../Radio/examples/ScanRadio
+../../../Radio/examples/ScanRadioWithRds
+../SevenSegment

@@ -17,3 +17,7 @@
 ../../../Radio/src/TEA5767.cpp
 ../../../Radio/src/TEA5767.h
 ../../../Radio/examples/TestRDA5807M/TestRDA5807M.ino
+../../../Radio/examples/ScanRadio/ScanRadio.ino
+../../../Radio/examples/ScanRadioWithRds/ScanRadioWithRds.ino
+../SevenSegment/sevensegment.h
+../SevenSegment/sevensegment.cpp

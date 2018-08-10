@@ -23,6 +23,15 @@ bool RadioInterfaceI2c::isDetected(byte address)
 {
     HWire.beginTransmission(address);
     return HWire.endTransmission()==0;
+//    for(byte i=1;i<128;i++)
+//    {
+//        HWire.beginTransmission(i);
+//        if(HWire.endTransmission()==0)
+//        {
+//            HWire.endTransmission();
+//            Serial.println(i, HEX);
+//        }
+//    }
 }
 
 bool RadioInterfaceI2c::send(byte address, byte* data, byte length)
