@@ -21,3 +21,4 @@
 ../../../Radio/examples/ScanRadioWithRds/ScanRadioWithRds.ino
 ../SevenSegment/sevensegment.h
 ../SevenSegment/sevensegment.cpp
+../SimpleRTC/SimpleRTC.ino
