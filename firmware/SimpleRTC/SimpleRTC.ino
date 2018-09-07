@@ -37,72 +37,77 @@
   ******************************************************************************
 */
 
-/* Changes by Christoph Tack: adding serial interface, so that utc time can be sent to stm32 and time can be asked back.
+/* Changes by Christoph Tack: adding Serial interface, so that utc time can be sent to stm32 and time can be asked back.
  *  Linux command line:
-    Configure serial port : stty -F /dev/ttyACM0 speed 9600 cs8 -cstopb -parenb raw
-    To send UTC to the STM32, open a 2nd terminal and execute: echo -ne $(date +%s) > /dev/ttyACM0
-*/
+ *  Configure Serial port : stty -F /dev/ttyACM0 speed 9600 cs8 -cstopb -parenb raw
+ *  To send UTC to the STM32, open a 2nd terminal and execute: echo -ne $(date +%s) > /dev/ttyACM0
+ */
 
 /* Get the rtc object */
 STM32RTC& rtc = STM32RTC::getInstance();
-long startUtc=0;
+unsigned long startUtc=0;
 
 void setup()
 {
-  Serial.begin(9600);
-  while (!Serial);
-  rtc.setClockSource(STM32RTC::RTC_LSE_CLOCK);
-  rtc.begin(); // initialize RTC 24H format
-  Serial.println("Ready to receive UTC");
+    pinMode(PB12, INPUT_PULLUP);
+    Serial.begin(9600);
+    while (!Serial);
+    rtc.setClockSource(STM32RTC::RTC_LSE_CLOCK);
+    rtc.begin(digitalRead(PB12),STM32RTC::RTC_HOUR_24); // initialize RTC 24H format
+    printDateTime();
+    Serial.println("Ready to receive UTC");
 }
 
 void loop()
 {
-  while (Serial.available() > 0)
-  {
-    long newutc = Serial.parseInt();
-    if (newutc)
+    while (Serial.available() > 0)
     {
-      if (!startUtc)
-      {
-        startUtc=newutc;
-        rtc.setEpoch(newutc);
-        printDateTime();
-      }
-      else
-      {
-        Serial.print("PC epoch - RTC epoch = "); Serial.println((long)(newutc - rtc.getEpoch()));
-        Serial.print("Number of seconds RTC is running: "); Serial.println(newutc - startUtc);
-      }
+        unsigned long newutc = Serial.parseInt();
+        if (newutc)
+        {
+            if (!startUtc)
+            {
+                startUtc=newutc;
+                rtc.setEpoch(1534017459);
+                //rtc.setEpoch(newutc);
+                printDateTime();
+            }
+            else
+            {
+                Serial.print("PC epoch - RTC epoch = "); Serial.println(newutc - rtc.getEpoch());
+                Serial.print("Number of seconds RTC is running: "); Serial.println(newutc - startUtc);
+            }
+        }
     }
-  }
-  //  delay(1000);
+    //  delay(1000);
 
 }
 
 void printDateTime()
 {
-  // Print date...
-  print2digits(rtc.getDay());
-  Serial.print("/");
-  print2digits(rtc.getMonth());
-  Serial.print("/");
-  print2digits(rtc.getYear());
-  Serial.print(" ");
+    Serial.print(rtc.getEpoch());
+    Serial.print("\t");
+    // Print date...
+    print2digits(rtc.getDay());
+    Serial.print("/");
+    print2digits(rtc.getMonth());
+    Serial.print("/");
+    print2digits(rtc.getYear());
+    Serial.print(" ");
 
-  // ...and time
-  print2digits(rtc.getHours());
-  Serial.print(":");
-  print2digits(rtc.getMinutes());
-  Serial.print(":");
-  print2digits(rtc.getSeconds());
+    // ...and time
+    print2digits(rtc.getHours());
+    Serial.print(":");
+    print2digits(rtc.getMinutes());
+    Serial.print(":");
+    print2digits(rtc.getSeconds());
 
-  Serial.println();
+    Serial.println();
 }
 
 void print2digits(int number) {
-  if (number < 10) {
-    Serial.print("0"); // print a 0 before if the number is < than 10
-  }
-  Serial.print(number);
+    if (number < 10) {
+        Serial.print("0"); // print a 0 before if the number is < than 10
+    }
+    Serial.print(number);
 }
