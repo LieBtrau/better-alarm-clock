@@ -49,11 +49,14 @@ unsigned long startUtc=0;
 
 void setup()
 {
-    pinMode(PB12, INPUT_PULLUP);
     Serial.begin(9600);
     while (!Serial);
     rtc.setClockSource(STM32RTC::RTC_LSE_CLOCK);
-    rtc.begin(digitalRead(PB12),STM32RTC::RTC_HOUR_24); // initialize RTC 24H format
+    /*Upon reset, RTC time will also be reset.  The "keep time" functionality doesn't work yet.
+     *  in our application this is not a problem, because clock time can be retrieved using DCF.
+     * It only takes a minute.
+     */
+    rtc.begin(STM32RTC::RTC_HOUR_24); // initialize RTC 24H format
     printDateTime();
     Serial.println("Ready to receive UTC");
 }
@@ -68,9 +71,11 @@ void loop()
             if (!startUtc)
             {
                 startUtc=newutc;
-                rtc.setEpoch(1534017459);
-                //rtc.setEpoch(newutc);
+                rtc.setEpoch(newutc);
                 printDateTime();
+                rtc.setAlarmEpoch( rtc.getEpoch() + 10);
+                rtc.attachInterrupt(alarmMatch);
+                rtc.enableAlarm(rtc.MATCH_DHHMMSS);
             }
             else
             {
@@ -79,8 +84,6 @@ void loop()
             }
         }
     }
-    //  delay(1000);
-
 }
 
 void printDateTime()
@@ -110,4 +113,10 @@ void print2digits(int number) {
         Serial.print("0"); // print a 0 before if the number is < than 10
     }
     Serial.print(number);
+}
+
+void alarmMatch(void *data)
+{
+  UNUSED(data);
+  Serial.println("Alarm Match!");
 }
