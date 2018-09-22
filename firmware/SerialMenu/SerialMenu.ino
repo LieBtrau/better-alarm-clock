@@ -29,6 +29,7 @@ result showEvent(eventMask e,navNode& nav,prompt& item) {
 }
 
 byte volume=1;
+byte* pVol=&volume;
 int alarm1enabled=LOW;
 bool alarm1Monday=false,
 alarm1Tuesday=false,
@@ -44,61 +45,48 @@ int alarm1repeater=1;
 byte alarm1tone=0;
 byte brightness=1;
 
-result action1(eventMask e) {
-    sp->print(e);
-    sp->println(" action1 executed, proceed menu");
-    sp->flush();
-    return proceed;
-}
-
-result action2(eventMask e, prompt &item) {
-    sp->print(e);
-    sp->print(" action2 executed, quiting menu");
-    return quit;
-}
-
-TOGGLE(alarm1enabled,alarm1activate,"Active: ",doNothing,noEvent,noStyle//,doExit,enterEvent,noStyle
+TOGGLE(alarm1enabled,mnuAlarmActive,"Active: ",doNothing,noEvent,noStyle//,doExit,enterEvent,noStyle
        ,VALUE("Yes",HIGH,doNothing,noEvent)
        ,VALUE("No",LOW,doNothing,noEvent)
        );
 
 
-TOGGLE(alarm1Monday,alarm1Mon,"Mon: ",doNothing,noEvent,noStyle//,doExit,enterEvent,noStyle
+TOGGLE(alarm1Monday,tglAlarmMon,"Mon: ",doNothing,noEvent,noStyle//,doExit,enterEvent,noStyle
        ,VALUE("On",true,doNothing,noEvent)
        ,VALUE("Off",false,doNothing,noEvent)
        );
 
-TOGGLE(alarm1Tuesday,alarm1Tue,"Tue: ",doNothing,noEvent,noStyle//,doExit,enterEvent,noStyle
+TOGGLE(alarm1Tuesday,tglAlarmTue,"Tue: ",doNothing,noEvent,noStyle//,doExit,enterEvent,noStyle
        ,VALUE("On",true,doNothing,noEvent)
        ,VALUE("Off",false,doNothing,noEvent)
        );
 
-TOGGLE(alarm1Wednesday,alarm1Wed,"Wed: ",doNothing,noEvent,noStyle//,doExit,enterEvent,noStyle
+TOGGLE(alarm1Wednesday,tglAlarmWed,"Wed: ",doNothing,noEvent,noStyle//,doExit,enterEvent,noStyle
        ,VALUE("On",true,doNothing,noEvent)
        ,VALUE("Off",false,doNothing,noEvent)
        );
 
-TOGGLE(alarm1Thursday,alarm1Thu,"Thu: ",doNothing,noEvent,noStyle//,doExit,enterEvent,noStyle
+TOGGLE(alarm1Thursday,tglAlarmThu,"Thu: ",doNothing,noEvent,noStyle//,doExit,enterEvent,noStyle
        ,VALUE("On",true,doNothing,noEvent)
        ,VALUE("Off",false,doNothing,noEvent)
        );
 
-TOGGLE(alarm1Friday,alarm1Fri,"Fri: ",doNothing,noEvent,noStyle//,doExit,enterEvent,noStyle
+TOGGLE(alarm1Friday,tglAlarmFri,"Fri: ",doNothing,noEvent,noStyle//,doExit,enterEvent,noStyle
        ,VALUE("On",true,doNothing,noEvent)
        ,VALUE("Off",false,doNothing,noEvent)
        );
 
-TOGGLE(alarm1Saturday,alarm1Sat,"Sat: ",doNothing,noEvent,noStyle//,doExit,enterEvent,noStyle
+TOGGLE(alarm1Saturday,tglAlarmSat,"Sat: ",doNothing,noEvent,noStyle//,doExit,enterEvent,noStyle
        ,VALUE("On",true,doNothing,noEvent)
        ,VALUE("Off",false,doNothing,noEvent)
        );
 
-TOGGLE(alarm1Sunday,alarm1Sun,"Sun: ",doNothing,noEvent,noStyle//,doExit,enterEvent,noStyle
+TOGGLE(alarm1Sunday,tglAlarmSun,"Sun: ",doNothing,noEvent,noStyle//,doExit,enterEvent,noStyle
        ,VALUE("On",true,doNothing,noEvent)
        ,VALUE("Off",false,doNothing,noEvent)
        );
 
-SELECT(alarm1repeater,alarm1repeat,"Repeat: ",doNothing,noEvent,wrapStyle
+SELECT(alarm1repeater,mnuAlarmRepeat,"Repeat: ",doNothing,noEvent,wrapStyle
        ,VALUE("Once",1,doNothing,noEvent)
        ,VALUE("Weekly",2,doNothing,noEvent)
        ,VALUE("Daily",3,doNothing,noEvent)
@@ -117,41 +105,55 @@ SELECT(alarm1tone,mnuAlarm1tone,"Tone: ",doNothing,noEvent,wrapStyle
        ,VALUE("Piano",3,doNothing,noEvent)
        );
 
-//define a pad style menu (single line menu)
-//here with a set of fields to enter a date in YYYY/MM/DD format
-//altMENU(menu,alarm1time,"Birth",doNothing,noEvent,noStyle,(systemStyles)(_asPad|Menu::_menuData|Menu::_canNav|_parentDraw)
-PADMENU(alarm1time,"Time",doNothing,noEvent,wrapStyle
+PADMENU(padAlarmTime,"Time",doNothing,noEvent,wrapStyle
         ,FIELD(hour,"",":",0,23,5,1,doNothing,noEvent,wrapStyle)
         ,FIELD(minute,"","",0,59,10,1,doNothing,noEvent,wrapStyle)
         );
 
 MENU(alarm1week,"Week",showEvent,anyEvent,wrapStyle
-     ,SUBMENU(alarm1Mon)
-     ,SUBMENU(alarm1Tue)
-     ,SUBMENU(alarm1Wed)
-     ,SUBMENU(alarm1Thu)
-     ,SUBMENU(alarm1Fri)
-     ,SUBMENU(alarm1Sat)
-     ,SUBMENU(alarm1Sun)
+     ,SUBMENU(tglAlarmMon)
+     ,SUBMENU(tglAlarmTue)
+     ,SUBMENU(tglAlarmWed)
+     ,SUBMENU(tglAlarmThu)
+     ,SUBMENU(tglAlarmFri)
+     ,SUBMENU(tglAlarmSat)
+     ,SUBMENU(tglAlarmSun)
      ,EXIT("<Back")
      );
 
 MENU(alarm1,"Alarm1",showAlarm1,anyEvent,wrapStyle
-     ,SUBMENU(alarm1activate)
-     ,SUBMENU(alarm1time)
-     ,SUBMENU(alarm1repeat)
+     ,SUBMENU(mnuAlarmActive)
+     ,SUBMENU(padAlarmTime)
+     ,SUBMENU(mnuAlarmRepeat)
      ,SUBMENU(alarm1week)
      ,SUBMENU(mnuAlarm1tone)
      ,SUBMENU(mnuAlarm1type)
-     ,FIELD(volume,"Volume:","",1,7,1,1,doNothing,noEvent,noStyle)
+     ,FIELD(*pVol,"Volume:","",1,7,1,1,doNothing,noEvent,noStyle)
      ,FIELD(brightness,"Brightness:","",1,7,1,1,doNothing,noEvent,noStyle)
      ,EXIT("<Back")
      );
 
-result showAlarm1(eventMask e,navNode& nav,prompt& item) {
+result showAlarm1(eventMask e,navNode& nav,prompt& item)
+{
     alarm1[3].enabled = (alarm1repeater==2 ? enabledStatus : disabledStatus);
     return proceed;
 }
+
+result action1(eventMask e)
+{
+    sp->print(e);
+    sp->println(" action1 executed, proceed menu");
+    sp->flush();
+    return proceed;
+}
+
+result action2(eventMask e, prompt &item)
+{
+    sp->print(e);
+    sp->print(" action2 executed, quiting menu");
+    return quit;
+}
+
 
 MENU(mainMenu,"Main menu",doNothing,noEvent,wrapStyle
      ,SUBMENU(alarm1)
@@ -170,7 +172,8 @@ NAVROOT(nav,mainMenu,MAX_DEPTH,serial,out);
 
 
 //when menu is suspended
-result idle(menuOut &o, idleEvent e) {
+result idle(menuOut &o, idleEvent e)
+{
     // o.clear();
     switch(e) {
     case idleStart:o.println("suspending menu!");break;
@@ -180,7 +183,8 @@ result idle(menuOut &o, idleEvent e) {
     return proceed;
 }
 
-void setup() {
+void setup()
+{
     pinMode(LEDPIN,OUTPUT);
     digitalWrite(LEDPIN,!alarm1enabled);
     delay(500);
@@ -193,7 +197,8 @@ void setup() {
     nav.timeOut=60;
 }
 
-void loop() {
+void loop()
+{
     nav.poll();
     delay(100);//simulate a delay when other tasks are done
 }
