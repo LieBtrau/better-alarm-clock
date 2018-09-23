@@ -1,3 +1,6 @@
+../Calendar/Calendar.ino
+../Calendar/stm32rtcwrapper.cpp
+../Calendar/stm32rtcwrapper.h
 ../SerialMenu/SerialMenu.ino
 ../SimpleRTC/SimpleRTC.ino
 ../rds-receiver/radiointerfacei2c.cpp
