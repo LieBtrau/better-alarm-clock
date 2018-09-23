@@ -91,12 +91,16 @@ void printDateTime()
     Serial.print(rtc.getEpoch());
     Serial.print("\t");
     // Print date...
+    char* days[8]={"0", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
+    Serial.print(days[rtc.getWeekDay()]);
+    Serial.print(" ");
     print2digits(rtc.getDay());
     Serial.print("/");
     print2digits(rtc.getMonth());
     Serial.print("/");
     print2digits(rtc.getYear());
     Serial.print(" ");
+
 
     // ...and time
     print2digits(rtc.getHours());
