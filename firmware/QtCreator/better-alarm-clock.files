@@ -1,4 +1,6 @@
 ../Calendar/Calendar.ino
+../Calendar/alarmcalendar.cpp
+../Calendar/alarmcalendar.h
 ../Calendar/stm32rtcwrapper.cpp
 ../Calendar/stm32rtcwrapper.h
 ../SerialMenu/SerialMenu.ino
