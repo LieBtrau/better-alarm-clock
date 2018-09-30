@@ -32,6 +32,7 @@
 Stm32RtcWrapper stmRtc;
 AlarmCalendar ac;
 
+#define PRINT(...)  SERIAL_DEVICE.print(__VA_ARGS__)
 #define PRINTLN(...)  SERIAL_DEVICE.println(__VA_ARGS__)
 
 void setup() {
@@ -55,20 +56,24 @@ void setup() {
     {
         PRINTLN();
         nextEventStart.printTo(SERIAL_DEVICE);
+        PRINT('\t');
+        PRINTLN(nextEventStart.asEpoch());
     }
     ac.addOnceOnlyEvent(AlarmCalendar::ALARM1, Chronos::Weekday::Thursday, 10,0);
-    nextEventStart;
     if(ac.getStartOfNextEvent(nextEventStart))
     {
         PRINTLN();
         nextEventStart.printTo(SERIAL_DEVICE);
+        PRINT('\t');
+        PRINTLN(nextEventStart.asEpoch());
     }
     ac.addWeeklyEvent(AlarmCalendar::ALARM1, Chronos::Weekday::Thursday, 11,0);
-    nextEventStart;
     if(ac.getStartOfNextEvent(nextEventStart))
     {
         PRINTLN();
         nextEventStart.printTo(SERIAL_DEVICE);
+        PRINT('\t');
+        PRINTLN(nextEventStart.asEpoch());
     }
 }
 
@@ -76,3 +81,4 @@ void setup() {
 void loop()
 {
 }
+
