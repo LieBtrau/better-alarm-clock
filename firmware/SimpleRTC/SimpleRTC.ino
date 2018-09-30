@@ -43,6 +43,8 @@
  *  To send UTC to the STM32, open a 2nd terminal and execute: echo -ne $(date +%s) > /dev/ttyACM0
  */
 
+#include "Chronos.h"
+
 /* Get the rtc object */
 STM32RTC& rtc = STM32RTC::getInstance();
 unsigned long startUtc=0;
@@ -91,32 +93,9 @@ void printDateTime()
     Serial.print(rtc.getEpoch());
     Serial.print("\t");
     // Print date...
-    char* days[8]={"0", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
-    Serial.print(days[rtc.getWeekDay()]);
-    Serial.print(" ");
-    print2digits(rtc.getDay());
-    Serial.print("/");
-    print2digits(rtc.getMonth());
-    Serial.print("/");
-    print2digits(rtc.getYear());
-    Serial.print(" ");
-
-
-    // ...and time
-    print2digits(rtc.getHours());
-    Serial.print(":");
-    print2digits(rtc.getMinutes());
-    Serial.print(":");
-    print2digits(rtc.getSeconds());
-
+    Chronos::DateTime now(rtc.getEpoch());
+    now.printTo(Serial);
     Serial.println();
-}
-
-void print2digits(int number) {
-    if (number < 10) {
-        Serial.print("0"); // print a 0 before if the number is < than 10
-    }
-    Serial.print(number);
 }
 
 void alarmMatch(void *data)
