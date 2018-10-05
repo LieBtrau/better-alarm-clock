@@ -41,13 +41,20 @@
  *  Linux command line:
  *  Configure Serial port : stty -F /dev/ttyACM0 speed 9600 cs8 -cstopb -parenb raw
  *  To send UTC to the STM32, open a 2nd terminal and execute: echo -ne $(date +%s) > /dev/ttyACM0
+ *
+ *  Adding local time zone functionality
  */
 
 #include "Chronos.h"
+#include <Timezone.h>    // https://github.com/JChristensen/Timezone
 
 /* Get the rtc object */
 STM32RTC& rtc = STM32RTC::getInstance();
 unsigned long startUtc=0;
+
+TimeChangeRule myDST = {"CEST", Last, Sun, Mar, 2, +120}; //Last Sunday of March, at 2AM, go to UTC+120min
+TimeChangeRule mySTD = {"CET", Last, Sun, Oct, 3, +60}; //Last Sunday of October, at 3AM, go to UTC+60min
+Timezone myTZ(myDST, mySTD);
 
 void setup()
 {
@@ -93,8 +100,9 @@ void printDateTime()
     Serial.print(rtc.getEpoch());
     Serial.print("\t");
     // Print date...
-    Chronos::DateTime now(rtc.getEpoch());
-    now.printTo(Serial);
+    Chronos::DateTime utc(rtc.getEpoch());
+    Chronos::DateTime localTime = myTZ.toLocal(utc.asEpoch());
+    localTime.printTo(Serial);
     Serial.println();
 }
 
