@@ -66,6 +66,14 @@ void setup()
      * It only takes a minute.
      */
     rtc.begin(STM32RTC::RTC_HOUR_24); // initialize RTC 24H format
+    //End of October switch from DST to STD
+    //1540686780    Sunday, October 28, 2018 2:33:00 AM GMT+02:00
+    //1540690380    Sunday, October 28, 2018 2:33:00 AM GMT+01:00
+    //1540693980    Sunday, October 28, 2018 3:33:00 AM GMT+01:00
+    //End of March switch from STD to DST
+    //1553992200    Sunday, March 31, 2019 1:30:00 AM GMT+01:00
+    //1553995800    Sunday, March 31, 2019 3:30:00 AM GMT+02:00
+    rtc.setEpoch(1553992200);
     printDateTime();
     Serial.println("Ready to receive UTC");
 }
