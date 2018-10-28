@@ -5,6 +5,7 @@
 ../Calendar/stm32rtcwrapper.h
 ../SerialMenu/SerialMenu.ino
 ../SimpleRTC/SimpleRTC.ino
+../mp3player/mp3player.ino
 ../rds-receiver/radiointerfacei2c.cpp
 ../rds-receiver/radiointerfacei2c.h
 ../rds-receiver/rds-receiver.ino
@@ -28,4 +29,6 @@
 ../../../Radio/examples/ScanRadioWithRds/ScanRadioWithRds.ino
 ../SevenSegment/sevensegment.h
 ../SevenSegment/sevensegment.cpp
-
+../SimpleDCF/dcf77receiver.h
+../SimpleDCF/dcf77receiver.cpp
+../SimpleDCF/SimpleDCF.ino

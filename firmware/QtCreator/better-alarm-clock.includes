@@ -10,3 +10,16 @@
 ../SerialMenu
 ../Calendar
 /home/ctack/Arduino/libraries/Chronos/src
+../mp3player
+../../../Arduino-DCF77/examples/DCFBinaryStream
+../../../Arduino-DCF77/utility
+../../../Arduino-DCF77/examples/DCFSignal
+../../../Arduino-DCF77/extras/documentation
+../../../Arduino-DCF77/examples/InternalClockSync
+../../../Arduino-DCF77/examples/TimeZones
+../../../Arduino-DCF77/extras
+../../../Arduino-DCF77/examples/SyncProvider
+../../../Arduino-DCF77/examples/DCFPulseLength
+../../../Arduino-DCF77
+../../../Arduino-DCF77/extras/documentation/html
+../SimpleDCF

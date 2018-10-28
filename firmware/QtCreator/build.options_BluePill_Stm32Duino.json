@@ -1,0 +1,10 @@
+{
+  "builtInLibrariesFolders": "/home/ctack/Programs/arduino-1.8.5/libraries",
+  "customBuildProperties": "build.warn_data_percentage=75,runtime.tools.arm-none-eabi-gcc.path=/home/ctack/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/4.8.3-2014q1,runtime.tools.stm32tools.path=/home/ctack/.arduino15/packages/stm32duino/tools/stm32tools/2018.9.24",
+  "fqbn": "stm32duino:STM32F1:genericSTM32F103R:device_variant=STM32F103R8,upload_method=STLinkMethod,cpu_speed=speed_72mhz,opt=osstd",
+  "hardwareFolders": "/home/ctack/Programs/arduino-1.8.5/hardware,/home/ctack/.arduino15/packages",
+  "otherLibrariesFolders": "/home/ctack/Arduino/libraries",
+  "runtime.ide.version": "10805",
+  "sketchLocation": "/home/ctack/git/better-alarm-clock/firmware/SimpleDCF/SimpleDCF.ino",
+  "toolsFolders": "/home/ctack/Programs/arduino-1.8.5/tools-builder,/home/ctack/Programs/arduino-1.8.5/hardware/tools/avr,/home/ctack/.arduino15/packages"
+}
