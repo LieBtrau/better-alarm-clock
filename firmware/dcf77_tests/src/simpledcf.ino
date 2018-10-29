@@ -16,13 +16,19 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program. If not, see http://www.gnu.org/licenses/
 #include "phaseDetector.h" 
+#include "secondsDecoder.h"
 
-PhaseDetector sd(PB6, PC13);
+PhaseDetector pd(PB6, PC13);
+SecondsDecoder sd;
 unsigned long ultimer=0;
+
 
 void secondsTick(const byte value)
 {
+    sd.updateSeconds((SecondsDecoder::PULSE_TYPES)value);
     Serial1.print(millis() - ultimer);
+    Serial1.print(",");
+    Serial1.print(sd.getSecond());
     Serial1.print(",");
     Serial1.println(value);
     ultimer=millis();
@@ -31,8 +37,8 @@ void secondsTick(const byte value)
 void setup() {
     Serial1.begin(115200);
     Serial1.println();
-    sd.init();
-    sd.attachSecondEventHandler(secondsTick);
+    pd.init();
+    pd.attachSecondEventHandler(secondsTick);
 }
  
 void loop() {

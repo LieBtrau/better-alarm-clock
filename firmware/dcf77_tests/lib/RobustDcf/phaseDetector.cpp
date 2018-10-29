@@ -1,16 +1,15 @@
 #include "phaseDetector.h"
 
-static PhaseDetector* psd;
+static PhaseDetector *psd;
 void getSample();
 
-PhaseDetector::PhaseDetector(const byte inputPin, const byte monitorPin):
-    _inputPin(inputPin),
-    _monitorPin(monitorPin)
+PhaseDetector::PhaseDetector(const byte inputPin, const byte monitorPin) : _inputPin(inputPin),
+                                                                           _monitorPin(monitorPin)
 {
-    memset(_bins.data, 0, BIN_COUNT * sizeof(uint16_t));
-    memset(_bins.phaseCorrelation, 0, BIN_COUNT * sizeof(uint32_t));
-    _bins.activeBin = 0;
-    _bins.pulseStart = 255;
+    memset(_data, 0, sizeof(_data));
+    memset(_phaseCorrelation, 0, sizeof(_phaseCorrelation));
+    _activeBin = 0;
+    _pulseStartBin = 255;
     psd = this;
 }
 
@@ -29,57 +28,50 @@ void PhaseDetector::attachSecondEventHandler(event secondTickEvent)
 
 void PhaseDetector::secondsSampler(const bool input)
 {
-    static byte state=0;
-    static byte pulseData=0;
-    static byte decodedData=0;
-    static byte currentSecondPulseStart=0;
-    // Serial1.print(_bins.pulseStart);
-    // Serial1.print(",");
-    // Serial1.println(_bins.activeBin);
-    //Serial1.println(_bins.pulseStart);
-    switch(state)
+    static byte state = 0;
+    static byte pulseData = 0;
+    static byte decodedData = 0;
+    static byte currentSecondPulseStart = 0;
+    switch (state)
     {
-        case 0:
-            //Start sampling <10ms before pulse start or <100ms after pulse start
-            if(wrap(BIN_COUNT + _bins.pulseStart - _bins.activeBin) <= BINS_PER_10ms || wrap((BIN_COUNT + _bins.activeBin - _bins.pulseStart)) <= BINS_PER_100ms)
-            {
-                state=1;
-                pulseData = input;
-                currentSecondPulseStart = _bins.pulseStart;
-            }
-            else
-            {
-            }
-            break;
-        case 1:
-            //Check what the most occurring inputpin value was from 10ms before the start of the pulse up to 100ms later.
-            pulseData+=input;
-            if(wrap(BIN_COUNT + currentSecondPulseStart + BINS_PER_100ms) == _bins.activeBin)
-            {
-                state=2;
-                decodedData = (pulseData > (BINS_PER_100ms>>1) ? 1 : 0);
-                pulseData=0;
-            }
-            break;
-        case 2:
-            //Check what the most occurring inputpin value was from 100ms after the start of the pulse up to 110ms later.
-            pulseData+=input;
-            if(wrap(BIN_COUNT + currentSecondPulseStart + BINS_PER_200ms + BINS_PER_10ms) == _bins.activeBin)
-            {
-                state=0;
-                decodedData |= (pulseData > (BINS_PER_100ms>>1) ? 2 : 0);
-                /* Decoded data:
+    case 0:
+        //Start sampling <10ms before pulse start or <100ms after pulse start
+        if (wrap(BIN_COUNT + _pulseStartBin - _activeBin) <= BINS_PER_10ms || wrap((BIN_COUNT + _activeBin - _pulseStartBin)) <= BINS_PER_100ms)
+        {
+            state = 1;
+            pulseData = input;
+            currentSecondPulseStart = _pulseStartBin;
+        }
+        break;
+    case 1:
+        //Check what the most occurring inputpin value was from 10ms before the start of the pulse up to 100ms later.
+        pulseData += input;
+        if (wrap(BIN_COUNT + currentSecondPulseStart + BINS_PER_100ms) == _activeBin)
+        {
+            state = 2;
+            decodedData = (pulseData > (BINS_PER_100ms >> 1) ? 1 : 0);
+            pulseData = 0;
+        }
+        break;
+    case 2:
+        //Check what the most occurring inputpin value was from 100ms after the start of the pulse up to 110ms later.
+        pulseData += input;
+        if (wrap(BIN_COUNT + currentSecondPulseStart + BINS_PER_200ms + BINS_PER_10ms) == _activeBin)
+        {
+            state = 0;
+            decodedData |= (pulseData > (BINS_PER_100ms >> 1) ? 2 : 0);
+            /* Decoded data:
                 0 : no pulse            -> minute marker
                 1 : short regular pulse -> 0-bit
                 3 : long regular pulse  -> 1-bit
                 2 : short pulse, but 100ms shifted -> invalid
                 */
-               if(_secondsEvent)
-               {
-                   _secondsEvent(decodedData);
-               }
+            if (_secondsEvent)
+            {
+                _secondsEvent(decodedData);
             }
-            break;
+        }
+        break;
     }
 }
 
@@ -88,49 +80,48 @@ void PhaseDetector::secondsSampler(const bool input)
 uint16_t PhaseDetector::wrap(const uint16_t value)
 {
     uint16_t result = value;
-    // while (result >= BIN_COUNT)
-    // {
-    //     result -= BIN_COUNT;
-    // }
-    // return result;
-    return value % BIN_COUNT;
+    while (result >= BIN_COUNT)
+    {
+        result -= BIN_COUNT;
+    }
+    return result;
 }
 
 // The correlation is used to find the window of maximum signal strength.
 void PhaseDetector::phaseCorrelator()
 {
-    uint8_t current_bin = _bins.activeBin;
-    _bins.phaseCorrelation[current_bin] = 0;
+    ;
+    _phaseCorrelation[_activeBin] = 0;
     for (uint16_t bin = 0; bin < BINS_PER_100ms; ++bin)
     {
-        _bins.phaseCorrelation[current_bin] += ((uint32_t)_bins.data[wrap(current_bin + bin)]);
+        _phaseCorrelation[_activeBin] += ((uint32_t)_data[wrap(_activeBin + bin)]);
     }
-    _bins.phaseCorrelation[current_bin] <<= 1;
+    _phaseCorrelation[_activeBin] <<= 1;
     for (uint16_t bin = BINS_PER_100ms; bin < BINS_PER_200ms; ++bin)
     {
-        _bins.phaseCorrelation[current_bin] += (uint32_t)_bins.data[wrap(current_bin + bin)];
+        _phaseCorrelation[_activeBin] += (uint32_t)_data[wrap(_activeBin + bin)];
     }
 
     uint32_t maxCorrelation = 0;
-    byte highestCorrelationBin=0;
-    for (uint16_t bin = 0; bin < BIN_COUNT; ++bin) {
+    byte highestCorrelationBin = 0;
+    for (uint16_t bin = 0; bin < BIN_COUNT; ++bin)
+    {
         //Find bin where correlation is maximum
-        if (_bins.phaseCorrelation[bin] > maxCorrelation) {
-            maxCorrelation = _bins.phaseCorrelation[bin];
+        if (_phaseCorrelation[bin] > maxCorrelation)
+        {
+            maxCorrelation = _phaseCorrelation[bin];
             highestCorrelationBin = bin;
         }
     }
 
-    if(highestCorrelationBin<_bins.pulseStart)
+    if (highestCorrelationBin < _pulseStartBin)
     {
-        _bins.pulseStart--;
+        _pulseStartBin--;
     }
-    if(highestCorrelationBin>_bins.pulseStart)
+    if (highestCorrelationBin > _pulseStartBin)
     {
-        _bins.pulseStart++;
+        _pulseStartBin++;
     }
-
-    
 }
 
 //Add the averaged sample to the correct bin.
@@ -143,31 +134,22 @@ void PhaseDetector::phase_binning(const bool input)
     // clock 30 ppm => N < 300
     const uint16_t N = 300;
 
-    //Select the next bin to add samples to.
-    // if(_bins.activeBin < BIN_COUNT - 1)
-    // {
-    //     _bins.activeBin++;
-    // }else{
-    //     _bins.activeBin=0;
-    // }
+    _activeBin = ((_activeBin < BIN_COUNT - 1) ? _activeBin + 1 : 0);
 
-    _bins.activeBin = ((_bins.activeBin < BIN_COUNT - 1) ? _bins.activeBin + 1 : 0);
- 
     if (input)
     {
-        if (_bins.data[_bins.activeBin] < N)
+        if (_data[_activeBin] < N)
         {
-            ++_bins.data[_bins.activeBin];
+            ++_data[_activeBin];
         }
     }
     else
     {
-        if (_bins.data[_bins.activeBin] > 0)
+        if (_data[_activeBin] > 0)
         {
-            --_bins.data[_bins.activeBin];
+            --_data[_activeBin];
         }
     }
-    // Serial1.println(bins.data[bins.tick]);
 }
 
 //Find the symbol that occurs most (0 or 1) every 10 samples.
@@ -198,7 +180,7 @@ void PhaseDetector::process_one_sample()
     const uint8_t sampled_data = digitalRead(_inputPin);
 
     digitalWrite(_monitorPin, sampled_data);
-
+    //sample inverter for HKW module
     averager(sampled_data ? 0 : 1);
 }
 
