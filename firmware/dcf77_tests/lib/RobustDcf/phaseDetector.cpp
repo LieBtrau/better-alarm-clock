@@ -6,7 +6,7 @@ void getSample();
 PhaseDetector::PhaseDetector(const byte inputPin, const byte monitorPin) : _inputPin(inputPin),
                                                                            _monitorPin(monitorPin)
 {
-    memset(_data, 0, sizeof(_data));
+    memset(_bins, 0, sizeof(_bins));
     memset(_phaseCorrelation, 0, sizeof(_phaseCorrelation));
     _activeBin = 0;
     _pulseStartBin = 255;
@@ -29,8 +29,8 @@ void PhaseDetector::attachSecondEventHandler(event secondTickEvent)
 void PhaseDetector::secondsSampler(const bool input)
 {
     static byte state = 0;
-    static byte pulseData = 0;
-    static byte decodedData = 0;
+    static byte pulseCtr = 0;
+    static bool syncMark = false;
     static byte currentSecondPulseStart = 0;
     switch (state)
     {
@@ -39,36 +39,31 @@ void PhaseDetector::secondsSampler(const bool input)
         if (wrap(BIN_COUNT + _pulseStartBin - _activeBin) <= BINS_PER_10ms || wrap((BIN_COUNT + _activeBin - _pulseStartBin)) <= BINS_PER_100ms)
         {
             state = 1;
-            pulseData = input;
+            pulseCtr = input;
             currentSecondPulseStart = _pulseStartBin;
         }
         break;
     case 1:
         //Check what the most occurring inputpin value was from 10ms before the start of the pulse up to 100ms later.
-        pulseData += input;
+        //This where the sync mark is located in case it's present
+        pulseCtr += input;
         if (wrap(BIN_COUNT + currentSecondPulseStart + BINS_PER_100ms) == _activeBin)
         {
             state = 2;
-            decodedData = (pulseData > (BINS_PER_100ms >> 1) ? 1 : 0);
-            pulseData = 0;
+            syncMark = (pulseCtr > (BINS_PER_100ms >> 1) ? false : true);
+            pulseCtr = 0;
         }
         break;
     case 2:
         //Check what the most occurring inputpin value was from 100ms after the start of the pulse up to 110ms later.
-        pulseData += input;
+        //This is where the the difference between a short and a long pulse can be detected.
+        pulseCtr += input;
         if (wrap(BIN_COUNT + currentSecondPulseStart + BINS_PER_200ms + BINS_PER_10ms) == _activeBin)
         {
             state = 0;
-            decodedData |= (pulseData > (BINS_PER_100ms >> 1) ? 2 : 0);
-            /* Decoded data:
-                0 : no pulse            -> minute marker
-                1 : short regular pulse -> 0-bit
-                3 : long regular pulse  -> 1-bit
-                2 : short pulse, but 100ms shifted -> invalid
-                */
             if (_secondsEvent)
             {
-                _secondsEvent(decodedData);
+                _secondsEvent(syncMark, pulseCtr > (BINS_PER_100ms >> 1) ? true : false);
             }
         }
         break;
@@ -90,23 +85,25 @@ uint16_t PhaseDetector::wrap(const uint16_t value)
 // The correlation is used to find the window of maximum signal strength.
 void PhaseDetector::phaseCorrelator()
 {
-    ;
+    //Reset bin
     _phaseCorrelation[_activeBin] = 0;
+
+    //Correlate with the template
     for (uint16_t bin = 0; bin < BINS_PER_100ms; ++bin)
     {
-        _phaseCorrelation[_activeBin] += ((uint32_t)_data[wrap(_activeBin + bin)]);
+        _phaseCorrelation[_activeBin] += ((uint32_t)_bins[wrap(_activeBin + bin)]);
     }
     _phaseCorrelation[_activeBin] <<= 1;
     for (uint16_t bin = BINS_PER_100ms; bin < BINS_PER_200ms; ++bin)
     {
-        _phaseCorrelation[_activeBin] += (uint32_t)_data[wrap(_activeBin + bin)];
+        _phaseCorrelation[_activeBin] += (uint32_t)_bins[wrap(_activeBin + bin)];
     }
 
+    //Find bin where correlation is maximum
     uint32_t maxCorrelation = 0;
     byte highestCorrelationBin = 0;
     for (uint16_t bin = 0; bin < BIN_COUNT; ++bin)
     {
-        //Find bin where correlation is maximum
         if (_phaseCorrelation[bin] > maxCorrelation)
         {
             maxCorrelation = _phaseCorrelation[bin];
@@ -114,6 +111,7 @@ void PhaseDetector::phaseCorrelator()
         }
     }
 
+    //Move the bin where the pulse starts closer to the bin with currently the highest match
     if (highestCorrelationBin < _pulseStartBin)
     {
         _pulseStartBin--;
@@ -128,7 +126,7 @@ void PhaseDetector::phaseCorrelator()
 //This function gets called every 10ms
 void PhaseDetector::phase_binning(const bool input)
 {
-    // how many seconds may be cummulated
+    // how many seconds may be accumulated
     // this controls how slow the filter may be to follow a phase drift
     // N times the clock precision shall be smaller 1
     // clock 30 ppm => N < 300
@@ -138,16 +136,16 @@ void PhaseDetector::phase_binning(const bool input)
 
     if (input)
     {
-        if (_data[_activeBin] < N)
+        if (_bins[_activeBin] < N)
         {
-            ++_data[_activeBin];
+            ++_bins[_activeBin];
         }
     }
     else
     {
-        if (_data[_activeBin] > 0)
+        if (_bins[_activeBin] > 0)
         {
-            --_data[_activeBin];
+            --_bins[_activeBin];
         }
     }
 }

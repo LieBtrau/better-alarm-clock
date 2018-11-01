@@ -1,7 +1,7 @@
 #pragma once
 #include "Arduino.h"
 
-typedef void (*event)(const byte value);
+typedef void (*event)(const bool isSync, const bool isLongPulse);
 
 class PhaseDetector
 {
@@ -28,7 +28,7 @@ private:
   byte _inputPin = 0;
   byte _monitorPin;
   event _secondsEvent = nullptr;
-  uint16_t _data[BIN_COUNT];
+  uint16_t _bins[BIN_COUNT]; //100bins, each holding for 10ms of data
   uint32_t _phaseCorrelation[BIN_COUNT];
   uint8_t _activeBin;
   uint8_t _pulseStartBin;
