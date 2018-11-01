@@ -23,14 +23,14 @@ SecondsDecoder sd;
 unsigned long ultimer=0;
 
 
-void secondsTick(const byte value)
+void secondsTick(const bool isSyncMark, const bool isLongPulse)
 {
-    sd.updateSeconds((SecondsDecoder::PULSE_TYPES)value);
+    sd.updateSeconds(isSyncMark, isLongPulse);
     Serial1.print(millis() - ultimer);
     Serial1.print(",");
     Serial1.print(sd.getSecond());
     Serial1.print(",");
-    Serial1.println(value);
+    Serial1.println(isLongPulse);
     ultimer=millis();
 }
  
