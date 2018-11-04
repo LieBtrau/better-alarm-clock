@@ -6,7 +6,7 @@ public:
   SecondsDecoder();
   void updateSeconds(const bool isSyncMark, const bool isLongPulse);
   bool getSecond(uint8_t& second);
-
+  bool getTimeData(uint64_t& data);
 private:
   static const uint8_t SECONDS_PER_MINUTE = 60;
   static const int8_t LOCK_THRESHOLD = 5;
@@ -14,6 +14,7 @@ private:
   bool dataValid(uint64_t x);
   int8_t _bins[SECONDS_PER_MINUTE];
   uint64_t _bitShifter = 0;
+  uint64_t _prevBitShifter = 0;
   uint8_t _activeBin = 0;
   uint8_t _minuteStartBin = 0xFF;
 };

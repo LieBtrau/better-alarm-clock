@@ -52,9 +52,14 @@ void SecondsDecoder::updateSeconds(const bool isSyncMark, const bool isLongPulse
             _minuteStartBin = bin;
         }
     }
- 
     //Advance current bin
     _activeBin = _activeBin < (SECONDS_PER_MINUTE - 1) ? _activeBin + 1 : 0;
+
+    uint8_t second=0;
+    if(getSecond(second) && second==59)
+    {
+        _prevBitShifter = _bitShifter;
+    }
 }
 
 //return false when second doesn't contain valid data
@@ -63,9 +68,19 @@ bool SecondsDecoder::getSecond(uint8_t& second)
     // we have to subtract 2 seconds
     //   1 because the seconds already advanced by 1 tick
     //   1 because the sync mark is not second 0 but second 59
+    if(_minuteStartBin==0xFF)
+    {
+        return false;
+    }
     second = ((SECONDS_PER_MINUTE<<1) + _activeBin - 2 - _minuteStartBin);
     second %= SECONDS_PER_MINUTE;
-    return _minuteStartBin != 0xFF;
+    return true;
+}
+
+bool SecondsDecoder::getTimeData(uint64_t& data)
+{
+    data = _prevBitShifter;
+    return _minuteStartBin!=0xFF;
 }
 
 void SecondsDecoder::bounded_increment(int8_t &value, int8_t N)

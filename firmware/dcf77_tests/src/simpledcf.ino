@@ -21,20 +21,12 @@
 PhaseDetector pd(PB6, PC13);
 SecondsDecoder sd;
 unsigned long ultimer = 0;
+volatile bool secondTicked = false;
 
 void secondsTick(const bool isSyncMark, const bool isLongPulse)
 {
-    uint8_t second;
     sd.updateSeconds(isSyncMark, isLongPulse);
-    if (sd.getSecond(second))
-    {
-        Serial1.print(millis() - ultimer);
-        Serial1.print(",");
-        Serial1.print(second);
-        Serial1.print(",");
-        Serial1.println(isLongPulse);
-        ultimer = millis();
-    }
+    secondTicked = true;
 }
 
 void setup()
@@ -47,4 +39,17 @@ void setup()
 
 void loop()
 {
+    if (secondTicked)
+    {
+        secondTicked=false;
+        uint8_t second;
+        if (sd.getSecond(second) && second == 59)
+        {
+            uint64_t data = 0;
+            sd.getTimeData(data);
+            Serial1.println(data, BIN);
+            //website (bit0 is left)    0-00010110010000-000101-00011011-0000011-001000-111-10001-000110000
+            //captured (bit0 is right)  00001100-010001-111-000100-1100000-11011000-101000-00001001101000-0
+        }
+    }
 }
