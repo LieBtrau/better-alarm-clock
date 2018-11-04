@@ -5,14 +5,15 @@ class SecondsDecoder
 public:
   SecondsDecoder();
   void updateSeconds(const bool isSyncMark, const bool isLongPulse);
-  uint8_t getSecond();
+  bool getSecond(uint8_t& second);
 
 private:
   static const uint8_t SECONDS_PER_MINUTE = 60;
+  static const int8_t LOCK_THRESHOLD = 5;
   void bounded_increment(int8_t &value, int8_t N);
-  bool dataValid(uint64_t data);
+  bool dataValid(uint64_t x);
   int8_t _bins[SECONDS_PER_MINUTE];
   uint64_t _bitShifter = 0;
   uint8_t _activeBin = 0;
-  uint8_t _minuteStartBin = 0;
+  uint8_t _minuteStartBin = 0xFF;
 };

@@ -15,32 +15,36 @@
 //
 //  You should have received a copy of the GNU General Public License
 //  along with this program. If not, see http://www.gnu.org/licenses/
-#include "phaseDetector.h" 
+#include "phaseDetector.h"
 #include "secondsDecoder.h"
 
 PhaseDetector pd(PB6, PC13);
 SecondsDecoder sd;
-unsigned long ultimer=0;
-
+unsigned long ultimer = 0;
 
 void secondsTick(const bool isSyncMark, const bool isLongPulse)
 {
+    uint8_t second;
     sd.updateSeconds(isSyncMark, isLongPulse);
-    Serial1.print(millis() - ultimer);
-    Serial1.print(",");
-    Serial1.print(sd.getSecond());
-    Serial1.print(",");
-    Serial1.println(isLongPulse);
-    ultimer=millis();
+    if (sd.getSecond(second))
+    {
+        Serial1.print(millis() - ultimer);
+        Serial1.print(",");
+        Serial1.print(second);
+        Serial1.print(",");
+        Serial1.println(isLongPulse);
+        ultimer = millis();
+    }
 }
- 
-void setup() {
+
+void setup()
+{
     Serial1.begin(115200);
     Serial1.println();
     pd.init();
     pd.attachSecondEventHandler(secondsTick);
 }
- 
-void loop() {
-}
 
+void loop()
+{
+}

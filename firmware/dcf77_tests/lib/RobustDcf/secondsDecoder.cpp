@@ -41,17 +41,12 @@ void SecondsDecoder::updateSeconds(const bool isSyncMark, const bool isLongPulse
     //Detect sync mark on second 59
     bounded_increment(_bins[_activeBin], (isSyncMark && (!isLongPulse))? 6 : -6);
 
-    if(isSyncMark)
-    {
-       Serial1.println(_bitShifter, HEX);
-    }
-
     //Find bin where correlation is maximum
     int8_t maxCorrelation = 0;
-    _minuteStartBin = 0;
+    _minuteStartBin = 0xFF;
     for (uint16_t bin = 0; bin < sizeof(_bins); ++bin)
     {
-        if (_bins[bin] >= maxCorrelation)
+        if (_bins[bin] >= max(maxCorrelation, LOCK_THRESHOLD))
         {
             maxCorrelation = _bins[bin];
             _minuteStartBin = bin;
@@ -59,23 +54,18 @@ void SecondsDecoder::updateSeconds(const bool isSyncMark, const bool isLongPulse
     }
  
     //Advance current bin
-    _activeBin = (_activeBin < (SECONDS_PER_MINUTE - 1) ? _activeBin + 1 : 0);
+    _activeBin = _activeBin < (SECONDS_PER_MINUTE - 1) ? _activeBin + 1 : 0;
 }
 
-uint8_t SecondsDecoder::getSecond()
+//return false when second doesn't contain valid data
+bool SecondsDecoder::getSecond(uint8_t& second)
 {
-    // at least one sync mark and a 0 and a 1 seen
-    // the threshold is tricky:
-    //   higher --> takes longer to acquire an initial lock, but higher probability of an accurate lock
-    //
-    //   lower  --> higher probability that the lock will oscillate at the beginning
-    //              and thus spoil the downstream stages
-
     // we have to subtract 2 seconds
     //   1 because the seconds already advanced by 1 tick
     //   1 because the sync mark is not second 0 but second 59
-    uint8_t second = 2 * SECONDS_PER_MINUTE + _activeBin - 2 - _minuteStartBin;
-    return second % SECONDS_PER_MINUTE;
+    second = ((SECONDS_PER_MINUTE<<1) + _activeBin - 2 - _minuteStartBin);
+    second %= SECONDS_PER_MINUTE;
+    return _minuteStartBin != 0xFF;
 }
 
 void SecondsDecoder::bounded_increment(int8_t &value, int8_t N)
