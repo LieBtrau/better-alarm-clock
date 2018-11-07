@@ -70,6 +70,7 @@ bool SecondsDecoder::getSecond(uint8_t& second)
     //   1 because the sync mark is not second 0 but second 59
     if(_minuteStartBin==0xFF)
     {
+        second=0;
         return false;
     }
     second = ((SECONDS_PER_MINUTE<<1) + _activeBin - 2 - _minuteStartBin);
@@ -87,11 +88,11 @@ void SecondsDecoder::bounded_increment(int8_t &value, int8_t N)
 {
     if (value > 0)
     {
-        value = (value > 128 - N ? 128 : value + N);
+        value = (value > INT8_MAX - N ? INT8_MAX : value + N);
     }
     else
     {
-        value = (value < -127 - N ? -127 : value + N);
+        value = (value < INT8_MIN - N ? INT8_MIN : value + N);
     }
 }
 
