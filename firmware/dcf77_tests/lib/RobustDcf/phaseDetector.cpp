@@ -13,17 +13,13 @@ PhaseDetector::PhaseDetector(const byte inputPin, const byte monitorPin) : _inpu
     psd = this;
 }
 
-void PhaseDetector::init()
+void PhaseDetector::init(event secondTickEvent)
 {
     pinMode(_inputPin, INPUT);
     digitalWrite(_monitorPin, HIGH);
     pinMode(_monitorPin, OUTPUT);
-    systick_attach_callback(getSample);
-}
-
-void PhaseDetector::attachSecondEventHandler(event secondTickEvent)
-{
     _secondsEvent = secondTickEvent;
+    systick_attach_callback(getSample);
 }
 
 void PhaseDetector::secondsSampler(const bool input)

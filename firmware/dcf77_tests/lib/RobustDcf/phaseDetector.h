@@ -7,9 +7,8 @@ class PhaseDetector
 {
 public:
   PhaseDetector(const byte inputPin, const byte monitorPin = 0);
-  void init();
+  void init(event secondTickEvent);
   void process_one_sample();
-  void attachSecondEventHandler(event secondTickEvent);
 
 private:
   static const int BIN_COUNT = 100;
