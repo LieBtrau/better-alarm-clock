@@ -35,13 +35,14 @@ void loop()
             uint64_t data = 0;
             uint8_t minute = 0;
             sd.getTimeData(data);
-            Serial1.println();
-            Serial1.println(data, BIN);
+            Serial1.print(data, HEX);
             minutes.update(data);
             if (minutes.getTime(minute))
             {
-                Serial1.println(minute);
+                Serial1.print("\t");
+                Serial1.print(minute);
             }
+            Serial1.println();
             minutes.advanceTick();
         }
     }

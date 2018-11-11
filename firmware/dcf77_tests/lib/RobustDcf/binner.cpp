@@ -20,11 +20,13 @@ bool Binner::getTime(uint8_t &value)
     //Find bin with the highest score.
     for (uint8_t i = 0; i < _dataSize; i++)
     {
-        if (_pData[i] > max(maximum, _lockThreshold))
+        if (_pData[i] >= max(maximum, _lockThreshold))
         {
             maximum = _pData[i];
             maxBin = i;
         }
+        Serial1.print(_pData[i]);
+        Serial1.print(" ");
     }
     if (maxBin == 0xFF)
     {
@@ -56,6 +58,17 @@ void Binner::update(uint64_t data)
         }
         int8_t score = ((_bitWidth + (_withParity ? 1 : 0)) >> 1) - hammingWeight(newData ^ prediction);
         bounded_increment(_pData[i], score);
+        if(_pData[i]==INT8_MAX)
+        {
+            //if bin is already at maximum, decrease the other bins
+            for(uint8_t j=0;j<_dataSize;j++)
+            {
+                if(j!=i)
+                {
+                    bounded_increment(_pData[i], -score);
+                }
+            }
+        }
     }
 }
 
@@ -93,11 +106,11 @@ void Binner::bounded_increment(int8_t &value, int8_t N)
 {
     if (value > 0)
     {
-        value = (value > INT8_MAX - N ? INT8_MAX : value + N);
+        value = value > INT8_MAX - N ? INT8_MAX : value + N;
     }
     else
     {
-        value = (value < INT8_MIN - N ? INT8_MIN : value + N);
+        value = value < INT8_MIN - N ? INT8_MIN : value + N;
     }
 }
 

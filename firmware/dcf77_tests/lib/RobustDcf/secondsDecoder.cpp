@@ -22,28 +22,41 @@ void SecondsDecoder::updateSeconds(const bool isSyncMark, const bool isLongPulse
     //Shift in new data from right to left (because LSb is sent first)
     _bitShifter >>= 1;
     _bitShifter |= isLongPulse ? 0x800000000000000U : 0;
-
+    int8_t score = 0;
     //Detect 0-bit on second 0
-    bounded_increment(_bins[_activeBin], _bitShifter & 1 ? -1 : 1);
+    score += _bitShifter & 1 ? -1 : 1;
     //Detect 1-bit on second 20
-    bounded_increment(_bins[_activeBin], _bitShifter & 0x100000U ? 1 : -1);
+    score += _bitShifter & 0x100000U ? 1 : -1;
     //Detect even parity over bits 21-28
     uint32_t parityCheck = _bitShifter & 0x1FE00000;
-    bounded_increment(_bins[_activeBin], dataValid(parityCheck) ? 1 : -1);
+    score += dataValid(parityCheck) ? 1 : -1;
     //Compiler bug : & bit operations on uint64 don't work.  Only the lower 32bits are taken into account.
     //Detect even parity over bits 29–35
-    parityCheck = (_bitShifter>>4) & 0xFE000000;
-    bounded_increment(_bins[_activeBin], dataValid(parityCheck) & 1 ? 1 : -1);
+    parityCheck = (_bitShifter >> 4) & 0xFE000000;
+    score += dataValid(parityCheck) & 1 ? 1 : -1;
     //Detect even parity over bits 36–58
-    parityCheck = (_bitShifter>>28) & 0x7fffff00;
-    bounded_increment(_bins[_activeBin], dataValid(parityCheck) & 1 ? 1 : -1);
+    parityCheck = (_bitShifter >> 28) & 0x7fffff00;
+    score += dataValid(parityCheck) & 1 ? 1 : -1;
     //Detect sync mark on second 59
-    bounded_increment(_bins[_activeBin], (isSyncMark && (!isLongPulse))? 6 : -6);
+    score += (isSyncMark && (!isLongPulse)) ? 6 : -6;
+
+    bounded_increment(_bins[_activeBin], score);
+    if (_bins[_activeBin] == INT8_MAX)
+    {
+        //if bin is already at maximum, decrease the other bins
+        for (uint8_t i = 0; i < SECONDS_PER_MINUTE; i++)
+        {
+            if (i != _activeBin)
+            {
+                bounded_increment(_bins[i], -score);
+            }
+        }
+    }
 
     //Find bin where correlation is maximum
     int8_t maxCorrelation = 0;
     _minuteStartBin = 0xFF;
-    for (uint16_t bin = 0; bin < sizeof(_bins); ++bin)
+    for (uint8_t bin = 0; bin < sizeof(_bins); ++bin)
     {
         if (_bins[bin] >= max(maxCorrelation, LOCK_THRESHOLD))
         {
@@ -54,33 +67,33 @@ void SecondsDecoder::updateSeconds(const bool isSyncMark, const bool isLongPulse
     //Advance current bin
     _activeBin = _activeBin < (SECONDS_PER_MINUTE - 1) ? _activeBin + 1 : 0;
 
-    uint8_t second=0;
-    if(getSecond(second) && second==59)
+    uint8_t second = 0;
+    if (getSecond(second) && second == 59)
     {
         _prevBitShifter = _bitShifter;
     }
 }
 
 //return false when second doesn't contain valid data
-bool SecondsDecoder::getSecond(uint8_t& second)
+bool SecondsDecoder::getSecond(uint8_t &second)
 {
     // we have to subtract 2 seconds
     //   1 because the seconds already advanced by 1 tick
     //   1 because the sync mark is not second 0 but second 59
-    if(_minuteStartBin==0xFF)
+    if (_minuteStartBin == 0xFF)
     {
-        second=0;
+        second = 0;
         return false;
     }
-    second = ((SECONDS_PER_MINUTE<<1) + _activeBin - 2 - _minuteStartBin);
+    second = ((SECONDS_PER_MINUTE << 1) + _activeBin - 2 - _minuteStartBin);
     second %= SECONDS_PER_MINUTE;
     return true;
 }
 
-bool SecondsDecoder::getTimeData(uint64_t& data)
+bool SecondsDecoder::getTimeData(uint64_t &data)
 {
     data = _prevBitShifter;
-    return _minuteStartBin!=0xFF;
+    return _minuteStartBin != 0xFF;
 }
 
 void SecondsDecoder::bounded_increment(int8_t &value, int8_t N)
