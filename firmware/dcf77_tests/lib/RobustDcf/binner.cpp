@@ -17,6 +17,7 @@ bool Binner::getTime(uint8_t &value)
 {
     int8_t maximum = INT8_MIN;
     uint8_t maxBin = 0xFF;
+    //Find bin with the highest score.
     for (uint8_t i = 0; i < _dataSize; i++)
     {
         if (_pData[i] > max(maximum, _lockThreshold))
@@ -29,6 +30,7 @@ bool Binner::getTime(uint8_t &value)
     {
         return false;
     }
+    //Convert index of the bin to a decimal value within the expected range.
     value = getValueInRange(maxBin);
     return true;
 }
@@ -38,18 +40,21 @@ void Binner::advanceTick()
     _currentTick = _currentTick < _dataSize - 1 ? _currentTick + 1 : 0;
 }
 
+/* Check validity of the data by correlating these with a calculated prediction value for each bin.
+ * The matching score of the correlation gets added to the corresponding bin.
+ */ 
 void Binner::update(uint64_t data)
 {
     uint64_t newData = data >> _startBit;
     newData &= (1 << (_bitWidth + (_withParity ? 1 : 0))) - 1;
     for (uint8_t i = 0; i < _dataSize; i++)
     {
-        uint8_t candidate = int2bcd(getValueInRange(i));
-        if (_withParity && parityOdd(candidate))
+        uint8_t prediction = int2bcd(getValueInRange(i));
+        if (_withParity && parityOdd(prediction))
         {
-            candidate |= 1 << _bitWidth;
+            prediction |= 1 << _bitWidth;
         }
-        int8_t score = ((_bitWidth + (_withParity ? 1 : 0)) >> 1) - hammingWeight(newData ^ candidate);
+        int8_t score = ((_bitWidth + (_withParity ? 1 : 0)) >> 1) - hammingWeight(newData ^ prediction);
         bounded_increment(_pData[i], score);
     }
 }
@@ -88,16 +93,16 @@ void Binner::bounded_increment(int8_t &value, int8_t N)
 {
     if (value > 0)
     {
-        value = (value > 128 - N ? 128 : value + N);
+        value = (value > INT8_MAX - N ? INT8_MAX : value + N);
     }
     else
     {
-        value = (value < -127 - N ? -127 : value + N);
+        value = (value < INT8_MIN - N ? INT8_MIN : value + N);
     }
 }
 
-// i = 0 to _datasize - 1;
-uint8_t Binner::getValueInRange(uint8_t i)
+// binOffset = 0 to _datasize - 1;
+uint8_t Binner::getValueInRange(uint8_t binOffset)
 {
-    return _lowestValue + ((i + _currentTick) % _dataSize);
+    return _lowestValue + ((binOffset + _currentTick) % _dataSize);
 }

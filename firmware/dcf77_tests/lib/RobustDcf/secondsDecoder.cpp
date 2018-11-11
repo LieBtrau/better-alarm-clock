@@ -7,9 +7,8 @@ SecondsDecoder::SecondsDecoder()
 
 void SecondsDecoder::updateSeconds(const bool isSyncMark, const bool isLongPulse)
 {
-    /* Add two 60bit registers: one register for sync mark bit, one register for data bit.
-     * Each time tick data comes in, it gets shifted into the two registers.
-     * After that, a correlator is run on each register.  The results are added and stored in the current bin.
+    /* Each second, pulse data comes in.  It gets shifted into the bit shifter.
+     * After that, a correlator is run on the bit shifter.  The results are added to the current bin.
      * The bin that has the highest score is the most likely to be the minute start.
      * Following markers will be used:
      *  - 0-bit on second 0

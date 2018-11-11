@@ -3,8 +3,7 @@
 static PhaseDetector *psd;
 void getSample();
 
-PhaseDetector::PhaseDetector(const byte inputPin, const byte monitorPin) : _inputPin(inputPin),
-                                                                           _monitorPin(monitorPin)
+PhaseDetector::PhaseDetector(const byte inputPin, const byte monitorPin) : _inputPin(inputPin), _monitorPin(monitorPin)
 {
     memset(_bins, 0, sizeof(_bins));
     memset(_phaseCorrelation, 0, sizeof(_phaseCorrelation));
@@ -22,6 +21,7 @@ void PhaseDetector::init(event secondTickEvent)
     systick_attach_callback(getSample);
 }
 
+//Sample data to check if a short/long tick is in the current second and if there's a minute sync mark (no pulse at all).
 void PhaseDetector::secondsSampler(const bool input)
 {
     static byte state = 0;
@@ -68,9 +68,9 @@ void PhaseDetector::secondsSampler(const bool input)
 
 // faster modulo function which avoids division
 // returns value % bin_count
-uint16_t PhaseDetector::wrap(const uint16_t value)
+uint8_t PhaseDetector::wrap(const uint8_t value)
 {
-    uint16_t result = value;
+    uint8_t result = value;
     while (result >= BIN_COUNT)
     {
         result -= BIN_COUNT;
@@ -78,19 +78,22 @@ uint16_t PhaseDetector::wrap(const uint16_t value)
     return result;
 }
 
-// The correlation is used to find the window of maximum signal strength.
+// The correlation is used to find the window of maximum signal math with the predefined template:
+//      0 -> 100ms : high (start of pulse)
+//      100ms -> 200ms : either high or low, depending of long or short pulse
+//      200ms -> 1000ms : low
 void PhaseDetector::phaseCorrelator()
 {
     //Reset bin
     _phaseCorrelation[_activeBin] = 0;
 
     //Correlate with the template
-    for (uint16_t bin = 0; bin < BINS_PER_100ms; ++bin)
+    for (uint8_t bin = 0; bin < BINS_PER_100ms; ++bin)
     {
         _phaseCorrelation[_activeBin] += ((uint32_t)_bins[wrap(_activeBin + bin)]);
     }
     _phaseCorrelation[_activeBin] <<= 1;
-    for (uint16_t bin = BINS_PER_100ms; bin < BINS_PER_200ms; ++bin)
+    for (uint8_t bin = BINS_PER_100ms; bin < BINS_PER_200ms; ++bin)
     {
         _phaseCorrelation[_activeBin] += (uint32_t)_bins[wrap(_activeBin + bin)];
     }
@@ -98,7 +101,7 @@ void PhaseDetector::phaseCorrelator()
     //Find bin where correlation is maximum
     uint32_t maxCorrelation = 0;
     byte highestCorrelationBin = 0;
-    for (uint16_t bin = 0; bin < BIN_COUNT; ++bin)
+    for (uint8_t bin = 0; bin < BIN_COUNT; ++bin)
     {
         if (_phaseCorrelation[bin] > maxCorrelation)
         {
@@ -108,13 +111,13 @@ void PhaseDetector::phaseCorrelator()
     }
 
     //Move the bin where the pulse starts closer to the bin with currently the highest match
-    if (highestCorrelationBin < _pulseStartBin)
+    if (wrap(BIN_COUNT + _pulseStartBin - highestCorrelationBin) > (BIN_COUNT >> 1))
     {
-        _pulseStartBin--;
+        _pulseStartBin = wrap(_pulseStartBin + 1);
     }
-    if (highestCorrelationBin > _pulseStartBin)
+    else if (_pulseStartBin != highestCorrelationBin)
     {
-        _pulseStartBin++;
+        _pulseStartBin = wrap(_pulseStartBin + BIN_COUNT - 1);
     }
 }
 
@@ -128,7 +131,7 @@ void PhaseDetector::phase_binning(const bool input)
     // clock 30 ppm => N < 300
     const uint16_t N = 300;
 
-    _activeBin = ((_activeBin < BIN_COUNT - 1) ? _activeBin + 1 : 0);
+    _activeBin = (_activeBin < BIN_COUNT - 1) ? _activeBin + 1 : 0;
 
     if (input)
     {
@@ -144,6 +147,7 @@ void PhaseDetector::phase_binning(const bool input)
             --_bins[_activeBin];
         }
     }
+    phaseCorrelator();
 }
 
 //Find the symbol that occurs most (0 or 1) every 10 samples.
@@ -159,10 +163,9 @@ void PhaseDetector::averager(const uint8_t sampled_data)
     if (++sampleCtr >= SAMPLES_PER_BIN)
     {
         // once all samples for the current bin are captured the bin gets updated
-        // that is each 10ms control is passed to stage 1
+        // each 10ms, control is passed to stage 1
         const bool input = (average > (SAMPLES_PER_BIN >> 1));
         phase_binning(input);
-        phaseCorrelator();
         secondsSampler(input);
         average = 0;
         sampleCtr = 0;

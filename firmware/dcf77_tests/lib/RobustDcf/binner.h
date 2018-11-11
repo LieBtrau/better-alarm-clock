@@ -1,3 +1,5 @@
+/*  The Binner gets some BCD-encoded data bytes of the SecondsDecoder, checks validity and converts these to decimal values.
+ */
 #pragma once
 #include "Arduino.h"
 

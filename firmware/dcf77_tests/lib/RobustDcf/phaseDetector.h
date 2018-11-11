@@ -1,3 +1,6 @@
+/* This class tries to find the start of each second in data stream of 0's & 1's coming from the DCF-module.
+ * Once the phase is found, it also returns the data from the stream : long/short pulse or no pulse at all (minute sync mark)
+ */
 #pragma once
 #include "Arduino.h"
 
@@ -18,7 +21,7 @@ private:
   static const uint16_t BINS_PER_100ms = 10 * BINS_PER_10ms;
   static const uint16_t BINS_PER_200ms = 20 * BINS_PER_10ms;
 
-  uint16_t wrap(const uint16_t value);
+  uint8_t wrap(const uint8_t value);
   void phaseCorrelator();
   void phase_binning(const bool input);
   void averager(const uint8_t sampled_data);

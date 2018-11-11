@@ -5,11 +5,14 @@
 PhaseDetector pd(PB6, PC13);
 SecondsDecoder sd;
 volatile bool secondTicked = false;
-Binner minutes(21, 7, true, 0, 59,4);
+Binner minutes(21, 7, true, 0, 59, 4);
+bool syncMark, longPulse;
 
+//secondsTick is called by an ISR.  It should be kept as short as possible
 void secondsTick(const bool isSyncMark, const bool isLongPulse)
 {
-    sd.updateSeconds(isSyncMark, isLongPulse);
+    syncMark = isSyncMark;
+    longPulse = isLongPulse;
     secondTicked = true;
 }
 
@@ -25,6 +28,7 @@ void loop()
     if (secondTicked)
     {
         secondTicked = false;
+        sd.updateSeconds(syncMark, longPulse);
         uint8_t second;
         if (sd.getSecond(second) && second == 59)
         {
@@ -34,7 +38,7 @@ void loop()
             Serial1.println();
             Serial1.println(data, BIN);
             minutes.update(data);
-            if(minutes.getTime(minute))
+            if (minutes.getTime(minute))
             {
                 Serial1.println(minute);
             }

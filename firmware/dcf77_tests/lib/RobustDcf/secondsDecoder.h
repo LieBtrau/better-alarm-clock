@@ -1,3 +1,6 @@
+/* The secondsDecoder finds the start of a minute inside the pulse data (long/short/none) that it gets from the phase decoder.
+ * It also holds the databits for the next minute and transfers these on the start of each minute to other objects.
+ */
 #pragma once
 #include "Arduino.h"
 class SecondsDecoder
