@@ -3,9 +3,8 @@
 static PhaseDetector *psd;
 void getSample();
 
-PhaseDetector::PhaseDetector(const byte inputPin, const byte monitorPin) : _inputPin(inputPin), _monitorPin(monitorPin)
+PhaseDetector::PhaseDetector(const byte inputPin, const byte monitorPin) : _inputPin(inputPin), _monitorPin(monitorPin), _bin(BIN_COUNT)
 {
-    memset(_bins, 0, sizeof(_bins));
     memset(_phaseCorrelation, 0, sizeof(_phaseCorrelation));
     _activeBin = 0;
     _pulseStartBin = 255;
@@ -90,12 +89,12 @@ void PhaseDetector::phaseCorrelator()
     //Correlate with the template
     for (uint8_t bin = 0; bin < BINS_PER_100ms; ++bin)
     {
-        _phaseCorrelation[_activeBin] += ((uint32_t)_bins[wrap(_activeBin + bin)]);
+        _phaseCorrelation[_activeBin] += ((uint32_t)_bin.getUnsigned(wrap(_activeBin + bin)));
     }
     _phaseCorrelation[_activeBin] <<= 1;
     for (uint8_t bin = BINS_PER_100ms; bin < BINS_PER_200ms; ++bin)
     {
-        _phaseCorrelation[_activeBin] += (uint32_t)_bins[wrap(_activeBin + bin)];
+        _phaseCorrelation[_activeBin] += (uint32_t)_bin.getUnsigned(wrap(_activeBin + bin));
     }
 
     //Find bin where correlation is maximum
@@ -125,28 +124,9 @@ void PhaseDetector::phaseCorrelator()
 //This function gets called every 10ms
 void PhaseDetector::phase_binning(const bool input)
 {
-    // how many seconds may be accumulated
-    // this controls how slow the filter may be to follow a phase drift
-    // N times the clock precision shall be smaller 1
-    // clock 30 ppm => N < 300
-    const uint16_t N = 300;
-
     _activeBin = (_activeBin < BIN_COUNT - 1) ? _activeBin + 1 : 0;
 
-    if (input)
-    {
-        if (_bins[_activeBin] < N)
-        {
-            ++_bins[_activeBin];
-        }
-    }
-    else
-    {
-        if (_bins[_activeBin] > 0)
-        {
-            --_bins[_activeBin];
-        }
-    }
+    _bin.add(_activeBin, input ? 1 : -1);
     phaseCorrelator();
 }
 

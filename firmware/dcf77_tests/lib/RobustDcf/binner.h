@@ -2,7 +2,7 @@
  */
 #pragma once
 #include "Arduino.h"
-
+#include "bin.h"
 class Binner
 {
   public:
@@ -15,15 +15,13 @@ class Binner
     uint8_t int2bcd(uint8_t hex);
     bool parityOdd(uint8_t x);
     int hammingWeight(int i);
-    void bounded_increment(int8_t &value, int8_t N);
     uint8_t getValueInRange(uint8_t i);
     uint8_t _startBit;
     uint8_t _bitWidth;
     bool _withParity;
     uint8_t _lowestValue;
     uint8_t _highestValue;
-    int8_t* _pData=nullptr;
-    uint8_t _dataSize=0;
     uint8_t _currentTick=0;
     int8_t _lockThreshold=0;
+    Bin _bin;
 };

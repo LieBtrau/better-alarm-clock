@@ -3,6 +3,7 @@
  */
 #pragma once
 #include "Arduino.h"
+#include "bin.h"
 class SecondsDecoder
 {
 public:
@@ -13,9 +14,8 @@ public:
 private:
   static const uint8_t SECONDS_PER_MINUTE = 60;
   static const int8_t LOCK_THRESHOLD = 5;
-  void bounded_increment(int8_t &value, int8_t N);
   bool dataValid(uint64_t x);
-  int8_t _bins[SECONDS_PER_MINUTE];
+  Bin _bin;
   uint64_t _bitShifter = 0;
   uint64_t _prevBitShifter = 0;
   uint8_t _activeBin = 0;

@@ -1,9 +1,6 @@
 #include "secondsDecoder.h"
 
-SecondsDecoder::SecondsDecoder()
-{
-    memset(_bins, 0, sizeof(_bins));
-}
+SecondsDecoder::SecondsDecoder():_bin(SECONDS_PER_MINUTE){}
 
 void SecondsDecoder::updateSeconds(const bool isSyncMark, const bool isLongPulse)
 {
@@ -40,30 +37,9 @@ void SecondsDecoder::updateSeconds(const bool isSyncMark, const bool isLongPulse
     //Detect sync mark on second 59
     score += (isSyncMark && (!isLongPulse)) ? 6 : -6;
 
-    bounded_increment(_bins[_activeBin], score);
-    if (_bins[_activeBin] == INT8_MAX)
-    {
-        //if bin is already at maximum, decrease the other bins
-        for (uint8_t i = 0; i < SECONDS_PER_MINUTE; i++)
-        {
-            if (i != _activeBin)
-            {
-                bounded_increment(_bins[i], -score);
-            }
-        }
-    }
+    _bin.add(_activeBin, score);
+    _minuteStartBin = _bin.maximum(LOCK_THRESHOLD);
 
-    //Find bin where correlation is maximum
-    int8_t maxCorrelation = 0;
-    _minuteStartBin = 0xFF;
-    for (uint8_t bin = 0; bin < sizeof(_bins); ++bin)
-    {
-        if (_bins[bin] >= max(maxCorrelation, LOCK_THRESHOLD))
-        {
-            maxCorrelation = _bins[bin];
-            _minuteStartBin = bin;
-        }
-    }
     //Advance current bin
     _activeBin = _activeBin < (SECONDS_PER_MINUTE - 1) ? _activeBin + 1 : 0;
 
@@ -94,18 +70,6 @@ bool SecondsDecoder::getTimeData(uint64_t &data)
 {
     data = _prevBitShifter;
     return _minuteStartBin != 0xFF;
-}
-
-void SecondsDecoder::bounded_increment(int8_t &value, int8_t N)
-{
-    if (value > 0)
-    {
-        value = (value > INT8_MAX - N ? INT8_MAX : value + N);
-    }
-    else
-    {
-        value = (value < INT8_MIN - N ? INT8_MIN : value + N);
-    }
 }
 
 //Check if data not zero and if parity is even

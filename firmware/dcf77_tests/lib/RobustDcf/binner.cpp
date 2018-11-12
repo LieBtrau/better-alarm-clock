@@ -1,45 +1,24 @@
 #include "binner.h"
 
-Binner::Binner(uint8_t startBit, uint8_t bitWidth, bool withParity, uint8_t lowestValue, uint8_t highestValue, int8_t lockThreshold) : _startBit(startBit), _bitWidth(bitWidth), _withParity(withParity), _lowestValue(lowestValue), _highestValue(highestValue), _lockThreshold(lockThreshold)
+Binner::Binner(uint8_t startBit, uint8_t bitWidth, bool withParity, uint8_t lowestValue, uint8_t highestValue, int8_t lockThreshold) : _startBit(startBit), _bitWidth(bitWidth), _withParity(withParity), _lowestValue(lowestValue), _highestValue(highestValue), _lockThreshold(lockThreshold), _bin(highestValue - lowestValue + 1)
 {
-    if (highestValue > lowestValue)
-    {
-        _dataSize = highestValue - lowestValue + 1;
-        _pData = (int8_t *)malloc(_dataSize);
-    }
-    if (_pData)
-    {
-        memset(_pData, 0, _dataSize);
-    }
 }
 
 bool Binner::getTime(uint8_t &value)
 {
-    int8_t maximum = INT8_MIN;
-    uint8_t maxBin = 0xFF;
-    //Find bin with the highest score.
-    for (uint8_t i = 0; i < _dataSize; i++)
-    {
-        if (_pData[i] >= max(maximum, _lockThreshold))
-        {
-            maximum = _pData[i];
-            maxBin = i;
-        }
-        Serial1.print(_pData[i]);
-        Serial1.print(" ");
-    }
-    if (maxBin == 0xFF)
+    uint8_t bin = _bin.maximum(_lockThreshold);
+    if(bin==0xFF)
     {
         return false;
     }
     //Convert index of the bin to a decimal value within the expected range.
-    value = getValueInRange(maxBin);
+    value = getValueInRange(bin);
     return true;
 }
 
 void Binner::advanceTick()
 {
-    _currentTick = _currentTick < _dataSize - 1 ? _currentTick + 1 : 0;
+    _currentTick = _currentTick < _bin.size() - 1 ? _currentTick + 1 : 0;
 }
 
 /* Check validity of the data by correlating these with a calculated prediction value for each bin.
@@ -49,7 +28,7 @@ void Binner::update(uint64_t data)
 {
     uint64_t newData = data >> _startBit;
     newData &= (1 << (_bitWidth + (_withParity ? 1 : 0))) - 1;
-    for (uint8_t i = 0; i < _dataSize; i++)
+    for (uint8_t i = 0; i < _bin.size(); i++)
     {
         uint8_t prediction = int2bcd(getValueInRange(i));
         if (_withParity && parityOdd(prediction))
@@ -57,18 +36,7 @@ void Binner::update(uint64_t data)
             prediction |= 1 << _bitWidth;
         }
         int8_t score = ((_bitWidth + (_withParity ? 1 : 0)) >> 1) - hammingWeight(newData ^ prediction);
-        bounded_increment(_pData[i], score);
-        if(_pData[i]==INT8_MAX)
-        {
-            //if bin is already at maximum, decrease the other bins
-            for(uint8_t j=0;j<_dataSize;j++)
-            {
-                if(j!=i)
-                {
-                    bounded_increment(_pData[i], -score);
-                }
-            }
-        }
+        _bin.add(i, score);
     }
 }
 
@@ -102,20 +70,9 @@ int Binner::hammingWeight(int i)
     return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
 }
 
-void Binner::bounded_increment(int8_t &value, int8_t N)
-{
-    if (value > 0)
-    {
-        value = value > INT8_MAX - N ? INT8_MAX : value + N;
-    }
-    else
-    {
-        value = value < INT8_MIN - N ? INT8_MIN : value + N;
-    }
-}
 
 // binOffset = 0 to _datasize - 1;
 uint8_t Binner::getValueInRange(uint8_t binOffset)
 {
-    return _lowestValue + ((binOffset + _currentTick) % _dataSize);
+    return _lowestValue + ((binOffset + _currentTick) % _bin.size());
 }
