@@ -3,7 +3,7 @@
 static PhaseDetector *psd;
 void getSample();
 
-PhaseDetector::PhaseDetector(const byte inputPin, const byte monitorPin) : _inputPin(inputPin), _monitorPin(monitorPin), _bin(BIN_COUNT)
+PhaseDetector::PhaseDetector(const byte inputPin, const byte monitorPin) : _inputPin(inputPin), _monitorPin(monitorPin), _bin(BIN_COUNT, -127)
 {
     memset(_phaseCorrelation, 0, sizeof(_phaseCorrelation));
     _activeBin = 0;
@@ -81,7 +81,7 @@ uint8_t PhaseDetector::wrap(const uint8_t value)
 //      0 -> 100ms : high (start of pulse)
 //      100ms -> 200ms : either high or low, depending of long or short pulse
 //      200ms -> 1000ms : low
-void PhaseDetector::phaseCorrelator()
+bool PhaseDetector::phaseCorrelator()
 {
     //Reset bin
     _phaseCorrelation[_activeBin] = 0;
@@ -99,14 +99,19 @@ void PhaseDetector::phaseCorrelator()
 
     //Find bin where correlation is maximum
     uint32_t maxCorrelation = 0;
-    byte highestCorrelationBin = 0;
+    byte highestCorrelationBin = 0xFF;
     for (uint8_t bin = 0; bin < BIN_COUNT; ++bin)
     {
-        if (_phaseCorrelation[bin] > maxCorrelation)
+        if (_phaseCorrelation[bin] > max(maxCorrelation, LOCK_THRESHOLD))
         {
             maxCorrelation = _phaseCorrelation[bin];
             highestCorrelationBin = bin;
         }
+    }
+    if (highestCorrelationBin == 0xFF)
+    {
+        //no lock
+        return false;
     }
 
     //Move the bin where the pulse starts closer to the bin with currently the highest match
@@ -118,6 +123,7 @@ void PhaseDetector::phaseCorrelator()
     {
         _pulseStartBin = wrap(_pulseStartBin + BIN_COUNT - 1);
     }
+    return true;
 }
 
 //Add the averaged sample to the correct bin.
@@ -127,7 +133,6 @@ void PhaseDetector::phase_binning(const bool input)
     _activeBin = (_activeBin < BIN_COUNT - 1) ? _activeBin + 1 : 0;
 
     _bin.add(_activeBin, input ? 1 : -1);
-    phaseCorrelator();
 }
 
 //Find the symbol that occurs most (0 or 1) every 10 samples.
@@ -146,7 +151,10 @@ void PhaseDetector::averager(const uint8_t sampled_data)
         // each 10ms, control is passed to stage 1
         const bool input = (average > (SAMPLES_PER_BIN >> 1));
         phase_binning(input);
-        secondsSampler(input);
+        if (phaseCorrelator())
+        {
+            secondsSampler(input);
+        }
         average = 0;
         sampleCtr = 0;
     }

@@ -21,9 +21,10 @@ private:
   static const uint16_t BINS_PER_10ms = BIN_COUNT / 100;
   static const uint16_t BINS_PER_100ms = 10 * BINS_PER_10ms;
   static const uint16_t BINS_PER_200ms = 20 * BINS_PER_10ms;
+  static const uint32 LOCK_THRESHOLD = 75;
 
   uint8_t wrap(const uint8_t value);
-  void phaseCorrelator();
+  bool phaseCorrelator();
   void phase_binning(const bool input);
   void averager(const uint8_t sampled_data);
   void secondsSampler(const bool input);

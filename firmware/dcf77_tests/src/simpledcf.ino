@@ -41,14 +41,14 @@ void loop()
         uint8_t second;
         if (sd.getSecond(second) && second == 59)
         {
-            uint64_t data = 0;
-            sd.getTimeData(data);
-            Serial1.print(data, HEX);
-            minutes.update(data);
-            hours.update(data);
-            days.update(data);
-            months.update(data);
-            years.update(data);
+            SecondsDecoder::BITDATA data;
+            sd.getTimeData(&data);
+            Serial1.print(data.bitShifter, HEX);
+            minutes.update(&data);
+            hours.update(&data);
+            days.update(&data);
+            months.update(&data);
+            years.update(&data);
             getDcfTime();
            minutes.advanceTick();
         }
