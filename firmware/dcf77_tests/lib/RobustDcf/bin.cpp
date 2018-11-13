@@ -1,11 +1,11 @@
 #include "bin.h"
 
-Bin::Bin(uint8_t dataSize) : _dataSize(dataSize)
+Bin::Bin(uint8_t dataSize, int8_t initVal) : _dataSize(dataSize)
 {
     _pData = (int8_t *)malloc(_dataSize);
     if (_pData)
     {
-        memset(_pData, 0, _dataSize);
+        memset(_pData, initVal, _dataSize);
     }
 }
 
