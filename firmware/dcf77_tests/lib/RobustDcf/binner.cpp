@@ -24,9 +24,14 @@ void Binner::advanceTick()
 /* Check validity of the data by correlating these with a calculated prediction value for each bin.
  * The matching score of the correlation gets added to the corresponding bin.
  */ 
-void Binner::update(uint64_t data)
+void Binner::update(SecondsDecoder::BITDATA* data)
 {
-    uint64_t newData = data >> _startBit;
+    if(data->validBitCtr<SecondsDecoder::SECONDS_PER_MINUTE-_startBit)
+    {
+        //not enough valid samples in the data buffer
+        return;
+    }
+    uint64_t newData = data->bitShifter >> _startBit;
     newData &= (1 << (_bitWidth + (_withParity ? 1 : 0))) - 1;
     for (uint8_t i = 0; i < _bin.size(); i++)
     {

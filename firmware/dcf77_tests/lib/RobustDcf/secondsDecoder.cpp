@@ -1,6 +1,6 @@
 #include "secondsDecoder.h"
 
-SecondsDecoder::SecondsDecoder():_bin(SECONDS_PER_MINUTE){}
+SecondsDecoder::SecondsDecoder() : _bin(SECONDS_PER_MINUTE) {}
 
 void SecondsDecoder::updateSeconds(const bool isSyncMark, const bool isLongPulse)
 {
@@ -17,22 +17,23 @@ void SecondsDecoder::updateSeconds(const bool isSyncMark, const bool isLongPulse
      */
 
     //Shift in new data from right to left (because LSb is sent first)
-    _bitShifter >>= 1;
-    _bitShifter |= isLongPulse ? 0x800000000000000U : 0;
+    _curData.validBitCtr++;
+    _curData.bitShifter >>= 1;
+    _curData.bitShifter |= isLongPulse ? 0x800000000000000U : 0;
     int8_t score = 0;
     //Detect 0-bit on second 0
-    score += _bitShifter & 1 ? -1 : 1;
+    score += _curData.bitShifter & 1 ? -1 : 1;
     //Detect 1-bit on second 20
-    score += _bitShifter & 0x100000U ? 1 : -1;
+    score += _curData.bitShifter & 0x100000U ? 1 : -1;
     //Detect even parity over bits 21-28
-    uint32_t parityCheck = _bitShifter & 0x1FE00000;
+    uint32_t parityCheck = _curData.bitShifter & 0x1FE00000;
     score += dataValid(parityCheck) ? 1 : -1;
     //Compiler bug : & bit operations on uint64 don't work.  Only the lower 32bits are taken into account.
     //Detect even parity over bits 29–35
-    parityCheck = (_bitShifter >> 4) & 0xFE000000;
+    parityCheck = (_curData.bitShifter >> 4) & 0xFE000000;
     score += dataValid(parityCheck) & 1 ? 1 : -1;
     //Detect even parity over bits 36–58
-    parityCheck = (_bitShifter >> 28) & 0x7fffff00;
+    parityCheck = (_curData.bitShifter >> 28) & 0x7fffff00;
     score += dataValid(parityCheck) & 1 ? 1 : -1;
     //Detect sync mark on second 59
     score += (isSyncMark && (!isLongPulse)) ? 6 : -6;
@@ -46,7 +47,8 @@ void SecondsDecoder::updateSeconds(const bool isSyncMark, const bool isLongPulse
     uint8_t second = 0;
     if (getSecond(second) && second == 59)
     {
-        _prevBitShifter = _bitShifter;
+        _prevData = _curData;
+        _curData = {0,0};
     }
 }
 
@@ -66,9 +68,9 @@ bool SecondsDecoder::getSecond(uint8_t &second)
     return true;
 }
 
-bool SecondsDecoder::getTimeData(uint64_t &data)
+bool SecondsDecoder::getTimeData(BITDATA* pdata)
 {
-    data = _prevBitShifter;
+    *pdata = _prevData;
     return _minuteStartBin != 0xFF;
 }
 
