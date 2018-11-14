@@ -34,6 +34,6 @@ private:
   event _secondsEvent = nullptr;
   Bin _bin; //100bins, each holding for 10ms of data
   uint32_t _phaseCorrelation[BIN_COUNT];
-  uint8_t _activeBin;
-  uint8_t _pulseStartBin;
+  uint8_t _activeBin = 0;
+  uint8_t _pulseStartBin = UINT8_MAX;
 };

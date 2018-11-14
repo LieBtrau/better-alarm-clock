@@ -3,11 +3,9 @@
 static PhaseDetector *psd;
 void getSample();
 
-PhaseDetector::PhaseDetector(const byte inputPin, const byte monitorPin) : _inputPin(inputPin), _monitorPin(monitorPin), _bin(BIN_COUNT, -127)
+PhaseDetector::PhaseDetector(const byte inputPin, const byte monitorPin) : _inputPin(inputPin), _monitorPin(monitorPin), _bin(BIN_COUNT, INT8_MIN)
 {
     memset(_phaseCorrelation, 0, sizeof(_phaseCorrelation));
-    _activeBin = 0;
-    _pulseStartBin = 255;
     psd = this;
 }
 
@@ -113,15 +111,22 @@ bool PhaseDetector::phaseCorrelator()
         //no lock
         return false;
     }
-
-    //Move the bin where the pulse starts closer to the bin with currently the highest match
-    if (wrap(BIN_COUNT + _pulseStartBin - highestCorrelationBin) > (BIN_COUNT >> 1))
+    if (_pulseStartBin == UINT8_MAX)
     {
-        _pulseStartBin = wrap(_pulseStartBin + 1);
+        //if not yet initialized, set correct bin directly.
+        _pulseStartBin = highestCorrelationBin;
     }
-    else if (_pulseStartBin != highestCorrelationBin)
+    else
     {
-        _pulseStartBin = wrap(_pulseStartBin + BIN_COUNT - 1);
+        //Move the bin where the pulse starts closer to the bin with currently the highest match
+        if (wrap(BIN_COUNT + _pulseStartBin - highestCorrelationBin) > (BIN_COUNT >> 1))
+        {
+            _pulseStartBin = wrap(_pulseStartBin + 1);
+        }
+        else if (_pulseStartBin != highestCorrelationBin)
+        {
+            _pulseStartBin = wrap(_pulseStartBin + BIN_COUNT - 1);
+        }
     }
     return true;
 }
