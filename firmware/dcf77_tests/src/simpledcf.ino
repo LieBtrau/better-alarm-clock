@@ -1,16 +1,19 @@
 #include "phaseDetector.h"
 #include "secondsDecoder.h"
-#include "binner.h"
+#include "bcdDecoder.h"
+#include "timezoneDecoder.h"
 #include <Timezone.h> // https://github.com/JChristensen/Timezone
+#include <Chronos.h>
 
 PhaseDetector pd(PB6, PC13);
 SecondsDecoder sd;
 volatile bool secondTicked = false;
-Binner minutes(21, 7, true, 0, 59, 4);
-Binner hours(29, 6, true, 0, 23, 3);
-Binner days(36, 6, false, 1, 31, 3);
-Binner months(45, 5, false, 1, 12, 2);
-Binner years(50, 8, false, 0, 99, 4);
+BcdDecoder minutes(21, 7, true, 0, 59, 4);
+BcdDecoder hours(29, 6, true, 0, 23, 3);
+BcdDecoder days(36, 6, false, 1, 31, 3);
+BcdDecoder months(45, 5, false, 1, 12, 2);
+BcdDecoder years(50, 8, false, 0, 99, 4);
+TimeZoneDecoder tzd;
 bool syncMark, longPulse;
 
 TimeChangeRule myDST = {"CEST", Last, Sun, Mar, 2, +120}; //Last Sunday of March, at 2AM, go to UTC+120min
@@ -32,6 +35,24 @@ void setup()
     pd.init(secondsTick);
 }
 
+
+Chronos::EpochTime getEpoch()
+{
+    uint8_t minute, hour, day, month, year;
+    int16_t secondsOffset;
+    minutes.getTime(minute);
+    hours.getTime(hour);
+    days.getTime(day);
+    months.getTime(month);
+    years.getTime(year);
+    year += 2000;
+    Chronos::DateTime localtime(year, month, day, hour, minute);
+    tzd.getSecondsOffset(secondsOffset);
+    Chronos::EpochTime epoch = localtime.asEpoch() - secondsOffset;
+    localtime.printTo(Serial1);
+    return epoch;
+}
+
 void loop()
 {
     if (secondTicked)
@@ -41,6 +62,7 @@ void loop()
         uint8_t second;
         if (sd.getSecond(second) && second == 59)
         {
+            //get current data
             SecondsDecoder::BITDATA data;
             sd.getTimeData(&data);
             Serial1.print(data.bitShifter, HEX);
@@ -49,26 +71,21 @@ void loop()
             days.update(&data);
             months.update(&data);
             years.update(&data);
-            getDcfTime();
-           minutes.advanceTick();
+            tzd.update(&data);
+            Serial1.println(getEpoch());
+            //set prediction
+            minutes.advanceTick();
+            tzd.setPrediction(false);
         }
     }
 }
 
-void getDcfTime()
-{
-    uint8_t minute, hour, day, month, year;
-    minutes.getTime(minute);
-    hours.getTime(hour);
-    days.getTime(day);
-    months.getTime(month);
-    years.getTime(year);
-    char stime[100];
-    sprintf(stime, "\t%d-%d-%d %d:%d", year, month, day, hour, minute);
-    Serial1.println(stime);
-}
 
-/*Chronos::DateTime::setTime(2015, 12, 21, 17, 30, 0); //DateTime(YYYY, MM, DD, HH, mm, SS)
+/*
+Best time to sync the clock is at 01:01 UTC:
+    winter to summer time : at 01:00 UTC : 2AM becomes 3AM local time
+    summer to winter time : at 01:00 UTC : 3AM becomes 2AM local time
+Chronos::DateTime::setTime(2015, 12, 21, 17, 30, 0); //DateTime(YYYY, MM, DD, HH, mm, SS)
 Chronos::DateTime inTwoWeeks = nowTime + Chronos::Span::Weeks(2);
 PRINT(curDateTime.year());
   PRINT('-');
