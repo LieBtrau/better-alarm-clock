@@ -9,6 +9,7 @@ void SecondsDecoder::updateSeconds(const bool isSyncMark, const bool isLongPulse
      * The bin that has the highest score is the most likely to be the minute start.
      * Following markers will be used:
      *  - 0-bit on second 0
+     *  - timezone bits : bit 17 must be different from bit 18
      *  - 1-bit on second 20
      *  - even parity over bits 21-28
      *  - even parity over bits 29–35
@@ -23,6 +24,8 @@ void SecondsDecoder::updateSeconds(const bool isSyncMark, const bool isLongPulse
     int8_t score = 0;
     //Detect 0-bit on second 0
     score += _curData.bitShifter & 1 ? -1 : 1;
+    //Detect bit 17 and bit 18 are different;
+    score += ((_curData.bitShifter ^ (_curData.bitShifter>>1)) & 0x20000) ? 1 : -1;
     //Detect 1-bit on second 20
     score += _curData.bitShifter & 0x100000U ? 1 : -1;
     //Detect even parity over bits 21-28
