@@ -1,10 +1,10 @@
-#include "binner.h"
+#include "bcdDecoder.h"
 
-Binner::Binner(uint8_t startBit, uint8_t bitWidth, bool withParity, uint8_t lowestValue, uint8_t highestValue, int8_t lockThreshold) : _startBit(startBit), _bitWidth(bitWidth), _withParity(withParity), _lowestValue(lowestValue), _highestValue(highestValue), _lockThreshold(lockThreshold), _bin(highestValue - lowestValue + 1)
+BcdDecoder::BcdDecoder(uint8_t startBit, uint8_t bitWidth, bool withParity, uint8_t lowestValue, uint8_t highestValue, int8_t lockThreshold) : _startBit(startBit), _bitWidth(bitWidth), _withParity(withParity), _lowestValue(lowestValue), _highestValue(highestValue), _lockThreshold(lockThreshold), _bin(highestValue - lowestValue + 1)
 {
 }
 
-bool Binner::getTime(uint8_t &value)
+bool BcdDecoder::getTime(uint8_t &value)
 {
     uint8_t bin = _bin.maximum(_lockThreshold);
     if(bin==0xFF)
@@ -16,7 +16,7 @@ bool Binner::getTime(uint8_t &value)
     return true;
 }
 
-void Binner::advanceTick()
+void BcdDecoder::advanceTick()
 {
     _currentTick = _currentTick < _bin.size() - 1 ? _currentTick + 1 : 0;
 }
@@ -24,7 +24,7 @@ void Binner::advanceTick()
 /* Check validity of the data by correlating these with a calculated prediction value for each bin.
  * The matching score of the correlation gets added to the corresponding bin.
  */ 
-void Binner::update(SecondsDecoder::BITDATA* data)
+void BcdDecoder::update(SecondsDecoder::BITDATA* data)
 {
     if(data->validBitCtr<SecondsDecoder::SECONDS_PER_MINUTE-_startBit)
     {
@@ -45,7 +45,7 @@ void Binner::update(SecondsDecoder::BITDATA* data)
     }
 }
 
-uint8_t Binner::bcd2int(uint8_t bcd)
+uint8_t BcdDecoder::bcd2int(uint8_t bcd)
 {
     //ret = highnibble * 10 + lownibble = highnibble*8 + highnibble*2 + lownibble
     uint8_t ret = bcd & 0xF;
@@ -54,13 +54,13 @@ uint8_t Binner::bcd2int(uint8_t bcd)
 }
 
 //https://www.electronicdesign.com/displays/easily-convert-decimal-numbers-their-binary-and-bcd-formats
-uint8_t Binner::int2bcd(uint8_t hex)
+uint8_t BcdDecoder::int2bcd(uint8_t hex)
 {
     uint8_t highNibble = hex / 10;
     return (highNibble << 2) + (highNibble << 1) + hex;
 }
 
-bool Binner::parityOdd(uint8_t x)
+bool BcdDecoder::parityOdd(uint8_t x)
 {
     x ^= x >> 4;
     x &= 0xf;
@@ -68,7 +68,7 @@ bool Binner::parityOdd(uint8_t x)
 }
 
 //https://stackoverflow.com/questions/109023/how-to-count-the-number-of-set-bits-in-a-32-bit-integer#109025
-int Binner::hammingWeight(int i)
+int BcdDecoder::hammingWeight(int i)
 {
     i = i - ((i >> 1) & 0x55555555);
     i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
@@ -77,7 +77,7 @@ int Binner::hammingWeight(int i)
 
 
 // binOffset = 0 to _datasize - 1;
-uint8_t Binner::getValueInRange(uint8_t binOffset)
+uint8_t BcdDecoder::getValueInRange(uint8_t binOffset)
 {
     return _lowestValue + ((binOffset + _currentTick) % _bin.size());
 }

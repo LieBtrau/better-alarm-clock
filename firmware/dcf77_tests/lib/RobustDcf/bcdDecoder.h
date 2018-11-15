@@ -1,13 +1,13 @@
-/*  The Binner gets some BCD-encoded data bytes of the SecondsDecoder, checks validity and converts these to decimal values.
+/*  The BcdDecoder gets some BCD-encoded data bytes of the SecondsDecoder, checks validity and converts these to decimal values.
  */
 #pragma once
 #include "Arduino.h"
 #include "bin.h"
 #include "secondsDecoder.h"
-class Binner
+class BcdDecoder
 {
   public:
-    Binner(uint8_t startBit, uint8_t bitWidth, bool withParity, uint8_t lowestValue, uint8_t highestValue, int8_t lockThreshold);
+    BcdDecoder(uint8_t startBit, uint8_t bitWidth, bool withParity, uint8_t lowestValue, uint8_t highestValue, int8_t lockThreshold);
     void update(SecondsDecoder::BITDATA* data);
     void advanceTick();
     bool getTime(uint8_t& value);
