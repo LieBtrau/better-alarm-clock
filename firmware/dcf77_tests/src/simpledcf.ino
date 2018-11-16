@@ -35,8 +35,7 @@ void setup()
     pd.init(secondsTick);
 }
 
-
-Chronos::EpochTime getEpoch()
+Chronos::EpochTime getUnixEpochTime()
 {
     uint8_t minute, hour, day, month, year;
     int16_t secondsOffset;
@@ -45,11 +44,9 @@ Chronos::EpochTime getEpoch()
     days.getTime(day);
     months.getTime(month);
     years.getTime(year);
-    year += 2000;
-    Chronos::DateTime localtime(year, month, day, hour, minute);
+    Chronos::DateTime localtime(tmYearToCalendar(y2kYearToTm(year)), month, day, hour, minute);
     tzd.getSecondsOffset(secondsOffset);
     Chronos::EpochTime epoch = localtime.asEpoch() - secondsOffset;
-    localtime.printTo(Serial1);
     return epoch;
 }
 
@@ -64,42 +61,27 @@ void loop()
         {
             //get current data
             SecondsDecoder::BITDATA data;
-            sd.getTimeData(&data);
-            Serial1.print(data.bitShifter, HEX);
-            minutes.update(&data);
-            hours.update(&data);
-            days.update(&data);
-            months.update(&data);
-            years.update(&data);
-            tzd.update(&data);
-            Serial1.println(getEpoch());
-            //set prediction
-            minutes.advanceTick();
-            tzd.setPrediction(false);
+            bool bSuccess = sd.getTimeData(&data);
+            bSuccess &= minutes.update(&data);
+            bSuccess &= hours.update(&data);
+            bSuccess &= days.update(&data);
+            bSuccess &= months.update(&data);
+            bSuccess &= years.update(&data);
+            bSuccess &= tzd.update(&data);
+            if (bSuccess)
+            {
+                Chronos::DateTime localTime = myTZ.toLocal(getUnixEpochTime());
+                localTime.printTo(Serial1);
+                Serial1.println();
+                //set prediction for next minute
+                Chronos::DateTime predictionTime = localTime + Chronos::Span::Minutes(1);
+                minutes.setPrediction(predictionTime.minute());
+                hours.setPrediction(predictionTime.hour());
+                days.setPrediction(predictionTime.day());
+                months.setPrediction(predictionTime.month());
+                years.setPrediction(tmYearToY2k(CalendarYrToTm(predictionTime.year())));
+                tzd.setPrediction(myTZ.locIsDST(predictionTime.asEpoch()));
+            }
         }
     }
 }
-
-
-/*
-Best time to sync the clock is at 01:01 UTC:
-    winter to summer time : at 01:00 UTC : 2AM becomes 3AM local time
-    summer to winter time : at 01:00 UTC : 3AM becomes 2AM local time
-Chronos::DateTime::setTime(2015, 12, 21, 17, 30, 0); //DateTime(YYYY, MM, DD, HH, mm, SS)
-Chronos::DateTime inTwoWeeks = nowTime + Chronos::Span::Weeks(2);
-PRINT(curDateTime.year());
-  PRINT('-');
-  PRINT(curDateTime.month());
-  PRINT('-');
-  PRINT(curDateTime.day());
-  PRINT(' ');
-  PRINT(curDateTime.hour());
-  PRINT(':');
-  PRINT(curDateTime.minute());
-  PRINT(':');
-  PRINT(curDateTime.second());
-  PRINTLN('!');
-      Chronos::DateTime utc(rtc.getEpoch());
-    Chronos::DateTime localTime = myTZ.toLocal(utc.asEpoch());
-
-  */
