@@ -7,7 +7,7 @@ class TimeZoneDecoder
 {
   public:
     TimeZoneDecoder();
-    void update(SecondsDecoder::BITDATA *data);
+    bool update(SecondsDecoder::BITDATA *data);
     bool getSecondsOffset(int16_t &offset);
     void setPrediction(bool isSummerTime);
 

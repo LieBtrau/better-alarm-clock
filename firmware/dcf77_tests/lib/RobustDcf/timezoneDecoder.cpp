@@ -2,12 +2,12 @@
 
 TimeZoneDecoder::TimeZoneDecoder() : _bin(NR_OR_TIMEZONES){};
 
-void TimeZoneDecoder::update(SecondsDecoder::BITDATA *data)
+bool TimeZoneDecoder::update(SecondsDecoder::BITDATA *data)
 {
     if (data->validBitCtr < SecondsDecoder::SECONDS_PER_MINUTE - STARTBIT)
     {
         //not enough valid samples in the data buffer
-        return;
+        return false;
     }
     int8_t score = 0;
     int8_t points = _isPredictionCEST ? 1 : -1;
@@ -15,6 +15,7 @@ void TimeZoneDecoder::update(SecondsDecoder::BITDATA *data)
     _bin.add(0, score);
     score += (data->bitShifter & CET_BIT) ? points : -points;
     _bin.add(1, score);
+    return true;
 }
 
 void TimeZoneDecoder::setPrediction(bool isSummerTime)
