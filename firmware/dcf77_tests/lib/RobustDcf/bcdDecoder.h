@@ -8,8 +8,8 @@ class BcdDecoder
 {
   public:
     BcdDecoder(uint8_t startBit, uint8_t bitWidth, bool withParity, uint8_t lowestValue, uint8_t highestValue, int8_t lockThreshold);
-    void update(SecondsDecoder::BITDATA* data);
-    void advanceTick();
+    bool update(SecondsDecoder::BITDATA* data);
+    void setPrediction(uint8_t prediction);
     bool getTime(uint8_t& value);
   private:
     uint8_t bcd2int(uint8_t bcd);

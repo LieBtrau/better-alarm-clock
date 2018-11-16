@@ -7,7 +7,7 @@ BcdDecoder::BcdDecoder(uint8_t startBit, uint8_t bitWidth, bool withParity, uint
 bool BcdDecoder::getTime(uint8_t &value)
 {
     uint8_t bin = _bin.maximum(_lockThreshold);
-    if(bin==0xFF)
+    if (bin == 0xFF)
     {
         return false;
     }
@@ -16,20 +16,25 @@ bool BcdDecoder::getTime(uint8_t &value)
     return true;
 }
 
-void BcdDecoder::advanceTick()
+void BcdDecoder::setPrediction(uint8_t prediction)
 {
-    _currentTick = _currentTick < _bin.size() - 1 ? _currentTick + 1 : 0;
+    uint8_t bin = _bin.maximum(_lockThreshold);
+    if (bin == 0xFF)
+    {
+        return;
+    }
+    _currentTick = (_bin.size() + prediction - _lowestValue - bin) % _bin.size();
 }
 
 /* Check validity of the data by correlating these with a calculated prediction value for each bin.
  * The matching score of the correlation gets added to the corresponding bin.
- */ 
-void BcdDecoder::update(SecondsDecoder::BITDATA* data)
+ */
+bool BcdDecoder::update(SecondsDecoder::BITDATA *data)
 {
-    if(data->validBitCtr<SecondsDecoder::SECONDS_PER_MINUTE-_startBit)
+    if (data->validBitCtr < SecondsDecoder::SECONDS_PER_MINUTE - _startBit)
     {
         //not enough valid samples in the data buffer
-        return;
+        return false;
     }
     uint64_t newData = data->bitShifter >> _startBit;
     newData &= (1 << (_bitWidth + (_withParity ? 1 : 0))) - 1;
@@ -43,6 +48,7 @@ void BcdDecoder::update(SecondsDecoder::BITDATA* data)
         int8_t score = ((_bitWidth + (_withParity ? 1 : 0)) >> 1) - hammingWeight(newData ^ prediction);
         _bin.add(i, score);
     }
+    return true;
 }
 
 uint8_t BcdDecoder::bcd2int(uint8_t bcd)
@@ -74,7 +80,6 @@ int BcdDecoder::hammingWeight(int i)
     i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
     return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
 }
-
 
 // binOffset = 0 to _datasize - 1;
 uint8_t BcdDecoder::getValueInRange(uint8_t binOffset)
