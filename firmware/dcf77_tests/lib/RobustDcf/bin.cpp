@@ -9,6 +9,14 @@ Bin::Bin(uint8_t dataSize, int8_t initVal) : _dataSize(dataSize)
     }
 }
 
+Bin::~Bin()
+{
+    if(_pData)
+    {
+        free(_pData);
+    }
+}
+
 void Bin::add(uint8_t index, int8_t N)
 {
     if (_pData[index] == INT8_MAX)
