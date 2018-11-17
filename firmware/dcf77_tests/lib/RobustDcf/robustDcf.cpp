@@ -70,6 +70,7 @@ bool RobustDcf::update(Chronos::EpochTime& unixEpoch)
     return true;
 }
 
+//Currently only minute resolution.
 bool RobustDcf::getUnixEpochTime(Chronos::EpochTime &unixEpoch)
 {
     uint8_t minute, hour, day, month, year;
