@@ -25,7 +25,7 @@ void RobustDcf::init()
     _pd.init(secondsTick);
 }
 
-bool RobustDcf::update(Chronos::EpochTime& unixEpoch)
+bool RobustDcf::update(Chronos::EpochTime &unixEpoch)
 {
     if (!secondTicked)
     {
@@ -34,31 +34,36 @@ bool RobustDcf::update(Chronos::EpochTime& unixEpoch)
     secondTicked = false;
     _sd.updateSeconds(syncMark, longPulse);
     uint8_t second;
-    if ((!_sd.getSecond(second)) || (second != 59))
+    SecondsDecoder::BITDATA data;
+    if ((!_sd.getSecond(second)) || (second != 59) || (!_sd.getTimeData(&data)))
     {
         return false;
     }
-    //get current data
-    SecondsDecoder::BITDATA data;
-    bool bSuccess = _sd.getTimeData(&data);
-    bSuccess &= _minutes.update(&data);
-    bSuccess &= _hours.update(&data);
-    bSuccess &= _days.update(&data);
-    bSuccess &= _months.update(&data);
-    bSuccess &= _years.update(&data);
-    bSuccess &= _tzd.update(&data);
+    return updateClock(&data , &unixEpoch);
+}
+
+bool RobustDcf::updateClock(SecondsDecoder::BITDATA *pdata, Chronos::EpochTime* pEpoch)
+{
+    bool bSuccess = true;
+    bSuccess &= _minutes.update(pdata);
+    bSuccess &= _hours.update(pdata);
+    bSuccess &= _days.update(pdata);
+    bSuccess &= _months.update(pdata);
+    bSuccess &= _years.update(pdata);
+    bSuccess &= _tzd.update(pdata);
     if (!bSuccess)
+    {
+        return false;
+    }
+    if (!getUnixEpochTime(pEpoch))
     {
         return false;
     }
     TimeChangeRule myDST = {"CEST", Last, Sun, Mar, 2, +120}; //Last Sunday of March, at 2AM, go to UTC+120min
     TimeChangeRule mySTD = {"CET", Last, Sun, Oct, 3, +60};   //Last Sunday of October, at 3AM, go to UTC+60min
     Timezone myTZ(myDST, mySTD);
-    if (!getUnixEpochTime(unixEpoch))
-    {
-        return false;
-    }
-    Chronos::DateTime localTime = myTZ.toLocal(unixEpoch);
+    Chronos::DateTime localTime = myTZ.toLocal(*pEpoch);
+
     //set prediction for next minute
     Chronos::DateTime predictionTime = localTime + Chronos::Span::Minutes(1);
     _minutes.setPrediction(predictionTime.minute());
@@ -71,7 +76,7 @@ bool RobustDcf::update(Chronos::EpochTime& unixEpoch)
 }
 
 //Currently only minute resolution.
-bool RobustDcf::getUnixEpochTime(Chronos::EpochTime &unixEpoch)
+bool RobustDcf::getUnixEpochTime(Chronos::EpochTime* pUnixEpoch)
 {
     uint8_t minute, hour, day, month, year;
     int16_t secondsOffset;
@@ -79,7 +84,7 @@ bool RobustDcf::getUnixEpochTime(Chronos::EpochTime &unixEpoch)
     {
         Chronos::DateTime localtime(tmYearToCalendar(y2kYearToTm(year)), month, day, hour, minute);
         _tzd.getSecondsOffset(secondsOffset);
-        unixEpoch = localtime.asEpoch() - secondsOffset;
+        *pUnixEpoch = localtime.asEpoch() - secondsOffset;
         return true;
     }
     return false;

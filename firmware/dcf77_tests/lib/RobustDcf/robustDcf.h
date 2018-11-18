@@ -8,15 +8,16 @@
 
 class RobustDcf
 {
-  public:
-    RobustDcf(const byte inputPin, const byte monitorPin = 0);
-    void init();
-    bool update(Chronos::EpochTime &unixEpoch);
+public:
+  RobustDcf(const byte inputPin, const byte monitorPin = 0);
+  void init();
+  bool update(Chronos::EpochTime &unixEpoch);
 
-  private:
-    bool getUnixEpochTime(Chronos::EpochTime &unixEpoch);
-    PhaseDetector _pd;
-    SecondsDecoder _sd;
-    BcdDecoder _minutes, _hours, _days, _months, _years;
-    TimeZoneDecoder _tzd;
+private:
+  bool getUnixEpochTime(Chronos::EpochTime* unixEpoch);
+  bool updateClock(SecondsDecoder::BITDATA *data, Chronos::EpochTime *pEpoch);
+  PhaseDetector _pd;
+  SecondsDecoder _sd;
+  BcdDecoder _minutes, _hours, _days, _months, _years;
+  TimeZoneDecoder _tzd;
 };
