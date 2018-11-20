@@ -25,6 +25,7 @@ void RobustDcf::init()
     _pd.init(secondsTick);
 }
 
+//Becomes true once a minute (on second 59) to let you know that unixEpoch has been updated.
 bool RobustDcf::update(Chronos::EpochTime &unixEpoch)
 {
     if (!secondTicked)
