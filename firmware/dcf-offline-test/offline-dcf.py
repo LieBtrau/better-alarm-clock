@@ -1,5 +1,12 @@
-# https://www.dcf77logs.de/logs
-# https://www.dcf77logs.de/ereignisse
+# This program parses ".log"-files that have been downloaded from https://www.dcf77logs.de/logs and https://www.dcf77logs.de/ereignisse.
+# The logging file contains the DCF-pattern and the corresponding date string.
+# The DCF-pattern is converted to a number.
+# The date string is converted to a UTC time stamp.
+# 
+# The numeric version of the DCF-pattern from the log file is sent over the serial port.  The DCF-decoder will reply with the UTC time stamp.
+# This program will verify if the returned time stamp matches with the given time stamp from the DCF-pattern.
+#
+# More info on Python datetime:
 # https://medium.com/@eleroy/10-things-you-need-to-know-about-date-and-time-in-python-with-datetime-pytz-dateutil-timedelta-309bfbafb3f7
 
 import serial
@@ -18,12 +25,13 @@ def datestring2unixepoch(dtString):
         tOffset='+02:00'
     elif data[3]=='WZ':
         tOffset='+01:00'
+    # Converting date & time info to ISO8601 string (that can reliably be converted to a datetime)
     iso8601time =  str(int(date[2])+2000)+'-'+ date[1] +'-'+ date[0]+'T'+time[0]+':'+time[1]+':00'+tOffset
     d = dateutil.parser.parse(iso8601time)
     d = d.replace(tzinfo=pytz.UTC) - d.utcoffset()
     epoch = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.UTC)
-    ts = (d - epoch).total_seconds()
-    return ts
+    utcTimestamp = (d - epoch).total_seconds()
+    return utcTimestamp
 
 
 def readFile(filename):
@@ -50,8 +58,8 @@ def parseLines(lines):
                     retList.append(tup)
     return retList
 
-
-fileLines = readFile('Winterzeit.log')
+fileLines = readFile('DcfLog_20181124.log')
+# fileLines = readFile('Winterzeit.log')
 # fileLines = readFile('Sommerzeit.log')
 # fileLines = readFile('Jahreswechsel.log')
 # fileLines = readFile('DcfLog_20181108.log')
