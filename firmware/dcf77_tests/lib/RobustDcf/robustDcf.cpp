@@ -40,10 +40,10 @@ bool RobustDcf::update(Chronos::EpochTime &unixEpoch)
     {
         return false;
     }
-    return updateClock(&data , &unixEpoch);
+    return updateClock(&data, &unixEpoch);
 }
 
-bool RobustDcf::updateClock(SecondsDecoder::BITDATA *pdata, Chronos::EpochTime* pEpoch)
+bool RobustDcf::updateClock(SecondsDecoder::BITDATA *pdata, Chronos::EpochTime *pEpoch)
 {
     bool bSuccess = true;
     bSuccess &= _minutes.update(pdata);
@@ -72,19 +72,18 @@ bool RobustDcf::updateClock(SecondsDecoder::BITDATA *pdata, Chronos::EpochTime* 
     _days.setPrediction(predictionTime.day());
     _months.setPrediction(predictionTime.month());
     _years.setPrediction(tmYearToY2k(CalendarYrToTm(predictionTime.year())));
-    _tzd.setPrediction(myTZ.locIsDST(predictionTime.asEpoch()));
     return true;
 }
 
 //Currently only minute resolution.
-bool RobustDcf::getUnixEpochTime(Chronos::EpochTime* pUnixEpoch)
+bool RobustDcf::getUnixEpochTime(Chronos::EpochTime *pUnixEpoch)
 {
     uint8_t minute, hour, day, month, year;
     int16_t secondsOffset;
     if (_minutes.getTime(minute) && _hours.getTime(hour) && _days.getTime(day) && _months.getTime(month) && _years.getTime(year))
     {
+        _tzd.getSecondsOffset(secondsOffset, hour, minute);
         Chronos::DateTime localtime(tmYearToCalendar(y2kYearToTm(year)), month, day, hour, minute);
-        _tzd.getSecondsOffset(secondsOffset);
         *pUnixEpoch = localtime.asEpoch() - secondsOffset;
         return true;
     }

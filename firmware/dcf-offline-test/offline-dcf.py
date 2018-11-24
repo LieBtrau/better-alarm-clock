@@ -14,11 +14,13 @@ def datestring2unixepoch(dtString):
     data = dtString.split()
     date = data[1].split('.')
     time = data[2].split(':')
-    d = datetime.datetime(int(date[2])+2000, int(date[1]), int(date[0]), int(time[0]), int(time[1]))
-    utc = pytz.UTC
-    amsterdam = pytz.timezone('Europe/Amsterdam')
-    d = amsterdam.localize(d)
-    d = d.astimezone(utc)
+    if data[3]=='SZ':
+        tOffset='+02:00'
+    elif data[3]=='WZ':
+        tOffset='+01:00'
+    iso8601time =  str(int(date[2])+2000)+'-'+ date[1] +'-'+ date[0]+'T'+time[0]+':'+time[1]+':00'+tOffset
+    d = dateutil.parser.parse(iso8601time)
+    d = d.replace(tzinfo=pytz.UTC) - d.utcoffset()
     epoch = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.UTC)
     ts = (d - epoch).total_seconds()
     return ts
@@ -49,10 +51,11 @@ def parseLines(lines):
     return retList
 
 
-# fileLines = readFile('DcfLog_20181111.log')
-fileLines = readFile('DcfLog_20181108.log')
+fileLines = readFile('Winterzeit.log')
+# fileLines = readFile('Sommerzeit.log')
+# fileLines = readFile('Jahreswechsel.log')
+# fileLines = readFile('DcfLog_20181108.log')
 pData = parseLines(fileLines)
-# print pData
 
 ser = serial.Serial(
     port='/dev/ttyUSB0',
@@ -63,7 +66,7 @@ ser = serial.Serial(
 )
 ser.isOpen
 
-print "Make sure to reset the BluePill before running this test."
+print "\nMake sure to reset the BluePill before running this test."
 succes = 0
 for tup in pData:
     ser.write(hex(tup[0])+'Z')
@@ -72,7 +75,8 @@ for tup in pData:
         succes = succes+1
     else:
         print "Error: Soll: " + str(tup[1]) + "\tIst: " + str(
-            readEpoch) + "\tDifference : " + str(tup[1] - readEpoch) + '\t' + tup[2]
-        break
-print succes
+            readEpoch) + "\tDifference : " + str(readEpoch - tup[1]) + '\t' + tup[2] + '\t' + str(tup[0])
+    # print str(tup[0])+'\t'+str(tup[1])+'\t'+str(tup[2])
+    # print str(tup[0])+','
+print str(succes) + ' minutes ok of ' + str(len(pData)) + ' minutes'
 ser.close()
