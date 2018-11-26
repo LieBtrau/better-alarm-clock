@@ -6,10 +6,9 @@
 void printDateTime();
 void alarmMatch();
 
-/* Get the rtc object */
 unsigned long startUtc = 0;
 
-/* Changes by Christoph Tack: adding Serial interface, so that utc time can be sent to stm32 and time can be asked back.
+/*  adding Serial interface, so that utc time can be sent to stm32 and time can be asked back.
  *  Linux command line:
  *  Configure Serial port : stty -F /dev/ttyUSB0 speed 115200 cs8 -cstopb -parenb raw
  *  To send UTC to the STM32, open a 2nd terminal and execute: echo -ne $(date +%s) > /dev/ttyUSB0
@@ -34,35 +33,34 @@ void setup()
     //End of March switch from STD to DST
     //1553992200    Sunday, March 31, 2019 1:30:00 AM GMT+01:00
     //1553995800    Sunday, March 31, 2019 3:30:00 AM GMT+02:00
-    rtc_set_count(1553992200);
     printDateTime();
     Serial1.println("Ready to receive UTC");
 }
 
 void loop()
 {
-    while (Serial1.available() > 0)
-    {
-        unsigned long newutc = Serial1.parseInt();
-        if (newutc)
-        {
-            if (!startUtc)
-            {
-                startUtc = newutc;
-                rtc_set_count(newutc);
-                printDateTime();
-                rtc_set_alarm(rtc_get_count() + 10);
-                rtc_attach_interrupt(RTC_ALARM_SPECIFIC_INTERRUPT, alarmMatch);
-            }
-            else
-            {
-                Serial1.print("PC epoch - RTC epoch = ");
-                Serial1.println(newutc - rtc_get_count());
-                Serial1.print("Number of seconds RTC is running: ");
-                Serial1.println(newutc - startUtc);
-            }
-        }
-    }
+    // while (Serial1.available() > 0)
+    // {
+    //     unsigned long newutc = Serial1.parseInt();
+    //     if (newutc)
+    //     {
+    //         if (!startUtc)
+    //         {
+    //             startUtc = newutc;
+    //             rtc_set_count(newutc);
+    //             printDateTime();
+    //             rtc_set_alarm(rtc_get_count() + 10);
+    //             rtc_attach_interrupt(RTC_ALARM_SPECIFIC_INTERRUPT, alarmMatch);
+    //         }
+    //         else
+    //         {
+    //             Serial1.print("PC epoch - RTC epoch = ");
+    //             Serial1.println(newutc - rtc_get_count());
+    //             Serial1.print("Number of seconds RTC is running: ");
+    //             Serial1.println(newutc - startUtc);
+    //         }
+    //     }
+    // }
 }
 
 void printDateTime()
