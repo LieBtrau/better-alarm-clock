@@ -1,21 +1,19 @@
 #include "stm32rtcwrapper.h"
-
-//don't make static, because it will no longer work
-STM32RTC& rtc = STM32RTC::getInstance();
+#include <utility/rtc_util.h>
 
 void Stm32RtcWrapper::begin()
 {
-    rtc.setClockSource(STM32RTC::RTC_LSE_CLOCK);
-    rtc.begin(STM32RTC::RTC_HOUR_24); // initialize RTC 24H format
+    rtc_init(RTCSEL_LSE);
+    rtc_set_prescaler_load(0x7fff);
 }
 
 time_t Stm32RtcWrapper::get()
 {
-    return rtc.getEpoch();
+    return rtc_get_count();
 }
 
 bool Stm32RtcWrapper::set(time_t t)
 {
-    rtc.setEpoch(t);
+    rtc_set_count(t);
     return true;
 }
