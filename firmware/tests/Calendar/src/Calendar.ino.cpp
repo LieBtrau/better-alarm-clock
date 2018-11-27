@@ -26,49 +26,51 @@
 #include "alarmcalendar.h"
 
 // the serial device specifics
-#define SERIAL_BAUDRATE    9600
-#define SERIAL_DEVICE     Serial
+#define SERIAL_BAUDRATE 9600
+#define SERIAL_DEVICE Serial
 
 Stm32RtcWrapper stmRtc;
 AlarmCalendar ac;
 
-#define PRINT(...)  SERIAL_DEVICE.print(__VA_ARGS__)
-#define PRINTLN(...)  SERIAL_DEVICE.println(__VA_ARGS__)
+#define PRINT(...) SERIAL_DEVICE.print(__VA_ARGS__)
+#define PRINTLN(...) SERIAL_DEVICE.println(__VA_ARGS__)
 
-void setup() {
-    while (!SERIAL_DEVICE);
+void setup()
+{
+    while (!SERIAL_DEVICE)
+        ;
     SERIAL_DEVICE.begin(SERIAL_BAUDRATE);
 
     stmRtc.begin();
-    setSyncProvider(stmRtc.get);   // the function to get the time from the RTC
-    if(timeStatus()!= timeSet)
+    setSyncProvider(stmRtc.get); // the function to get the time from the RTC
+    if (timeStatus() != timeSet)
         Serial.println("Unable to sync with the RTC");
     else
         Serial.println("RTC has set the system time");
 
     // printTo is a convenience method useful for debugging
     // in real life, you'd use accessors and format it however you like.
-    Chronos::DateTime::now().printTo(SERIAL_DEVICE);//Saturday, Jan 1 2000
+    Chronos::DateTime::now().printTo(SERIAL_DEVICE); //Saturday, Jan 1 2000
 
-    ac.addDailyEvent(AlarmCalendar::ALARM1, 9,0);
+    ac.addDailyEvent(AlarmCalendar::ALARM1, 9, 0);
     Chronos::DateTime nextEventStart;
-    if(ac.getStartOfNextEvent(nextEventStart))
+    if (ac.getStartOfNextEvent(nextEventStart))
     {
         PRINTLN();
         nextEventStart.printTo(SERIAL_DEVICE);
         PRINT('\t');
         PRINTLN(nextEventStart.asEpoch());
     }
-    ac.addOnceOnlyEvent(AlarmCalendar::ALARM1, Chronos::Weekday::Thursday, 10,0);
-    if(ac.getStartOfNextEvent(nextEventStart))
+    ac.addOnceOnlyEvent(AlarmCalendar::ALARM1, Chronos::Weekday::Thursday, 10, 0);
+    if (ac.getStartOfNextEvent(nextEventStart))
     {
         PRINTLN();
         nextEventStart.printTo(SERIAL_DEVICE);
         PRINT('\t');
         PRINTLN(nextEventStart.asEpoch());
     }
-    ac.addWeeklyEvent(AlarmCalendar::ALARM1, Chronos::Weekday::Thursday, 11,0);
-    if(ac.getStartOfNextEvent(nextEventStart))
+    ac.addWeeklyEvent(AlarmCalendar::ALARM1, Chronos::Weekday::Thursday, 11, 0);
+    if (ac.getStartOfNextEvent(nextEventStart))
     {
         PRINTLN();
         nextEventStart.printTo(SERIAL_DEVICE);
@@ -76,9 +78,7 @@ void setup() {
         PRINTLN(nextEventStart.asEpoch());
     }
 }
-
 
 void loop()
 {
 }
-
