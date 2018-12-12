@@ -1,17 +1,24 @@
-#ifndef ALARMCALENDAR_H
-#define ALARMCALENDAR_H
-
+#pragma once
 #include <Time.h>
 #include <Chronos.h>
 
-#define CALENDAR_MAX_NUM_EVENTS   14
-DefineCalendarType(Calendar, CALENDAR_MAX_NUM_EVENTS);
+typedef enum
+{
+    ALARM1,
+    ALARM2,
+    MAX_ALARM
+} ALARMNR;
+const byte EVENTSLOTS_PER_ALARM = 7;
+const byte MAX_NR_OF_EVENTS = MAX_ALARM * EVENTSLOTS_PER_ALARM + 1;
+const byte SYNC_EVENT = MAX_NR_OF_EVENTS;
+DefineCalendarType(Calendar, MAX_NR_OF_EVENTS);
 
 class AlarmCalendar
 {
-public:
+  public:
+    typedef void (*alarmCallBack)(ALARMNR nr);
+    typedef bool (*syncCallBack)(Chronos::EpochTime &epoch);
     AlarmCalendar();
-    typedef enum{ALARM1, ALARM2, MAX_ALARM}ALARMNR;
     bool addOnceOnlyEvent(ALARMNR nr, Chronos::Weekday::Day aDay, Chronos::Hours hours, Chronos::Minutes minutes);
     bool addDailyEvent(ALARMNR nr, Chronos::Hours hours, Chronos::Minutes minutes);
     bool addWeeklyEvent(ALARMNR nr, Chronos::Weekday::Day aDay, Chronos::Hours hours, Chronos::Minutes minutes);
@@ -19,8 +26,12 @@ public:
     bool removeDailyEvent(ALARMNR nr);
     bool removeWeeklyEvent(ALARMNR nr, Chronos::Weekday::Day aDay);
     bool getStartOfNextEvent(Chronos::DateTime &returnDT);
-private:
-     typedef enum
+    void setTimeSync(Chronos::Hours dailySyncHour, syncCallBack function);
+    void setAlarmCallBack(alarmCallBack function);
+    void checkForOngoingEvents();
+
+  private:
+    typedef enum
     {
         Invalid,
         OnceOnly,
@@ -33,10 +44,11 @@ private:
         WeeklySaturday,
         WeeklySunday,
         MAX_AlarmType
-    }AlarmType;
+    } AlarmType;
     AlarmType getAlarmType(Chronos::Weekday::Day aDay);
+    byte getEventSlot(ALARMNR alarm, AlarmType type);
     Calendar _MyCalendar;
     Chronos::Span::Minutes _defaultSpan;
+    alarmCallBack _alarmCall = nullptr;
+    syncCallBack _syncCall = nullptr;
 };
-
-#endif // ALARMCALENDAR_H

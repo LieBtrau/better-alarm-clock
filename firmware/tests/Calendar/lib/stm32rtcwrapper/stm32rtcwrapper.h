@@ -1,10 +1,17 @@
 #pragma once
-#include <Time.h>
+#include <Chronos.h>
 
 class Stm32RtcWrapper
 {
-public:
+  public:
+    Stm32RtcWrapper();
+    typedef bool (*getExternalTime)(Chronos::EpochTime &epoch);
     void begin();
-    static time_t get();
-    static bool set(time_t t);
+    Chronos::EpochTime get();
+    bool sync();
+    void setSyncProvider(getExternalTime getTimeFunction);
+
+  private:
+    getExternalTime _getTimePtr = nullptr;
+    bool _isTimeSynced = false;
 };

@@ -4,7 +4,7 @@
  *      Author: Pat Deegan
  *      Part of the Chronos library project
  *      Copyright (C) 2016 Pat Deegan, http://psychogenic.com
- *  Modified by Christoph Tack on, Sep 30, 2018
+ *  Modified by Christoph Tack, 2018
  *
  *  This file is part of the Chronos embedded datetime/calendar library.
  *
@@ -24,61 +24,81 @@
 
 #include "stm32rtcwrapper.h"
 #include "alarmcalendar.h"
-
-// the serial device specifics
-#define SERIAL_BAUDRATE 9600
-#define SERIAL_DEVICE Serial
+#include "source/robustDcf.h"
 
 Stm32RtcWrapper stmRtc;
 AlarmCalendar ac;
+HardwareSerial* ser1=&Serial1;
+RobustDcf rd(PB6, PC13);
 
-#define PRINT(...) SERIAL_DEVICE.print(__VA_ARGS__)
-#define PRINTLN(...) SERIAL_DEVICE.println(__VA_ARGS__)
+bool getDcfTime(Chronos::EpochTime& epoch)
+{
+    return rd.update(epoch);
+}
+
+time_t getRtcTime()
+{
+    return stmRtc.get();
+}
+
+void alarmCallback(ALARMNR nr)
+{
+    ser1->println("Alarm is active");
+}
 
 void setup()
 {
-    while (!SERIAL_DEVICE)
+    while (!*ser1)
         ;
-    SERIAL_DEVICE.begin(SERIAL_BAUDRATE);
-
+    ser1->begin(115200);
+    rd.init();
     stmRtc.begin();
-    setSyncProvider(stmRtc.get); // the function to get the time from the RTC
+    stmRtc.setSyncProvider(getDcfTime);
+    setSyncProvider(getRtcTime); // the function to get the time from the RTC
     if (timeStatus() != timeSet)
-        Serial.println("Unable to sync with the RTC");
+        ser1->println("Unable to sync with the RTC");
     else
-        Serial.println("RTC has set the system time");
+        ser1->println("RTC has set the system time");
 
     // printTo is a convenience method useful for debugging
     // in real life, you'd use accessors and format it however you like.
-    Chronos::DateTime::now().printTo(SERIAL_DEVICE); //Saturday, Jan 1 2000
+    Chronos::DateTime::now().printTo(*ser1); //Saturday, Jan 1 2000
 
-    ac.addDailyEvent(AlarmCalendar::ALARM1, 9, 0);
+    ac.addDailyEvent(ALARM1, 9, 0);
     Chronos::DateTime nextEventStart;
     if (ac.getStartOfNextEvent(nextEventStart))
     {
-        PRINTLN();
-        nextEventStart.printTo(SERIAL_DEVICE);
-        PRINT('\t');
-        PRINTLN(nextEventStart.asEpoch());
+        ser1->println();
+        nextEventStart.printTo(*ser1);
+        ser1->print('\t');
+        ser1->println(nextEventStart.asEpoch());
     }
-    ac.addOnceOnlyEvent(AlarmCalendar::ALARM1, Chronos::Weekday::Thursday, 10, 0);
+    ac.addOnceOnlyEvent(ALARM1, Chronos::Weekday::Thursday, 10, 0);
     if (ac.getStartOfNextEvent(nextEventStart))
     {
-        PRINTLN();
-        nextEventStart.printTo(SERIAL_DEVICE);
-        PRINT('\t');
-        PRINTLN(nextEventStart.asEpoch());
+        ser1->println();
+        nextEventStart.printTo(*ser1);
+        ser1->print('\t');
+        ser1->println(nextEventStart.asEpoch());
     }
-    ac.addWeeklyEvent(AlarmCalendar::ALARM1, Chronos::Weekday::Thursday, 11, 0);
+    ac.addWeeklyEvent(ALARM1, Chronos::Weekday::Thursday, 11, 0);
     if (ac.getStartOfNextEvent(nextEventStart))
     {
-        PRINTLN();
-        nextEventStart.printTo(SERIAL_DEVICE);
-        PRINT('\t');
-        PRINTLN(nextEventStart.asEpoch());
+        ser1->println();
+        nextEventStart.printTo(*ser1);
+        ser1->print('\t');
+        ser1->println(nextEventStart.asEpoch());
     }
+    ac.setAlarmCallBack(alarmCallback);
+    ac.setTimeSync(2, getDcfTime);
 }
 
 void loop()
 {
+    if (timeStatus() != timeSet)
+    {
+        Chronos::EpochTime epoch;
+        rd.update(epoch);
+    }
+    ac.checkForOngoingEvents();
 }
