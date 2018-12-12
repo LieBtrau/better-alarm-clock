@@ -5,6 +5,10 @@
 		},
 		{
 			"path": "Calendar"
+		},
+		{
+			"path": "NokiaLCD5110/NokiaLCD5110",
+			"name": "NokiaLCD5110"
 		}
 	],
 	"settings": {
