@@ -1,0 +1,24 @@
+{
+	"folders": [
+		{
+			"path": "SimpleRTC"
+		},
+		{
+			"path": "Calendar"
+		},
+		{
+			"path": "NokiaLCD5110/NokiaLCD5110",
+			"name": "NokiaLCD5110"
+		},
+		{
+			"path": "menu/menu",
+			"name": "menu"
+		}
+	],
+	"settings": {
+		"terminal.integrated.env.linux": {
+			"PATH": "/home/christoph/.platformio/penv/bin:/home/christoph/.platformio/penv:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/christoph/.local/bin:/home/christoph/bin",
+			"PLATFORMIO_CALLER": "vscode"
+		}
+	}
+}

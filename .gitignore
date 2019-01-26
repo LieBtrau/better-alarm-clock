@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+
+# Additional info
+info
+*.log
+
+README
+*.json
+.travis.yml
