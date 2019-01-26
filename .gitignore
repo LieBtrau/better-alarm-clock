@@ -34,3 +34,7 @@
 # Additional info
 info
 *.log
+
+README
+*.json
+.travis.yml
