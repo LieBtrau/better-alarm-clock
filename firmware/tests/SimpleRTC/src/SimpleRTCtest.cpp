@@ -1,12 +1,12 @@
-//More info : http://embedded-lab.com/blog/stm32s-internal-rtc/
 #include "Chronos.h"
-#include <Timezone.h> // https://github.com/JChristensen/Timezone
-#include <utility/rtc_util.h>
+#include <Timezone.h>
+#include <STM32RTC.h>
 
 void printDateTime();
-void alarmMatch();
+void alarmMatch(void *data);
 
 unsigned long startUtc = 0;
+STM32RTC& rtc = STM32RTC::getInstance();
 
 /*  adding Serial interface, so that utc time can be sent to stm32 and time can be asked back.
  *  Linux command line:
@@ -21,11 +21,11 @@ Timezone myTZ(myDST, mySTD);
 
 void setup()
 {
-    Serial1.begin(115200);
-    while (!Serial1)
+    Serial.begin(115200);
+    while (!Serial)
         ;
-    rtc_init(RTCSEL_LSE);
-    rtc_set_prescaler_load(0x7fff);
+    rtc.setClockSource(STM32RTC::LSE_CLOCK);
+    rtc.begin();
     //End of October switch from DST to STD
     //1540686780    Sunday, October 28, 2018 2:33:00 AM GMT+02:00
     //1540690380    Sunday, October 28, 2018 2:33:00 AM GMT+01:00
@@ -34,47 +34,46 @@ void setup()
     //1553992200    Sunday, March 31, 2019 1:30:00 AM GMT+01:00
     //1553995800    Sunday, March 31, 2019 3:30:00 AM GMT+02:00
     printDateTime();
-    Serial1.println("Ready to receive UTC");
+    Serial.println("Ready to receive UTC");
 }
 
 void loop()
 {
-    // while (Serial1.available() > 0)
-    // {
-    //     unsigned long newutc = Serial1.parseInt();
-    //     if (newutc)
-    //     {
-    //         if (!startUtc)
-    //         {
-    //             startUtc = newutc;
-    //             rtc_set_count(newutc);
-    //             printDateTime();
-    //             rtc_set_alarm(rtc_get_count() + 10);
-    //             rtc_attach_interrupt(RTC_ALARM_SPECIFIC_INTERRUPT, alarmMatch);
-    //         }
-    //         else
-    //         {
-    //             Serial1.print("PC epoch - RTC epoch = ");
-    //             Serial1.println(newutc - rtc_get_count());
-    //             Serial1.print("Number of seconds RTC is running: ");
-    //             Serial1.println(newutc - startUtc);
-    //         }
-    //     }
-    // }
+    while (Serial.available() > 0)
+    {
+        unsigned long newutc = Serial.parseInt();
+        if (newutc)
+        {
+            if (!startUtc)
+            {
+                startUtc = newutc;
+                rtc.setEpoch(newutc);
+                printDateTime();
+                rtc.setAlarmEpoch(rtc.getEpoch() + 10);
+                rtc.attachInterrupt(alarmMatch);
+            }
+            else
+            {
+                Serial.print("PC epoch - RTC epoch = ");
+                Serial.println(newutc - rtc.getEpoch());
+                Serial.print("Number of seconds RTC is running: ");
+                Serial.println(newutc - startUtc);
+            }
+        }
+    }
 }
 
 void printDateTime()
 {
-    Serial1.print(rtc_get_count());
-    Serial1.print("\t");
     // Print date...
-    Chronos::DateTime utc(rtc_get_count());
+    Chronos::DateTime utc(rtc.getEpoch());
     Chronos::DateTime localTime = myTZ.toLocal(utc.asEpoch());
-    localTime.printTo(Serial1);
-    Serial1.println();
+    localTime.printTo(Serial);
+    Serial.println();
 }
 
-void alarmMatch()
+void alarmMatch(void *data)
 {
-    Serial1.println("Alarm Match!");
+    UNUSED(data);
+    Serial.println("Alarm Match!");
 }
