@@ -28,7 +28,7 @@
 
 Stm32RtcWrapper stmRtc;
 AlarmCalendar ac;
-HardwareSerial* ser1=&Serial1;
+HardwareSerial* ser1=&Serial;
 RobustDcf rd(PB6, PC13);
 
 bool getDcfTime(Chronos::EpochTime& epoch)
@@ -53,8 +53,8 @@ void setup()
     ser1->begin(115200);
     rd.init();
     stmRtc.begin();
-    stmRtc.setSyncProvider(getDcfTime);
     setSyncProvider(getRtcTime); // the function to get the time from the RTC
+    delay(2000);
     if (timeStatus() != timeSet)
         ser1->println("Unable to sync with the RTC");
     else
@@ -62,9 +62,9 @@ void setup()
 
     // printTo is a convenience method useful for debugging
     // in real life, you'd use accessors and format it however you like.
-    Chronos::DateTime::now().printTo(*ser1); //Saturday, Jan 1 2000
+    Chronos::DateTime::now().printTo(*ser1); //Jan 1 1970
 
-    ac.addDailyEvent(ALARM1, 9, 0);
+    ac.addDailyEvent(ALARM1, 21, 0);
     Chronos::DateTime nextEventStart;
     if (ac.getStartOfNextEvent(nextEventStart))
     {
@@ -98,7 +98,17 @@ void loop()
     if (timeStatus() != timeSet)
     {
         Chronos::EpochTime epoch;
-        rd.update(epoch);
+        if(rd.update(epoch))
+        {
+            ser1->println("Time updated.");
+            if(stmRtc.setEpoch(epoch))
+            {
+                setTime(epoch);//Force set time, otherwise it will only be set after 300s
+                Chronos::DateTime::now().printTo(*ser1);
+            }
+        }
+    }else
+    {
+        ac.checkForOngoingEvents();
     }
-    ac.checkForOngoingEvents();
 }

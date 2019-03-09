@@ -1,17 +1,14 @@
 #pragma once
 #include <Chronos.h>
 
+//No sync functionality in this class, because the RTC will be updated by DCF.  DCF can't be polled.  DCF pushes its time once a minute.
 class Stm32RtcWrapper
 {
   public:
     Stm32RtcWrapper();
-    typedef bool (*getExternalTime)(Chronos::EpochTime &epoch);
     void begin();
     Chronos::EpochTime get();
-    bool sync();
-    void setSyncProvider(getExternalTime getTimeFunction);
-
+    bool setEpoch(Chronos::EpochTime epoch);
   private:
-    getExternalTime _getTimePtr = nullptr;
     bool _isTimeSynced = false;
 };
