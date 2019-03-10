@@ -17,28 +17,44 @@ void AlarmCalendar::setAlarmCallBack(alarmCallBack function)
 
 bool AlarmCalendar::addOnceOnlyEvent(ALARMNR nr, Chronos::Weekday::Day aDay, Chronos::Hours hours, Chronos::Minutes minutes)
 {
-    _MyCalendar.clear();
+    removeAllAlarmEvents(nr);
 
     Chronos::Mark::Weekly everyWeekMark(aDay, hours, minutes);
     Chronos::DateTime nowTime(Chronos::DateTime::now());
     Chronos::DateTime nextOccurence = nowTime.next(everyWeekMark);
-    return _MyCalendar.add(Chronos::Event(getEventSlot(nr, OnceOnly), nextOccurence, _defaultSpan));
+    return _MyCalendar.add(Chronos::Event(calcEventSlot(nr, OnceOnly), nextOccurence, _defaultSpan));
 }
 
 bool AlarmCalendar::addDailyEvent(ALARMNR nr, Chronos::Hours hours, Chronos::Minutes minutes)
 {
-    _MyCalendar.clear();
+    removeAllAlarmEvents(nr);
 
-    return _MyCalendar.add(Chronos::Event(getEventSlot(nr, Daily), Chronos::Mark::Daily(hours, minutes), _defaultSpan));
+    return _MyCalendar.add(Chronos::Event(calcEventSlot(nr, Daily), Chronos::Mark::Daily(hours, minutes), _defaultSpan));
 }
 
 bool AlarmCalendar::addWeeklyEvent(ALARMNR nr, Chronos::Weekday::Day aDay, Chronos::Hours hours, Chronos::Minutes minutes)
 {
-    _MyCalendar.remove(getEventSlot(nr, OnceOnly));
-    _MyCalendar.remove(getEventSlot(nr, Daily));
-    _MyCalendar.remove(getEventSlot(nr, getAlarmType(aDay)));
+    _MyCalendar.remove(calcEventSlot(nr, OnceOnly));
+    _MyCalendar.remove(calcEventSlot(nr, Daily));
 
-    return _MyCalendar.add(Chronos::Event(getEventSlot(nr, getAlarmType(aDay)), Chronos::Mark::Weekly(aDay, hours, minutes), _defaultSpan));
+    return _MyCalendar.add(Chronos::Event(calcEventSlot(nr, getAlarmType(aDay)), Chronos::Mark::Weekly(aDay, hours, minutes), _defaultSpan));
+}
+
+bool AlarmCalendar::removeWeeklyEvent(ALARMNR nr, Chronos::Weekday::Day aDay)
+{
+    return _MyCalendar.remove(calcEventSlot(nr, getAlarmType(aDay)));
+}
+
+bool AlarmCalendar::removeAllAlarmEvents(ALARMNR nr)
+{
+    for (byte i = 1; i <= EVENTSLOTS_PER_ALARM; i++)
+    {
+        if(!_MyCalendar.remove(nr * EVENTSLOTS_PER_ALARM + i))
+        {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool AlarmCalendar::getStartOfNextEvent(Chronos::DateTime &returnDT)
@@ -52,22 +68,19 @@ void AlarmCalendar::checkForOngoingEvents()
     byte numOngoing = _MyCalendar.listOngoing(MAX_NR_OF_EVENTS, occurrenceList, Chronos::DateTime::now());
     for (byte i = 0; i < numOngoing; i++)
     {
-        if (_alarmCall)
+        if (occurrenceList[i].id == SYNC_EVENT)
         {
-            if (occurrenceList[i].id == SYNC_EVENT)
+            if (_syncCall != nullptr)
             {
-                if (_syncCall != nullptr)
-                {
-                    Chronos::EpochTime epoch;
-                    _syncCall(epoch);
-                }
+                Chronos::EpochTime epoch;
+                _syncCall(epoch);
             }
-            else
+        }
+        else
+        {
+            if (_alarmCall != nullptr)
             {
-                if (_alarmCall != nullptr)
-                {
-                    _alarmCall(occurrenceList[i].id > EVENTSLOTS_PER_ALARM ? ALARM2 : ALARM1);
-                }
+                _alarmCall(occurrenceList[i].id > EVENTSLOTS_PER_ALARM ? ALARM2 : ALARM1);
             }
         }
     }
@@ -97,7 +110,7 @@ AlarmCalendar::AlarmType AlarmCalendar::getAlarmType(Chronos::Weekday::Day aDay)
 }
 
 //EventSlot numbers start at 1, not at 0
-byte AlarmCalendar::getEventSlot(ALARMNR alarm, AlarmType type)
+byte AlarmCalendar::calcEventSlot(ALARMNR alarm, AlarmType type)
 {
     byte offset = 0;
     switch (type)

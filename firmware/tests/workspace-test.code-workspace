@@ -5,6 +5,10 @@
 		},
 		{
 			"path": "Calendar"
+		},
+		{
+			"path": "mp3",
+			"name": "mp3"
 		}
 	],
 	"settings": {

@@ -22,8 +22,7 @@ class AlarmCalendar
     bool addOnceOnlyEvent(ALARMNR nr, Chronos::Weekday::Day aDay, Chronos::Hours hours, Chronos::Minutes minutes);
     bool addDailyEvent(ALARMNR nr, Chronos::Hours hours, Chronos::Minutes minutes);
     bool addWeeklyEvent(ALARMNR nr, Chronos::Weekday::Day aDay, Chronos::Hours hours, Chronos::Minutes minutes);
-    bool removeOnceOnlyEvent(ALARMNR nr);
-    bool removeDailyEvent(ALARMNR nr);
+    bool removeAllAlarmEvents(ALARMNR nr);
     bool removeWeeklyEvent(ALARMNR nr, Chronos::Weekday::Day aDay);
     bool getStartOfNextEvent(Chronos::DateTime &returnDT);
     void setTimeSync(Chronos::Hours dailySyncHour, syncCallBack function);
@@ -46,7 +45,7 @@ class AlarmCalendar
         MAX_AlarmType
     } AlarmType;
     AlarmType getAlarmType(Chronos::Weekday::Day aDay);
-    byte getEventSlot(ALARMNR alarm, AlarmType type);
+    byte calcEventSlot(ALARMNR alarm, AlarmType type);
     Calendar _MyCalendar;
     Chronos::Span::Minutes _defaultSpan;
     alarmCallBack _alarmCall = nullptr;
