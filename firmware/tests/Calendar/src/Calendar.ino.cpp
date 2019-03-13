@@ -26,24 +26,42 @@
 #include "alarmcalendar.h"
 #include "source/robustDcf.h"
 
-Stm32RtcWrapper stmRtc;
-AlarmCalendar ac;
+//Stm32RtcWrapper stmRtc;
+AlarmCalendar ac1;
+//AlarmCalendar syncCalendar;
 HardwareSerial* ser1=&Serial;
-RobustDcf rd(PB6, PC13);
+//RobustDcf rd(PB6, PC13);
+static volatile bool alarmIsActive=false;
 
-bool getDcfTime(Chronos::EpochTime& epoch)
-{
-    return rd.update(epoch);
-}
+// bool getDcfTime(Chronos::EpochTime& epoch)
+// {
+//     if(!rd.update(epoch))
+//     {
+//         return false;
+//     }
+//     ser1->println("Time updated.");
+//     if(stmRtc.setEpoch(epoch))
+//     {
+//         setTime(epoch);//Force set time, otherwise it will only be set after 300s
+//         Chronos::DateTime::now().printTo(*ser1);
+//     }
+//     return true;
+// }
 
-time_t getRtcTime()
-{
-    return stmRtc.get();
-}
+// time_t getRtcTime()
+// {
+//     return stmRtc.get();
+// }
 
-void alarmCallback(ALARMNR nr)
+// void updateDcf()
+// {
+//     Chronos::EpochTime epoch;
+//     getDcfTime(epoch);
+// }
+
+void alarmCallback()
 {
-    ser1->println("Alarm is active");
+    alarmIsActive=true;
 }
 
 void setup()
@@ -51,64 +69,54 @@ void setup()
     while (!*ser1)
         ;
     ser1->begin(115200);
-    rd.init();
-    stmRtc.begin();
-    setSyncProvider(getRtcTime); // the function to get the time from the RTC
-    delay(2000);
-    if (timeStatus() != timeSet)
-        ser1->println("Unable to sync with the RTC");
-    else
-        ser1->println("RTC has set the system time");
+    // rd.init();
+    // stmRtc.begin();
+    // setSyncProvider(getRtcTime); // the function to get the time from the RTC
+    // delay(2000);
+    // if (timeStatus() != timeSet)
+    //     ser1->println("Unable to sync with the RTC");
+    // else
+    //     ser1->println("RTC has set the system time");
+    setTime(1552892378);//Monday, March 18, 2019 6:59:38 AM
 
     // printTo is a convenience method useful for debugging
     // in real life, you'd use accessors and format it however you like.
     Chronos::DateTime::now().printTo(*ser1); //Jan 1 1970
-
-    ac.addDailyEvent(ALARM1, 21, 0);
-    Chronos::DateTime nextEventStart;
-    if (ac.getStartOfNextEvent(nextEventStart))
+    Chronos::DateTime nextAlarmTime; 
+    ac1.setTime(7,0);
+    ac1.enableWeekday(Chronos::Weekday::Monday);
+    ac1.setAlarmCallBack(alarmCallback);
+    if(ac1.getStartOfNextEvent(&nextAlarmTime))
     {
-        ser1->println();
-        nextEventStart.printTo(*ser1);
-        ser1->print('\t');
-        ser1->println(nextEventStart.asEpoch());
+        nextAlarmTime.printTo(*ser1);
     }
-    ac.addOnceOnlyEvent(ALARM1, Chronos::Weekday::Thursday, 10, 0);
-    if (ac.getStartOfNextEvent(nextEventStart))
-    {
-        ser1->println();
-        nextEventStart.printTo(*ser1);
-        ser1->print('\t');
-        ser1->println(nextEventStart.asEpoch());
-    }
-    ac.addWeeklyEvent(ALARM1, Chronos::Weekday::Thursday, 11, 0);
-    if (ac.getStartOfNextEvent(nextEventStart))
-    {
-        ser1->println();
-        nextEventStart.printTo(*ser1);
-        ser1->print('\t');
-        ser1->println(nextEventStart.asEpoch());
-    }
-    ac.setAlarmCallBack(alarmCallback);
-    ac.setTimeSync(2, getDcfTime);
+    // syncCalendar.setDailyAlarm(2, 0);
+    // syncCalendar.setAlarmCallBack(updateDcf);
 }
 
 void loop()
 {
-    if (timeStatus() != timeSet)
+    static bool alarmWasOn=false;
+    bool alarmIsOn = ac1.isAlarmOnGoing();
+    if(alarmIsOn && !alarmWasOn)
     {
-        Chronos::EpochTime epoch;
-        if(rd.update(epoch))
-        {
-            ser1->println("Time updated.");
-            if(stmRtc.setEpoch(epoch))
-            {
-                setTime(epoch);//Force set time, otherwise it will only be set after 300s
-                Chronos::DateTime::now().printTo(*ser1);
-            }
-        }
-    }else
-    {
-        ac.checkForOngoingEvents();
+        Chronos::DateTime::now().printTo(*ser1);
+        ser1->println(": Start of alarm");
     }
+    if(!alarmIsOn && alarmWasOn)
+    {
+        Chronos::DateTime::now().printTo(*ser1);
+        ser1->println(": End of alarm");
+    }
+    alarmWasOn = alarmIsOn;
+
+    // if (timeStatus() != timeSet)
+    // {
+    //     Chronos::EpochTime epoch;
+    //     getDcfTime(epoch);
+    // }
+    // else
+    // {
+    //     syncCalendar.loop();
+    // }
 }
