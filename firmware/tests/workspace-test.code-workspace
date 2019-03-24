@@ -9,6 +9,10 @@
 		{
 			"path": "mp3",
 			"name": "mp3"
+		},
+		{
+			"name": "DcfDailySync",
+			"path": "DcfDailySync"
 		}
 	],
 	"settings": {
