@@ -10,13 +10,14 @@ typedef struct
   Chronos::Hours hour;
   Chronos::Minutes mins;
   byte weekdays;
+  byte duration;
 } ALARM_CONFIG;
 
 class AlarmCalendar
 {
 public:
-  typedef void (*alarmCallBack)(void);
-  AlarmCalendar();
+  typedef void (*alarmCallBack)(bool bIsAlarmStartNotEnd);
+  AlarmCalendar(byte durationMinutes);
   void getConfig(ALARM_CONFIG *config);
   void setConfig(ALARM_CONFIG *config);
   void setDailyAlarm(Chronos::Hours hours, Chronos::Minutes minutes);
@@ -32,6 +33,6 @@ private:
   bool updateCalendar();
   Calendar _MyCalendar;
   ALARM_CONFIG _config;
-  Chronos::Span::Minutes _defaultSpan;
   alarmCallBack _alarmCall = nullptr;
+  bool _alarmWasOn = false;
 };

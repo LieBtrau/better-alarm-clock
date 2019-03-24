@@ -1,7 +1,8 @@
 #include "alarmcalendar.h"
 
-AlarmCalendar::AlarmCalendar() : _defaultSpan(2)
+AlarmCalendar::AlarmCalendar(byte durationMinutes)
 {
+    _config.duration = durationMinutes;
 }
 
 void AlarmCalendar::getConfig(ALARM_CONFIG *pconfig)
@@ -26,7 +27,7 @@ void AlarmCalendar::setAlarmCallBack(alarmCallBack function)
     _alarmCall = function;
 }
 
-bool AlarmCalendar::getStartOfNextEvent(Chronos::DateTime* returnDT)
+bool AlarmCalendar::getStartOfNextEvent(Chronos::DateTime *returnDT)
 {
     return _MyCalendar.nextDateTimeOfInterest(Chronos::DateTime::now(), *returnDT);
 }
@@ -60,15 +61,20 @@ bool AlarmCalendar::setTime(Chronos::Hours hours, Chronos::Minutes minutes)
 
 bool AlarmCalendar::loop()
 {
-    if (!isAlarmOnGoing())
-    {
-        return false;
-    }
+    bool alarmIsOn = isAlarmOnGoing();
     if (_alarmCall)
     {
-        _alarmCall();
-    }
-    return true;
+        if (alarmIsOn && !_alarmWasOn)
+        {
+            _alarmCall(true);
+        }
+        if (!alarmIsOn && _alarmWasOn)
+        {
+            _alarmCall(false);
+        }
+        _alarmWasOn = alarmIsOn;
+     }
+    return isAlarmOnGoing();
 }
 
 bool AlarmCalendar::updateCalendar()
@@ -78,7 +84,7 @@ bool AlarmCalendar::updateCalendar()
     {
         if (bitRead(_config.weekdays, day))
         {
-            if (!_MyCalendar.add(Chronos::Event(day, Chronos::Mark::Weekly(day, _config.hour, _config.mins, 00), _defaultSpan)))
+            if (!_MyCalendar.add(Chronos::Event(day, Chronos::Mark::Weekly(day, _config.hour, _config.mins, 00), Chronos::Span::Minutes(_config.duration))))
             {
                 return false;
             }

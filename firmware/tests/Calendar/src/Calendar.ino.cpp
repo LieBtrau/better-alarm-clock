@@ -26,13 +26,21 @@
 #include "alarmcalendar.h"
 #include "source/robustDcf.h"
 
-AlarmCalendar ac1;
-HardwareSerial* ser1=&Serial;
-static volatile bool alarmIsActive=false;
+AlarmCalendar ac1(2);
+HardwareSerial *ser1 = &Serial;
 
-void alarmCallback()
+void alarmCallback(bool bIsAlarmStartNotEnd)
 {
-    alarmIsActive=true;
+    ser1->println();
+    Chronos::DateTime::now().printTo(*ser1);
+    if (bIsAlarmStartNotEnd)
+    {
+        ser1->println(": Start of alarm");
+    }
+    else
+    {
+        ser1->println(": End of alarm");
+    }
 }
 
 void setup()
@@ -40,16 +48,16 @@ void setup()
     while (!*ser1)
         ;
     ser1->begin(115200);
-    setTime(1552892378);//Monday, March 18, 2019 6:59:38 AM
+    setTime(1552892378); //Monday, March 18, 2019 6:59:38 AM
 
     // printTo is a convenience method useful for debugging
     // in real life, you'd use accessors and format it however you like.
-    Chronos::DateTime::now().printTo(*ser1); //Jan 1 1970
-    Chronos::DateTime nextAlarmTime; 
-    ac1.setTime(7,0);
+    Chronos::DateTime::now().printTo(*ser1); 
+    Chronos::DateTime nextAlarmTime;
+    ac1.setTime(7, 0);
     ac1.enableWeekday(Chronos::Weekday::Monday);
     ac1.setAlarmCallBack(alarmCallback);
-    if(ac1.getStartOfNextEvent(&nextAlarmTime))
+    if (ac1.getStartOfNextEvent(&nextAlarmTime))
     {
         nextAlarmTime.printTo(*ser1);
     }
@@ -57,17 +65,5 @@ void setup()
 
 void loop()
 {
-    static bool alarmWasOn=false;
-    bool alarmIsOn = ac1.isAlarmOnGoing();
-    if(alarmIsOn && !alarmWasOn)
-    {
-        Chronos::DateTime::now().printTo(*ser1);
-        ser1->println(": Start of alarm");
-    }
-    if(!alarmIsOn && alarmWasOn)
-    {
-        Chronos::DateTime::now().printTo(*ser1);
-        ser1->println(": End of alarm");
-    }
-    alarmWasOn = alarmIsOn;
+    ac1.loop();
 }
