@@ -13,6 +13,10 @@
 		{
 			"name": "DcfDailySync",
 			"path": "DcfDailySync"
+		},
+		{
+			"name": "led_32x16",
+			"path": "led_32x16"
 		}
 	],
 	"settings": {
