@@ -12,43 +12,17 @@
 
 #include "Chaplex.h"
 
-Chaplex::Chaplex(byte* userPins, byte nrOfPins): numberOfPins(nrOfPins)
+Chaplex::Chaplex()
 {
-    pins = (byte*)malloc(sizeof(byte) * numberOfPins);
-    memcpy(pins, userPins, nrOfPins);
-    ledCtrl = (byte *)malloc(sizeof(byte) * numberOfPins);
     allClear();
-    showLedState();
-}
-
-Chaplex::~Chaplex()
-{
-   if (pins)
-   {
-      free(pins);
-   }
-   if(ledCtrl)
-   {
-       free(ledCtrl);
-   }
-}
-
-void Chaplex::setPinmode(voidFuncPtrUint32Uint32 function)
-{
-    pPinmode = function;
-}
-
-void Chaplex::setDigitalWrite(voidFuncPtrUint32Uint32 function)
-{
-    pDigitalWrite = function;
 }
 
 // set control-array for one LED ON/OFF
 bool Chaplex::setLedState(charlieLed led, LEDSTATE state)
 {
-    if ((led.a<numberOfPins) && (led.c<numberOfPins) && (led.a!=led.c))
+    if ((led.a < 5) && (led.c < 5) && (led.a != led.c))
     {
-        bitWrite(ledCtrl[led.a],led.c, state);
+        bitWrite(ledCtrl[led.a], led.c, state);
         return true;
     }
     return false;
@@ -57,12 +31,12 @@ bool Chaplex::setLedState(charlieLed led, LEDSTATE state)
 //set control-array for all LEDs OFF
 void Chaplex::allClear()
 {
-    memset(ledCtrl, OFF, numberOfPins);
+    memset(ledCtrl, OFF, 5);
 }
 
 // Turn a single LED ON at full brightness or OFF.  All other LEDs will be turned off as well.
 void Chaplex::setSingleLed(charlieLed led, LEDSTATE state)
-{
+{ /*
     if(!setLedState(led, state))
     {
         return;
@@ -72,26 +46,26 @@ void Chaplex::setSingleLed(charlieLed led, LEDSTATE state)
         pPinmode(pins[i], i==led.a || i==led.c ? OUTPUT:INPUT);
     }
     pDigitalWrite(pins[led.a], HIGH);
-    pDigitalWrite(pins[led.c], LOW);
+    pDigitalWrite(pins[led.c], LOW);*/
 }
 
-
 // Write led states to pins.  Needs to be called regularly for persistance of vision.
-void Chaplex::showLedState()
+bool Chaplex::showLedState(byte &pinModes, byte &gpioStates)
 {
-    pPinmode(pins[ledRow==0 ? numberOfPins-1 : ledRow-1],INPUT);
-    for (byte i=0; i<numberOfPins; i++)
-    {
-        if(i!=ledRow)
-        {
-            pPinmode(pins[i],bitRead(ledCtrl[ledRow],i) ? OUTPUT : INPUT);
-            pDigitalWrite(pins[i],LOW);
-        }
-    }
-    pDigitalWrite(pins[ledRow],HIGH);
-    pPinmode(pins[ledRow],OUTPUT);
-    if (++ledRow >= numberOfPins)
+    if (++ledRow >= 5)
     {
         ledRow = 0;
     }
+    byte curRow = ledCtrl[ledRow];
+    if (!curRow) //only do something for this row if there are LEDs to be turned on.
+    {
+        return false;
+    }
+    pinModes |=0x1F;            //Set all lines as input
+    pinModes &= ~curRow;        //Set needed lines as output
+    bitClear(pinModes, ledRow); // current line is output
+    gpioStates &= 0xE0;         // make all IO lines low <-- HARD CODED for 5 data lines!!
+    bitSet(gpioStates, ledRow); // current line high
+    
+    return true;
 }

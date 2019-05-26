@@ -3,8 +3,8 @@
 #include "Adafruit_MCP23017.h"
 #include "Chaplex.h"
 
-byte ctrlpins[] = {8,9,10,11,12}; //MCP23017 pins controlling charlieplexed leds
-Chaplex myCharlie(ctrlpins, sizeof(ctrlpins));
+byte ctrlpins[] = {8, 9, 10, 11, 12}; //MCP23017 pins controlling charlieplexed leds
+Chaplex myCharlie;
 CharlieLed ledmatrix[15] = {
     //{anode_registerbit, cathode_registerbit},
     {0, 1}, //D1
@@ -25,28 +25,27 @@ CharlieLed ledmatrix[15] = {
 };
 Adafruit_MCP23017 mcp;
 
-void mcp23017digitalwrite(uint32_t pin, uint32_t state)
+void showLedState()
 {
-  mcp.digitalWrite(pin, state);
-}
-
-void mcp23017pinmode(uint32_t pin, uint32_t state)
-{
-  mcp.pinMode(pin, state);
+  byte pinModes = mcp.readPinMode(1);
+  byte gpioStates = mcp.readGPIO(1);
+  if (myCharlie.showLedState(pinModes, gpioStates))
+  {
+    mcp.writePinMode(1, pinModes);
+    mcp.writeGPIO(1, gpioStates);
+  }
 }
 
 void setup()
 {
   mcp.begin(); // use default address 0
-  myCharlie.setPinmode(mcp23017pinmode);
-  myCharlie.setDigitalWrite(mcp23017digitalwrite);
   myCharlie.setLedState(ledmatrix[1], ON);
   myCharlie.setLedState(ledmatrix[12], ON);
+
 }
 
-// flip the pin #0 up and down
 void loop()
 {
-  myCharlie.showLedState();
+  showLedState();
   delay(1);
 }

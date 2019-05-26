@@ -29,25 +29,17 @@ struct CharlieLed {
 } ;
 
 typedef struct CharlieLed charlieLed;
-typedef void(*voidFuncPtrUint32Uint32)(uint32_t a, uint32_t b);
 class Chaplex {
 
 public:
-    Chaplex(byte* userPins, byte nrOfPins);
-    ~Chaplex();
+    Chaplex();
     bool setLedState(charlieLed led, LEDSTATE state);
 	void allClear();
-    void showLedState();
+    bool showLedState(byte &pinModes, byte &gpioStates);
     void setSingleLed(charlieLed led, LEDSTATE state);
-    void setPinmode(voidFuncPtrUint32Uint32 function);
-    void setDigitalWrite(voidFuncPtrUint32Uint32 function);
 private:
-    byte numberOfPins=0;
-    byte* pins=nullptr;
-    byte* ledCtrl=nullptr;
+    byte ledCtrl[5];
     byte ledRow=0;
-    voidFuncPtrUint32Uint32 pPinmode = pinMode;
-    voidFuncPtrUint32Uint32 pDigitalWrite = digitalWrite;
 };
 
 #endif

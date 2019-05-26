@@ -17,6 +17,10 @@
 		{
 			"name": "led_32x16",
 			"path": "led_32x16"
+		},
+		{
+			"name": "mcp23017",
+			"path": "mcp23017"
 		}
 	],
 	"settings": {
