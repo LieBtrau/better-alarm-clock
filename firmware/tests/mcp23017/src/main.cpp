@@ -36,16 +36,27 @@ void showLedState()
   }
 }
 
+void updateLEDs()
+{
+  static unsigned long ulTimer = millis();
+  static byte i = 0;
+  if (millis() > ulTimer + 100)
+  {
+    ulTimer = millis();
+    myCharlie.setLedState(ledmatrix[i], OFF);
+    i = i + 1 > 14 ? 0 : i + 1;
+    myCharlie.setLedState(ledmatrix[i], ON);
+  }
+}
+
 void setup()
 {
   mcp.begin(); // use default address 0
-  myCharlie.setLedState(ledmatrix[1], ON);
-  myCharlie.setLedState(ledmatrix[12], ON);
-
 }
 
 void loop()
 {
   showLedState();
   delay(1);
+  updateLEDs();
 }
