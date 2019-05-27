@@ -2,6 +2,7 @@
 #include <Wire.h>
 #include "Adafruit_MCP23017.h"
 #include "Chaplex.h"
+#include "KeyboardScan.h"
 
 byte ctrlpins[] = {8, 9, 10, 11, 12}; //MCP23017 pins controlling charlieplexed leds
 Chaplex myCharlie;
@@ -24,6 +25,27 @@ CharlieLed ledmatrix[15] = {
     {4, 0}  //D15
 };
 Adafruit_MCP23017 mcp;
+KeyboardScan keyb;
+
+void writePinModes(byte data)
+{
+  mcp.writePinMode(0, data);
+}
+
+void writePullups(byte data)
+{
+  mcp.writePullUps(0, data);
+}
+
+void writeGpio(byte data)
+{
+  mcp.writeGPIO(0, data);
+}
+
+byte readGpio()
+{
+  return mcp.readGPIO(0);
+}
 
 void showLedState()
 {
@@ -51,7 +73,9 @@ void updateLEDs()
 
 void setup()
 {
+  Serial.begin(115200);
   mcp.begin(); // use default address 0
+  keyb.init(writePinModes, writePullups);
 }
 
 void loop()
@@ -59,4 +83,8 @@ void loop()
   showLedState();
   delay(1);
   updateLEDs();
+  if(keyb.updateKeys(writeGpio, readGpio))
+  {
+    Serial.println(keyb.getKeys());
+  }
 }
