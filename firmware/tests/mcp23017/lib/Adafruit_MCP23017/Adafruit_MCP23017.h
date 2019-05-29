@@ -35,7 +35,6 @@ public:
 
   void pinMode(uint8_t p, uint8_t d);
   void digitalWrite(uint8_t p, uint8_t d);
-  void pullUp(uint8_t p, uint8_t d);
   void writePullUps(uint8_t b, uint8_t data);
   uint8_t digitalRead(uint8_t p);
 
@@ -50,6 +49,7 @@ public:
   void setupInterruptPin(uint8_t p, uint8_t mode);
   uint8_t getLastInterruptPin();
   uint8_t getLastInterruptPinValue();
+  uint8_t readInterruptCapture(uint8_t b);
 
  private:
   uint8_t i2caddr;

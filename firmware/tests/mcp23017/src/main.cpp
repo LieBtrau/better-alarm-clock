@@ -26,6 +26,8 @@ CharlieLed ledmatrix[15] = {
 };
 Adafruit_MCP23017 mcp;
 KeyboardScan keyb;
+volatile bool updated = false;
+byte pinData = 0;
 
 void writePinModes(byte data)
 {
@@ -71,20 +73,48 @@ void updateLEDs()
   }
 }
 
+void rotaryEncUpdate()
+{
+  updated = true;
+}
+
 void setup()
 {
   Serial.begin(115200);
   mcp.begin(); // use default address 0
+  mcp.pinMode(13, INPUT);
+  mcp.pinMode(14, INPUT);
+  mcp.setupInterrupts(true, false, LOW);
+  mcp.setupInterruptPin(13, CHANGE);
+  pinMode(PB1, INPUT_PULLUP);
+  attachInterrupt(PB1, rotaryEncUpdate, FALLING);
   keyb.init(writePinModes, writePullups);
 }
 
+byte lastPos = 1;
 void loop()
 {
   showLedState();
-  delay(1);
   updateLEDs();
-  if(keyb.updateKeys(writeGpio, readGpio))
+  if (keyb.updateKeys(writeGpio, readGpio))
   {
     Serial.println(keyb.getKeys());
+  }
+  if (updated || !digitalRead(PB1))
+  {
+    //rotate CCW : 0,96,0,96, ...
+    //rotate CW : 64,32,64,32, ...
+    byte curPos = mcp.readInterruptCapture(1) & 0x60;
+
+    if (!lastPos && curPos == 96)
+    {
+      Serial.print("-");
+    }
+    if (lastPos == 64 && curPos == 32)
+    {
+      Serial.print("+");
+    }
+    lastPos = curPos;
+    updated = false;
   }
 }

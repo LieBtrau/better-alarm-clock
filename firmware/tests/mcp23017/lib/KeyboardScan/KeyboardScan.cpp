@@ -12,10 +12,10 @@ void KeyboardScan::init(voidFuncPtrByte writePinModes, voidFuncPtrByte writePull
 bool KeyboardScan::updateKeys(voidFuncPtrByte writeGpio, byteFuncPtrVoid readGpio)
 {
     curRow = curRow + 1 > 3 ? 0 : curRow + 1;
-    //Column control
+    //Row control
     byte rowCmd = 0x0F & (~(1 << curRow));      //make one of the four lowest bits low, another one on each function call
     writeGpio(rowCmd);
-    //Row reading
+    //Column reading
     byte colState = readGpio() >> 4;
     //Copy four read buttons into the keystate register
     word clear = ~(0xF << (curRow<<2));         // prepare intermediate value to clear the status of the current 4 buttons in the keystate
