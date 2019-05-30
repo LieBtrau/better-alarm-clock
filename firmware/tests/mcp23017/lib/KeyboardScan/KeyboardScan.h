@@ -10,8 +10,10 @@ public:
     KeyboardScan(){};
     void init(voidFuncPtrByte writePinModes, voidFuncPtrByte writePullups);
     bool updateKeys(voidFuncPtrByte writeGpio, byteFuncPtrVoid readGpio);
-    word getKeys();
+    void setCallback_keyChange(voidFuncPtrByte keyChanged);
+    bool isKeyDown(byte keyNr);
 private:
     byte curRow = 0;
     word keyState = 0;
+    voidFuncPtrByte _keyChanged = nullptr;
 };

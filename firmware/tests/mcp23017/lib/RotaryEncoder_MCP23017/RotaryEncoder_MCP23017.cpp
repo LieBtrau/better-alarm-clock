@@ -24,7 +24,8 @@ void RotaryEncoder_MCP23017::init()
 
 void RotaryEncoder_MCP23017::poll()
 {
-    if (updated || !digitalRead(_irqPin)) //digitalRead is only here to make sure IRQ always gets cleared on MCP23017.
+    //Occasionally, the IRQ on the MCP23017 doesn't get cleared by the pin change interrupt on the STM32.  The digitalRead function is added to overcome this.
+    if (updated || !digitalRead(_irqPin))
     {
         //rotate CCW : 0,0x60,0,0x60, ...
         //rotate CW : 0x40,0x20,0x40,0x20, ...

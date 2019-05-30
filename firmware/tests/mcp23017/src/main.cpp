@@ -84,6 +84,11 @@ void decreaseRotEnc()
   Serial.println("-");
 }
 
+void keyChanged(byte key)
+{
+  Serial.println(key);
+}
+
 void setup()
 {
   Serial.begin(115200);
@@ -92,15 +97,13 @@ void setup()
   rotenc.setClockwiseCallback(increaseRotEnc);
   rotenc.setCounterClockwiseCallback(decreaseRotEnc);
   keyb.init(writePinModes, writePullups);
+  keyb.setCallback_keyChange(keyChanged);
 }
 
 void loop()
 {
   showLedState();
   updateLEDs();
-  if (keyb.updateKeys(writeGpio, readGpio))
-  {
-    Serial.println(keyb.getKeys());
-  }
+  keyb.updateKeys(writeGpio, readGpio);
   rotenc.poll();
 }
