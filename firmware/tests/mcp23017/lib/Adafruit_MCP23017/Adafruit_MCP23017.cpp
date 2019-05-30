@@ -306,8 +306,8 @@ void Adafruit_MCP23017::setupInterrupts(uint8_t mirroring, uint8_t openDrain, ui
  */
 void Adafruit_MCP23017::setupInterruptPin(uint8_t pin, uint8_t mode)
 {
-	bool levelTriggered;
-	bool defaultPinLevel;
+	bool levelTriggered = false;
+	bool defaultPinLevel = false;
 	switch (mode)
 	{
 	case CHANGE:
