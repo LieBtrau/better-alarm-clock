@@ -8,38 +8,27 @@
 ||
 */
 
-#ifndef Chaplex_h
-#define Chaplex_h
-
-#if defined(ARDUINO) && ARDUINO >= 100
+#pragma once
 #include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
 
-typedef enum
+struct CharlieLed
 {
-    OFF=0,
-    ON=1
-}LEDSTATE;
+    byte a;  // anode (corresponding bit in GPIO register)
+    byte c;  // cathode (corresponding bit in GPIO register)
+    bool on; // true = LED on, false = LED off
+};
 
-struct CharlieLed {
-  byte a;
-  byte c; 
-} ;
-
-typedef struct CharlieLed charlieLed;
-class Chaplex {
+class Chaplex
+{
 
 public:
     Chaplex();
-    bool setLedState(charlieLed led, LEDSTATE state);
-	void allClear();
+    bool setLedState(CharlieLed *led);
+    void allClear();
     bool showLedState(byte &pinModes, byte &gpioStates);
-    void setSingleLed(charlieLed led, LEDSTATE state);
+    void setSingleLed(CharlieLed *led);
+
 private:
     byte ledCtrl[5];
-    byte ledRow=0;
+    byte ledRow = 0;
 };
-
-#endif

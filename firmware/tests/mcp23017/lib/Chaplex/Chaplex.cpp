@@ -18,11 +18,11 @@ Chaplex::Chaplex()
 }
 
 // set control-array for one LED ON/OFF
-bool Chaplex::setLedState(charlieLed led, LEDSTATE state)
+bool Chaplex::setLedState(CharlieLed* led)
 {
-    if ((led.a < 5) && (led.c < 5) && (led.a != led.c))
+    if ((led->a < 5) && (led->c < 5) && (led->a != led->c))
     {
-        bitWrite(ledCtrl[led.a], led.c, state);
+        bitWrite(ledCtrl[led->a], led->c, led->on);
         return true;
     }
     return false;
@@ -31,11 +31,11 @@ bool Chaplex::setLedState(charlieLed led, LEDSTATE state)
 //set control-array for all LEDs OFF
 void Chaplex::allClear()
 {
-    memset(ledCtrl, OFF, 5);
+    memset(ledCtrl, 0, 5);
 }
 
 // Turn a single LED ON at full brightness or OFF.  All other LEDs will be turned off as well.
-void Chaplex::setSingleLed(charlieLed led, LEDSTATE state)
+void Chaplex::setSingleLed(CharlieLed* led)
 { /*
     if(!setLedState(led, state))
     {
@@ -52,20 +52,18 @@ void Chaplex::setSingleLed(charlieLed led, LEDSTATE state)
 // Write led states to pins.  Needs to be called regularly for persistance of vision.
 bool Chaplex::showLedState(byte &pinModes, byte &gpioStates)
 {
+    byte pinModesIn = pinModes;
+    byte gpioStatesIn = gpioStates;
     if (++ledRow >= 5)
     {
         ledRow = 0;
     }
     byte curRow = ledCtrl[ledRow];
-    if (!curRow) //only do something for this row if there are LEDs to be turned on.
-    {
-        return false;
-    }
     pinModes |=0x1F;            //Set all lines as input
     pinModes &= ~curRow;        //Set needed lines as output
     bitClear(pinModes, ledRow); // current line is output
     gpioStates &= 0xE0;         // make all IO lines low <-- HARD CODED for 5 data lines!!
     bitSet(gpioStates, ledRow); // current line high
     
-    return true;
+    return ((pinModes != pinModesIn) || (gpioStates!=gpioStatesIn));
 }

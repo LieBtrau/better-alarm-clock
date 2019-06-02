@@ -4,6 +4,7 @@
 #include <Adafruit_GFX.h>
 #include "Adafruit_LEDBackpack.h"
 #include "Menu.h"
+#include "Adafruit_MCP23017.h"
 
 Adafruit_7segment matrix7 = Adafruit_7segment();
 int numberOfHorizontalDisplays = 4;
@@ -11,6 +12,8 @@ int numberOfVerticalDisplays = 2;
 const byte pinMOSI = PA7;
 const byte pinSCLK = PA5;
 const byte pinCS = PA1;
+Adafruit_MCP23017 mcp;
+Chaplex myCharlie;
 
 void playSong(byte i)
 {
@@ -18,37 +21,83 @@ void playSong(byte i)
   matrix7.writeDisplay();
 }
 
-Max72xxPanel matrix = Max72xxPanel(pinMOSI, pinSCLK, pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
-Coordinate topleft = {0,0};
-Coordinate botright = {12,3};
-FieldParameter lightness = {0,50,100,5};
-LedMatrixField fldLightness=LedMatrixField(&matrix, topleft, botright, &lightness);
+void writeGpio(byte data)
+{
+  mcp.writeGPIO(0, data);
+}
 
-Coordinate topleft1 = {0,7};
+byte readGpio()
+{
+  return mcp.readGPIO(0);
+}
+
+void showLedState()
+{
+  static unsigned long ultimer = 0;
+  if (millis() > ultimer + 5)
+  {
+    ultimer = millis();
+    byte pinModes = mcp.readPinMode(1);
+    byte gpioStates = mcp.readGPIO(1);
+    if (myCharlie.showLedState(pinModes, gpioStates))
+    {
+      mcp.writePinMode(1, pinModes);
+      mcp.writeGPIO(1, gpioStates);
+    }
+  }
+}
+
+Max72xxPanel matrix = Max72xxPanel(pinMOSI, pinSCLK, pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
+Coordinate topleft = {0, 0};
+Coordinate botright = {12, 3};
+FieldParameter lightness = {0, 50, 100, 5};
+LedMatrixField fldLightness = LedMatrixField(&matrix, topleft, botright, &lightness);
+
+Coordinate topleft1 = {0, 7};
 Coordinate botRight1 = {12, 10};
-SelectParameter song = {3,9, playSong};
+SelectParameter song = {3, 9, playSong};
 LedMatrixSelect sldSong = LedMatrixSelect(&matrix, topleft1, botRight1, &song);
+
+CharlieLed ledDD1 = {0, 1, false};
+LedToggle tglLightness = LedToggle(&myCharlie, &ledDD1);
 
 void setup()
 {
+  mcp.begin(); // use default address 0
   matrix.init();
   fldLightness.render();
   sldSong.render();
-//   matrix.setCursor(2, 5);
-//   matrix.print("99:99");
-//   matrix.write(); // Send bitmap to display
+  //   matrix.setCursor(2, 5);
+  //   matrix.print("99:99");
+  //   matrix.write(); // Send bitmap to display
 
-// #ifndef __AVR_ATtiny85__
-//   Serial.begin(9600);
-//   Serial.println("7 Segment Backpack Test");
-// #endif
-   matrix7.begin(0x70);
+  // #ifndef __AVR_ATtiny85__
+  //   Serial.begin(9600);
+  //   Serial.println("7 Segment Backpack Test");
+  // #endif
+  matrix7.begin(0x70);
 }
 
-bool dirUp=true;
+bool dirUp = true;
+unsigned long ulTimer = millis();
 
-void loop() 
+void loop()
 {
+  if (millis() > ulTimer + 500)
+  {
+    ulTimer = millis();
+    if (dirUp)
+    {
+      tglLightness.set();
+      dirUp = false;
+    }
+    else
+    {
+      tglLightness.clear();
+      dirUp = true;
+    }
+    tglLightness.render();
+  }
   // if(dirUp)
   // {
   // if(!fldLightness.increase())
@@ -61,12 +110,13 @@ void loop()
   //     dirUp=true;
   //   }
   // }
-  matrix.fillScreen(0);
-  sldSong.next();
-  fldLightness.render();
-  sldSong.render();
-  matrix.write();
-  delay(500);
+  // matrix.fillScreen(0);
+  // sldSong.next();
+  // fldLightness.render();
+  // sldSong.render();
+  // matrix.write();
+  // delay(500);
+  showLedState();
   // // try to print a number thats too long
   // matrix7.print(10000, DEC);
   // matrix7.writeDisplay();
@@ -77,11 +127,11 @@ void loop()
   // matrix7.writeDisplay();
   // delay(500);
 
-  // // print a floating point 
+  // // print a floating point
   // matrix7.print(12.34);
   // matrix7.writeDisplay();
   // delay(500);
-  
+
   // // print with print/println
   // for (uint16_t counter = 0; counter < 9999; counter++) {
   //   matrix7.println(counter);
@@ -102,7 +152,7 @@ void loop()
   //   matrix7.drawColon(drawDots);
   //   matrix7.writeDigitNum(3, (counter / 10) % 10, drawDots);
   //   matrix7.writeDigitNum(4, counter % 10, drawDots);
-   
+
   //   blinkcounter+=50;
   //   if (blinkcounter < 500) {
   //     drawDots = false;

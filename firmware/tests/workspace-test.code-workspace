@@ -21,6 +21,10 @@
 		{
 			"name": "mcp23017",
 			"path": "mcp23017"
+		},
+		{
+			"name": "apds-9960",
+			"path": "apds-9960"
 		}
 	],
 	"settings": {

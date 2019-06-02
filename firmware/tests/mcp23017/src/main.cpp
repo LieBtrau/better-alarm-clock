@@ -5,7 +5,6 @@
 #include "KeyboardScan.h"
 #include "RotaryEncoder_MCP23017.h"
 
-byte ctrlpins[] = {8, 9, 10, 11, 12}; //MCP23017 pins controlling charlieplexed leds
 Chaplex myCharlie;
 CharlieLed ledmatrix[15] = {
     //{anode_registerbit, cathode_registerbit},
