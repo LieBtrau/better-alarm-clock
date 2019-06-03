@@ -1,20 +1,20 @@
 #include "Menu.h"
 
-LedToggle::LedToggle(Chaplex *chappy, CharlieLed *led) : _chappy(chappy), _led(led)
+LedToggle::LedToggle(Chaplex *chappy, CharlieLed *led, bool* value) : _chappy(chappy), _led(led), _val(value)
 {
 }
 
 void LedToggle::render()
 {
-    _chappy->setLedState(_led);
+    _chappy->setLedState(_led, *_val);
 }
 
 void LedToggle::set()
 {
-    _led->on = true;
+    *_val = true;
 }
 
 void LedToggle::clear()
 {
-    _led->on = false;
+    *_val = false;
 }

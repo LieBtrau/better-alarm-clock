@@ -58,8 +58,9 @@ Coordinate botRight1 = {12, 10};
 SelectParameter song = {3, 9, playSong};
 LedMatrixSelect sldSong = LedMatrixSelect(&matrix, topleft1, botRight1, &song);
 
-CharlieLed ledDD1 = {0, 1, false};
-LedToggle tglLightness = LedToggle(&myCharlie, &ledDD1);
+CharlieLed ledDD1 = {0, 1};
+bool bLightnessSelected=false;
+LedToggle tglLightness = LedToggle(&myCharlie, &ledDD1, &bLightnessSelected);
 
 void setup()
 {

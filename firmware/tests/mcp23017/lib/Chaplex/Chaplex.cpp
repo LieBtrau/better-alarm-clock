@@ -18,11 +18,12 @@ Chaplex::Chaplex()
 }
 
 // set control-array for one LED ON/OFF
-bool Chaplex::setLedState(CharlieLed* led)
+bool Chaplex::setLedState(CharlieLed* led, bool on)
 {
     if ((led->a < 5) && (led->c < 5) && (led->a != led->c))
     {
-        bitWrite(ledCtrl[led->a], led->c, led->on);
+        bitWrite(ledCtrl[led->a], led->c, on);
+        bitSet(changedMask, led->a);
         return true;
     }
     return false;
@@ -34,8 +35,10 @@ void Chaplex::allClear()
     memset(ledCtrl, 0, 5);
 }
 
-// Turn a single LED ON at full brightness or OFF.  All other LEDs will be turned off as well.
-void Chaplex::setSingleLed(CharlieLed* led)
+/* Turn a single LED ON at full brightness or OFF.  All other LEDs will be turned off as well.
+ * Once this function has been called, it's not needed to call showLedState repeatedly.
+ */
+void Chaplex::setSingleLed(CharlieLed* led, bool on)
 { /*
     if(!setLedState(led, state))
     {
@@ -52,18 +55,25 @@ void Chaplex::setSingleLed(CharlieLed* led)
 // Write led states to pins.  Needs to be called regularly for persistance of vision.
 bool Chaplex::showLedState(byte &pinModes, byte &gpioStates)
 {
-    byte pinModesIn = pinModes;
-    byte gpioStatesIn = gpioStates;
     if (++ledRow >= 5)
     {
         ledRow = 0;
     }
-    byte curRow = ledCtrl[ledRow];
+    byte curCols = ledCtrl[ledRow];
+    if ((!curCols) && (!bitRead(changedMask, ledRow)))
+    {
+        /* No leds to be turned on and no leds have recently been turned off (and the new status is not shown yet),
+         * so don't waste any time displaying that row.
+         * This will result in brighter LEDs and less flickering for the LEDs that are turned on.
+         */
+        return false;
+    }
+    bitClear(changedMask, ledRow);
     pinModes |=0x1F;            //Set all lines as input
-    pinModes &= ~curRow;        //Set needed lines as output
+    pinModes &= ~curCols;        //Set needed lines as output
     bitClear(pinModes, ledRow); // current line is output
     gpioStates &= 0xE0;         // make all IO lines low <-- HARD CODED for 5 data lines!!
     bitSet(gpioStates, ledRow); // current line high
     
-    return ((pinModes != pinModesIn) || (gpioStates!=gpioStatesIn));
+    return true;
 }
