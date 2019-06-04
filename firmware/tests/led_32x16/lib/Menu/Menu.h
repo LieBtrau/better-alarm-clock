@@ -1,6 +1,7 @@
 #pragma once
-#include "Max72xxPanel.h"   //32x16 LED matrix panel
-#include "Chaplex.h"        //Charlieplexed LEDs
+#include "Max72xxPanel.h"         //32x16 LED matrix panel
+#include "Chaplex.h"              //Charlieplexed LEDs
+#include "Adafruit_LEDBackpack.h" //7segment display
 
 struct Coordinate
 {
@@ -34,9 +35,10 @@ public:
 class Field : public MenuOut
 {
 public:
-    Field(FieldParameter* par);
+    Field(FieldParameter *par);
     bool increase();
     bool decrease();
+
 protected:
     FieldParameter *_val;
 };
@@ -52,6 +54,19 @@ private:
     Max72xxPanel *_panel;
     Coordinate _topleft;
     Coordinate _botRight;
+};
+
+class SevenSegmentField : public Field
+{
+public:
+    SevenSegmentField(Adafruit_7segment *panel, byte leftPos, FieldParameter *par);
+    void render();
+    void hide();
+    static const byte LEFTPOS = 0;
+    static const byte RIGHTPOS = 3;
+private:
+    Adafruit_7segment *_panel;
+    byte _leftPos;
 };
 
 class LedMatrixSelect : public MenuOut
@@ -73,13 +88,14 @@ private:
 class LedToggle : public MenuOut
 {
 public:
-    LedToggle(Chaplex* chappy, CharlieLed* led, bool* value);
+    LedToggle(Chaplex *chappy, CharlieLed *led, bool *value);
     void render();
     void set();
     void clear();
     void hide();
+
 private:
-    Chaplex* _chappy;
-    CharlieLed* _led;
-    bool* _val;
+    Chaplex *_chappy;
+    CharlieLed *_led;
+    bool *_val;
 };

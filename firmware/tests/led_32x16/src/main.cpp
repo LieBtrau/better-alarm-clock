@@ -7,11 +7,14 @@
 #include "Adafruit_MCP23017.h"
 
 Adafruit_7segment matrix7 = Adafruit_7segment();
+
 int numberOfHorizontalDisplays = 4;
 int numberOfVerticalDisplays = 2;
 const byte pinMOSI = PA7;
 const byte pinSCLK = PA5;
 const byte pinCS = PA1;
+Max72xxPanel matrix = Max72xxPanel(pinMOSI, pinSCLK, pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
+
 Adafruit_MCP23017 mcp;
 Chaplex myCharlie;
 
@@ -47,7 +50,6 @@ void showLedState()
   }
 }
 
-Max72xxPanel matrix = Max72xxPanel(pinMOSI, pinSCLK, pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
 Coordinate topleft = {0, 0};
 Coordinate botright = {12, 3};
 FieldParameter lightness = {0, 50, 100, 5};
@@ -62,11 +64,16 @@ CharlieLed ledDD1 = {0, 1};
 bool bLightnessSelected=false;
 LedToggle tglLightness = LedToggle(&myCharlie, &ledDD1, &bLightnessSelected);
 
+FieldParameter hours = {0, 12, 23 , 1};
+SevenSegmentField fldHours = SevenSegmentField(&matrix7, SevenSegmentField::RIGHTPOS, &hours);
+
 void setup()
 {
   mcp.begin(); // use default address 0
   matrix.init();
+  matrix7.begin(0x70);
   fldLightness.render();
+  fldHours.render();
   sldSong.render();
   //   matrix.setCursor(2, 5);
   //   matrix.print("99:99");
@@ -76,7 +83,6 @@ void setup()
   //   Serial.begin(9600);
   //   Serial.println("7 Segment Backpack Test");
   // #endif
-  matrix7.begin(0x70);
 }
 
 bool dirUp = true;
@@ -118,6 +124,7 @@ void loop()
   output->render();
   // sldSong.render();
   matrix.write();
+  matrix7.writeDisplay();
    delay(100);
   //showLedState();
   // // try to print a number thats too long
