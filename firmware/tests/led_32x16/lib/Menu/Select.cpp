@@ -19,6 +19,12 @@ void LedMatrixSelect::render()
     _panel->drawPixel(_topleft.x + 1 + _par->cur, _topleft.y+1,1);
 }
 
+void LedMatrixSelect::hide()
+{
+    _panel->drawRect(_topleft.x, _topleft.y, _botRight.x - _topleft.x, _botRight.y - _topleft.y, 0);
+    _panel->drawLine(_topleft.x + 1, _topleft.y + 1, _botRight.x - 1, _botRight.y - 1, 0);
+}
+
 void LedMatrixSelect::next()
 {
     _par->cur = _par->cur < _par->max ? _par->cur + 1 : 0;  //at maximum, loop back to minimum;

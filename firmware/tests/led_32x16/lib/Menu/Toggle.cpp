@@ -9,6 +9,11 @@ void LedToggle::render()
     _chappy->setLedState(_led, *_val);
 }
 
+void LedToggle::hide()
+{
+    _chappy->setLedState(_led, false);
+}
+
 void LedToggle::set()
 {
     *_val = true;

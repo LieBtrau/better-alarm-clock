@@ -2,12 +2,6 @@
 #include "Max72xxPanel.h"   //32x16 LED matrix panel
 #include "Chaplex.h"        //Charlieplexed LEDs
 
-class MenuOut
-{
-public:
-    virtual void render() = 0;
-};
-
 struct Coordinate
 {
     byte x = 0;
@@ -30,19 +24,34 @@ struct SelectParameter
     voidFuncPtrByte doAction = nullptr;
 };
 
-class LedMatrixField : public MenuOut
+class MenuOut
+{
+public:
+    virtual void render() = 0;
+    virtual void hide() = 0;
+};
+
+class Field : public MenuOut
+{
+public:
+    Field(FieldParameter* par);
+    bool increase();
+    bool decrease();
+protected:
+    FieldParameter *_val;
+};
+
+class LedMatrixField : public Field
 {
 public:
     LedMatrixField(Max72xxPanel *panel, Coordinate topleft, Coordinate botRight, FieldParameter *par);
     void render();
-    bool increase();
-    bool decrease();
+    void hide();
 
 private:
     Max72xxPanel *_panel;
     Coordinate _topleft;
     Coordinate _botRight;
-    FieldParameter *_val;
 };
 
 class LedMatrixSelect : public MenuOut
@@ -52,6 +61,7 @@ public:
     void render();
     void next();
     void prev();
+    void hide();
 
 private:
     Max72xxPanel *_panel;
@@ -67,6 +77,7 @@ public:
     void render();
     void set();
     void clear();
+    void hide();
 private:
     Chaplex* _chappy;
     CharlieLed* _led;

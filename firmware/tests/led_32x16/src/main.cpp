@@ -81,43 +81,45 @@ void setup()
 
 bool dirUp = true;
 unsigned long ulTimer = millis();
+MenuOut* output=&fldLightness;
 
 void loop()
 {
-  if (millis() > ulTimer + 500)
-  {
-    ulTimer = millis();
-    if (dirUp)
-    {
-      tglLightness.set();
-      dirUp = false;
-    }
-    else
-    {
-      tglLightness.clear();
-      dirUp = true;
-    }
-    tglLightness.render();
-  }
-  // if(dirUp)
+  // if (millis() > ulTimer + 500)
   // {
-  // if(!fldLightness.increase())
-  // {
-  //   dirUp=false;
-  // }
-  // }else{
-  //   if(!fldLightness.decrease())
+  //   ulTimer = millis();
+  //   if (dirUp)
   //   {
-  //     dirUp=true;
+  //     tglLightness.set();
+  //     dirUp = false;
   //   }
+  //   else
+  //   {
+  //     tglLightness.clear();
+  //     dirUp = true;
+  //   }
+  //   tglLightness.render();
   // }
-  // matrix.fillScreen(0);
+
+  if(dirUp)
+  {
+  if(!fldLightness.increase())
+  {
+    dirUp=false;
+  }
+  }else{
+    if(!fldLightness.decrease())
+    {
+      dirUp=true;
+    }
+  }
+  matrix.fillScreen(0);
   // sldSong.next();
-  // fldLightness.render();
+  output->render();
   // sldSong.render();
-  // matrix.write();
-  // delay(500);
-  showLedState();
+  matrix.write();
+   delay(100);
+  //showLedState();
   // // try to print a number thats too long
   // matrix7.print(10000, DEC);
   // matrix7.writeDisplay();
