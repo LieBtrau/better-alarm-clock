@@ -10,10 +10,12 @@ public:
     KeyboardScan(){};
     void init(voidFuncPtrByte writePinModes, voidFuncPtrByte writePullups);
     bool updateKeys(voidFuncPtrByte writeGpio, byteFuncPtrVoid readGpio);
-    void setCallback_keyChange(voidFuncPtrByte keyChanged);
+    void setCallback_keyReleased(voidFuncPtrByte keyReleased);
+    void setCallback_keyPressed(voidFuncPtrByte keyPressed);
     bool isKeyDown(byte keyNr);
 private:
     byte curRow = 0;
     word keyState = 0;
-    voidFuncPtrByte _keyChanged = nullptr;
+    voidFuncPtrByte _keyPressed = nullptr;
+    voidFuncPtrByte _keyReleased = nullptr;
 };

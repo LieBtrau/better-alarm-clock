@@ -11,6 +11,7 @@ bool Field::increase()
         return false;
     }
     _val->cur += _val->step;
+    updateNeeded=true;
     return true;
 }
 
@@ -21,6 +22,7 @@ bool Field::decrease()
         return false;
     }
     _val->cur -= _val->step;
+    updateNeeded=true;
     return true;
 }
 
@@ -33,8 +35,9 @@ LedMatrixField::LedMatrixField(Max72xxPanel *panel, Coordinate topleft, Coordina
     }
 }
 
-void LedMatrixField::render()
+void LedMatrixField::show()
 {
+    hide();
     _panel->drawRect(_topleft.x, _topleft.y, _botRight.x - _topleft.x, _botRight.y - _topleft.y, 1);
     byte maxLength = _botRight.x - _topleft.x - 2;
     //_panel->drawLine(_topleft.x+1, _topleft.y+1, maxLength, _topleft.y+1, 0);
@@ -48,7 +51,7 @@ void LedMatrixField::render()
 void LedMatrixField::hide()
 {
     _panel->drawRect(_topleft.x, _topleft.y, _botRight.x - _topleft.x, _botRight.y - _topleft.y, 0);
-    _panel->drawLine(_topleft.x + 1, _topleft.y + 1, _botRight.x - 1, _botRight.y - 1, 0);
+    _panel->drawLine(_topleft.x + 1, _topleft.y + 1, _botRight.x - 1, _topleft.y + 1, 0);
 }
 
 SevenSegmentField::SevenSegmentField(Adafruit_7segment *panel, byte leftPos, FieldParameter *par) : Field(par), _panel(panel), _leftPos(leftPos)
@@ -59,7 +62,7 @@ SevenSegmentField::SevenSegmentField(Adafruit_7segment *panel, byte leftPos, Fie
     }
 }
 
-void SevenSegmentField::render()
+void SevenSegmentField::show()
 {
     byte d0 = _val->cur / 10;
     byte d1 = _val->cur % 10;

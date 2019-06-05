@@ -28,8 +28,12 @@ struct SelectParameter
 class MenuOut
 {
 public:
-    virtual void render() = 0;
+    bool render(); //returns true if content has changed since last call, which would imply a redraw is needed.
     virtual void hide() = 0;
+
+protected:
+    virtual void show() = 0;
+    bool updateNeeded = true;
 };
 
 class Field : public MenuOut
@@ -47,8 +51,10 @@ class LedMatrixField : public Field
 {
 public:
     LedMatrixField(Max72xxPanel *panel, Coordinate topleft, Coordinate botRight, FieldParameter *par);
-    void render();
-    void hide();
+    virtual void hide();
+
+protected:
+    virtual void show();
 
 private:
     Max72xxPanel *_panel;
@@ -60,10 +66,13 @@ class SevenSegmentField : public Field
 {
 public:
     SevenSegmentField(Adafruit_7segment *panel, byte leftPos, FieldParameter *par);
-    void render();
-    void hide();
+    virtual void hide();
     static const byte LEFTPOS = 0;
     static const byte RIGHTPOS = 3;
+
+protected:
+    virtual void show();
+
 private:
     Adafruit_7segment *_panel;
     byte _leftPos;
@@ -73,10 +82,12 @@ class LedMatrixSelect : public MenuOut
 {
 public:
     LedMatrixSelect(Max72xxPanel *panel, Coordinate topleft, Coordinate botRight, SelectParameter *par);
-    void render();
     void next();
     void prev();
     void hide();
+
+protected:
+    virtual void show();
 
 private:
     Max72xxPanel *_panel;
@@ -89,10 +100,12 @@ class LedToggle : public MenuOut
 {
 public:
     LedToggle(Chaplex *chappy, CharlieLed *led, bool *value);
-    void render();
     void set();
     void clear();
     void hide();
+
+protected:
+    virtual void show();
 
 private:
     Chaplex *_chappy;

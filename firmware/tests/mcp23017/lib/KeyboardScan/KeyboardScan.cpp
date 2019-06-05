@@ -19,31 +19,44 @@ bool KeyboardScan::updateKeys(voidFuncPtrByte writeGpio, byteFuncPtrVoid readGpi
     byte colState = readGpio() >> 4;
     //Copy four read buttons into the keystate register
     word clear = ~(0xF << (curRow << 2)); // prepare intermediate value to clear the status of the current 4 buttons in the keystate
-    word tempKeyState = keyState;
+    word prevKeyState = keyState;
     keyState &= clear;                     // clear the status of the current 4 buttons in the keystate
     keyState |= colState << (curRow << 2); // copy the status of the four buttons into the keystate register
-    if (tempKeyState == keyState)
+    if (prevKeyState == keyState)
     {
         return false;
     }
-    if (_keyChanged)
+    word diffkey = keyState ^ prevKeyState;
+    for (byte i = 0; i < 16; i++)
     {
-        word diffkey = keyState ^ tempKeyState;
-        for (byte i = 0; i < 16; i++)
+        if (bitRead(diffkey, i))
         {
-            if (bitRead(diffkey, i))
+            if(bitRead(keyState, i) && _keyReleased!=nullptr)
             {
-                _keyChanged(i);
+                _keyReleased(i);
+            }
+            else
+            {
+                if(_keyPressed!=nullptr)
+                {
+                    _keyPressed(i);
+                }
             }
         }
     }
     return true;
 }
 
-void KeyboardScan::setCallback_keyChange(voidFuncPtrByte keyChanged)
+void KeyboardScan::setCallback_keyPressed(voidFuncPtrByte keyPressed)
 {
-    _keyChanged = keyChanged;
+    _keyPressed = keyPressed;
 }
+
+void KeyboardScan::setCallback_keyReleased(voidFuncPtrByte keyReleased)
+{
+    _keyReleased = keyReleased;
+}
+
 
 bool KeyboardScan::isKeyDown(byte keyNr)
 {

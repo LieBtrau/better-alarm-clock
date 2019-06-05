@@ -1,3 +1,5 @@
+/* https://hackaday.com/2015/09/04/embed-with-elliot-practical-state-machines/
+ */
 #include "Max72xxPanel.h"
 #include <SPI.h>
 #include <Wire.h> // Enable this line if using Arduino Uno, Mega, etc.
@@ -61,10 +63,10 @@ SelectParameter song = {3, 9, playSong};
 LedMatrixSelect sldSong = LedMatrixSelect(&matrix, topleft1, botRight1, &song);
 
 CharlieLed ledDD1 = {0, 1};
-bool bLightnessSelected=false;
+bool bLightnessSelected = false;
 LedToggle tglLightness = LedToggle(&myCharlie, &ledDD1, &bLightnessSelected);
 
-FieldParameter hours = {0, 12, 23 , 1};
+FieldParameter hours = {0, 12, 23, 1};
 SevenSegmentField fldHours = SevenSegmentField(&matrix7, SevenSegmentField::RIGHTPOS, &hours);
 
 void setup()
@@ -87,7 +89,7 @@ void setup()
 
 bool dirUp = true;
 unsigned long ulTimer = millis();
-MenuOut* output=&fldLightness;
+MenuOut *output = &fldLightness;
 
 void loop()
 {
@@ -107,25 +109,31 @@ void loop()
   //   tglLightness.render();
   // }
 
-  if(dirUp)
+  if (dirUp)
   {
-  if(!fldLightness.increase())
-  {
-    dirUp=false;
-  }
-  }else{
-    if(!fldLightness.decrease())
+    if (!fldLightness.increase())
     {
-      dirUp=true;
+      dirUp = false;
     }
   }
-  matrix.fillScreen(0);
+  else
+  {
+    if (!fldLightness.decrease())
+    {
+      dirUp = true;
+    }
+  }
   // sldSong.next();
-  output->render();
   // sldSong.render();
-  matrix.write();
-  matrix7.writeDisplay();
-   delay(100);
+  if (output->render() || sldSong.render())
+  {
+    matrix.write();
+  }
+  if (fldHours.render())
+  {
+    matrix7.writeDisplay();
+  }
+  delay(100);
   //showLedState();
   // // try to print a number thats too long
   // matrix7.print(10000, DEC);

@@ -4,7 +4,7 @@ LedToggle::LedToggle(Chaplex *chappy, CharlieLed *led, bool* value) : _chappy(ch
 {
 }
 
-void LedToggle::render()
+void LedToggle::show()
 {
     _chappy->setLedState(_led, *_val);
 }
@@ -17,9 +17,11 @@ void LedToggle::hide()
 void LedToggle::set()
 {
     *_val = true;
+    updateNeeded = true;
 }
 
 void LedToggle::clear()
 {
     *_val = false;
+    updateNeeded = true;
 }
