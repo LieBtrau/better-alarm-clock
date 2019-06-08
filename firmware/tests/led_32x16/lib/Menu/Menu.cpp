@@ -6,5 +6,7 @@ bool MenuOut::render()
     {
         show();
     }
+    bool retVal = updateNeeded;
     updateNeeded=false;
+    return retVal;
 }

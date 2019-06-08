@@ -38,20 +38,19 @@ LedMatrixField::LedMatrixField(Max72xxPanel *panel, Coordinate topleft, Coordina
 void LedMatrixField::show()
 {
     hide();
-    _panel->drawRect(_topleft.x, _topleft.y, _botRight.x - _topleft.x, _botRight.y - _topleft.y, 1);
-    byte maxLength = _botRight.x - _topleft.x - 2;
-    //_panel->drawLine(_topleft.x+1, _topleft.y+1, maxLength, _topleft.y+1, 0);
+    _panel->drawLine(_botRight.x, _topleft.y, _botRight.x, _botRight.y, 1);
+    _panel->drawLine(_topleft.x, _topleft.y, _topleft.x, _botRight.y, 1);
+    byte maxLength = _botRight.x - _topleft.x - 1;
     byte length = (_val->cur * maxLength) / (_val->max - _val->min);
     if (length)
     {
-        _panel->drawLine(_topleft.x + 1, _topleft.y + 1, length, _topleft.y + 1, 1);
+        _panel->fillRect(_topleft.x+1, _topleft.y, length, _botRight.y - _topleft.y+1, 1);
     }
 }
 
 void LedMatrixField::hide()
 {
-    _panel->drawRect(_topleft.x, _topleft.y, _botRight.x - _topleft.x, _botRight.y - _topleft.y, 0);
-    _panel->drawLine(_topleft.x + 1, _topleft.y + 1, _botRight.x - 1, _topleft.y + 1, 0);
+    _panel->fillRect(_topleft.x, _topleft.y, _botRight.x - _topleft.x, _botRight.y - _topleft.y+1, 0);
 }
 
 SevenSegmentField::SevenSegmentField(Adafruit_7segment *panel, byte leftPos, FieldParameter *par) : Field(par), _panel(panel), _leftPos(leftPos)

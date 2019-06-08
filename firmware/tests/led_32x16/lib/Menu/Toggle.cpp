@@ -25,3 +25,9 @@ void LedToggle::clear()
     *_val = false;
     updateNeeded = true;
 }
+
+void LedToggle::toggle()
+{
+    *_val = !(*_val);
+    updateNeeded = true;
+}

@@ -102,6 +102,7 @@ public:
     LedToggle(Chaplex *chappy, CharlieLed *led, bool *value);
     void set();
     void clear();
+    void toggle();
     void hide();
 
 protected:
@@ -111,4 +112,31 @@ private:
     Chaplex *_chappy;
     CharlieLed *_led;
     bool *_val;
+};
+
+//---------------------------------------------------------------------------------------------------------------------------
+typedef void (*voidFuncPtrLedTogglePtr)(LedToggle* led);
+enum BUTTONS
+{
+    LIGHTNESS = 3,
+    VOLUME = 2,
+    SONGCHOICE = 1,
+    ALARMTIME = 0,
+    MENU = 6,
+    MONDAY = 8,
+    TUESDAY = 9,
+    WEDNESDAY = 10,
+    THURSDAY = 11,
+    FRIDAY = 12,
+    SATURDAY = 13,
+    SUNDAY = 14,
+    NIGHTDISPLAYBRIGHTNESS = 5,
+    DAYNIGHTLEVEL = 4,
+    DAYDISPLAYBRIGHTNESS = 7
+};
+
+struct PushButton
+{
+    LedToggle* led;
+    voidFuncPtrLedTogglePtr doAction = nullptr;
 };

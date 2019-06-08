@@ -96,7 +96,7 @@ void setup()
   rotenc.setClockwiseCallback(increaseRotEnc);
   rotenc.setCounterClockwiseCallback(decreaseRotEnc);
   keyb.init(writePinModes, writePullups);
-  keyb.setCallback_keyChange(keyChanged);
+  keyb.setCallback_keyReleased(keyChanged);
 }
 
 void loop()
