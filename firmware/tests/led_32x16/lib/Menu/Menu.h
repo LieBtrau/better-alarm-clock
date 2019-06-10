@@ -115,7 +115,6 @@ private:
 };
 
 //---------------------------------------------------------------------------------------------------------------------------
-typedef void (*voidFuncPtrLedTogglePtr)(LedToggle* led);
 enum BUTTONS
 {
     LIGHTNESS = 3,
@@ -135,8 +134,19 @@ enum BUTTONS
     DAYDISPLAYBRIGHTNESS = 7
 };
 
-struct PushButton
+typedef void (*voidFuncPtrBool)(bool);
+
+class PushButton
 {
-    LedToggle* led;
-    voidFuncPtrLedTogglePtr doAction = nullptr;
+public:
+    PushButton(BUTTONS key, LedToggle* led, voidFuncPtrBool doAction);
+    BUTTONS key();
+    void doAction(bool selected);
+private:
+    BUTTONS _key;
+    LedToggle* _led;
+    voidFuncPtrBool _doAction = nullptr;
 };
+
+
+

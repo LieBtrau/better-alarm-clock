@@ -2,44 +2,93 @@
 #include "actions.h"
 
 extern FieldParameter lightness;
+extern FieldParameter volume;
+extern FieldParameter dayBright;
+extern FieldParameter dayNight;
+extern FieldParameter nightBright;
 extern SelectParameter song;
-extern bool bLightnessSelected;
+extern bool weekdays[7];
+extern bool bAlarmSelected;
+extern bool bMenuSelected;
+extern bool matrixFields[6];
+
 extern FieldParameter hours;
 
+void attachRotaryEnc(bool selected = false);
 
-Adafruit_7segment matrix7 = Adafruit_7segment();
-Chaplex myCharlie;
-
+// 32x16 LED Matrix elements
 int numberOfHorizontalDisplays = 4;
 int numberOfVerticalDisplays = 2;
 const byte pinMOSI = PA7;
 const byte pinSCLK = PA5;
 const byte pinCS = PA1;
 Max72xxPanel matrix = Max72xxPanel(pinMOSI, pinSCLK, pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
-Coordinate topleft = {0, 0};
-Coordinate botright = {11, 2};
-LedMatrixField fldLightness = LedMatrixField(&matrix, topleft, botright, &lightness);
 
-Coordinate topleft1 = {0, 7};
-Coordinate botRight1 = {11, 9};
-LedMatrixSelect sldSong = LedMatrixSelect(&matrix, topleft1, botRight1, &song);
+LedMatrixField fldLightness = LedMatrixField(&matrix, {0, 0}, {11, 2}, &lightness);
+LedMatrixField fldVolume = LedMatrixField(&matrix, {0, 7}, {11, 9}, &volume);
+LedMatrixSelect sldSong = LedMatrixSelect(&matrix, {0, 13}, {11, 15}, &song);
+LedMatrixField fldDayBright = LedMatrixField(&matrix, {20, 0}, {31, 2}, &dayBright);
+LedMatrixField fldDayNight = LedMatrixField(&matrix, {20, 7}, {31, 9}, &dayNight);
+LedMatrixField fldNightBright = LedMatrixField(&matrix, {20, 13}, {31, 15}, &nightBright);
 
-CharlieLed ledDD1 = {0, 1};
-LedToggle tglLightness = LedToggle(&myCharlie, &ledDD1, &bLightnessSelected);
+// Charlieplexed LEDs
+Chaplex myCharlie;
+CharlieLed ledMatrix[] = {
+    //{anode_registerbit, cathode_registerbit},
+    {2, 1}, //D4 - ALARMTIME = 0
+    {1, 2}, //D3 - SONGCHOICE = 1
+    {1, 0}, //D2 - VOLUME = 2
+    {0, 1}, //D1 - LIGHTNESS = 3
+    {0, 4}, //D14 - DAYNIGHTLEVEL = 4
+    {2, 0}, //D10 - NIGHTDISPLAYBRIGHTNESS = 5
+    {0, 2}, //D7 - MENU = 6
+    {4, 0}, //D15 - DAYDISPLAYBRIGHTNESS = 7
+    {1, 3}, //D13 - MONDAY = 8
+    {2, 3}, //D5 - TUESDAY = 9
+    {3, 2}, //D8 - WEDNESDAY = 10
+    {3, 4}, //D6 - THURSDAY = 11
+    {4, 3}, //D9 - FRIDAY = 12
+    {4, 2}, //D12 - SATURDAY = 13
+    {2, 4}  //D11 - SUNDAY = 14
+};
 
+LedToggle tglLightness = LedToggle(&myCharlie, &ledMatrix[LIGHTNESS], matrixFields);
+LedToggle tglVolume = LedToggle(&myCharlie, &ledMatrix[VOLUME], matrixFields + 1);
+LedToggle tglSongChoice = LedToggle(&myCharlie, &ledMatrix[SONGCHOICE], matrixFields + 2);
+LedToggle tglDayBrightness = LedToggle(&myCharlie, &ledMatrix[DAYDISPLAYBRIGHTNESS], matrixFields + 3);
+LedToggle tglDayNight = LedToggle(&myCharlie, &ledMatrix[DAYNIGHTLEVEL], matrixFields + 4);
+LedToggle tglNightBrightness = LedToggle(&myCharlie, &ledMatrix[NIGHTDISPLAYBRIGHTNESS], matrixFields + 5);
+LedToggle *matrixLEDs[] = {&tglLightness, &tglVolume, &tglSongChoice, &tglDayBrightness, &tglDayNight, &tglNightBrightness};
+
+LedToggle tglMonday = LedToggle(&myCharlie, &ledMatrix[MONDAY], weekdays);
+LedToggle tglTuesday = LedToggle(&myCharlie, &ledMatrix[TUESDAY], weekdays + 1);
+LedToggle tglWednesday = LedToggle(&myCharlie, &ledMatrix[WEDNESDAY], weekdays + 2);
+LedToggle tglThursday = LedToggle(&myCharlie, &ledMatrix[THURSDAY], weekdays + 3);
+LedToggle tglFriday = LedToggle(&myCharlie, &ledMatrix[FRIDAY], weekdays + 4);
+LedToggle tglSaturday = LedToggle(&myCharlie, &ledMatrix[SATURDAY], weekdays + 5);
+LedToggle tglSunday = LedToggle(&myCharlie, &ledMatrix[SUNDAY], weekdays + 6);
+
+LedToggle tglAlarm = LedToggle(&myCharlie, &ledMatrix[ALARMTIME], &bAlarmSelected);
+LedToggle tglMenu = LedToggle(&myCharlie, &ledMatrix[MENU], &bMenuSelected);
+
+// Seven segment display elements
+Adafruit_7segment matrix7 = Adafruit_7segment();
 SevenSegmentField fldHours = SevenSegmentField(&matrix7, SevenSegmentField::RIGHTPOS, &hours);
 
-void disableButtonLightness(LedToggle *led);
-void enableButtonLightness(LedToggle *led);
-
-PushButton buttons[1] = {{&tglLightness, enableButtonLightness}};
+PushButton matrixButtons[] =
+    {{LIGHTNESS, &tglLightness, attachRotaryEnc},
+     {VOLUME, &tglVolume, attachRotaryEnc},
+     {SONGCHOICE, &tglSongChoice, attachRotaryEnc},
+     {DAYDISPLAYBRIGHTNESS, &tglDayBrightness, attachRotaryEnc},
+     {DAYNIGHTLEVEL, &tglDayNight, attachRotaryEnc},
+     {NIGHTDISPLAYBRIGHTNESS, &tglNightBrightness, attachRotaryEnc}};
 Adafruit_MCP23017 mcp;
 KeyboardScan keyb;
+
 bool dirUp = true;
 bool dirUp1 = true;
 unsigned long ulTimer = millis();
 unsigned long ulTimer1 = millis();
-MenuOut *output = &fldLightness;
 
 void animation()
 {
@@ -67,61 +116,52 @@ void animation()
 
 void writePinModes(byte data)
 {
-    mcp.writePinMode(0, data);
+  mcp.writePinMode(0, data);
 }
 
 void writePullups(byte data)
 {
-    mcp.writePullUps(0, data);
+  mcp.writePullUps(0, data);
 }
 
 void writeGpio(byte data)
 {
-    mcp.writeGPIO(0, data);
+  mcp.writeGPIO(0, data);
 }
 
 byte readGpio()
 {
-    return mcp.readGPIO(0);
+  return mcp.readGPIO(0);
 }
 
 void showLedState()
 {
-    static unsigned long ultimer = 0;
-    if (millis() > ultimer + 5)
+  static unsigned long ultimer = 0;
+  if (millis() > ultimer + 5)
+  {
+    ultimer = millis();
+    byte pinModes = mcp.readPinMode(1);
+    byte gpioStates = mcp.readGPIO(1);
+    if (myCharlie.showLedState(pinModes, gpioStates))
     {
-        ultimer = millis();
-        byte pinModes = mcp.readPinMode(1);
-        byte gpioStates = mcp.readGPIO(1);
-        if (myCharlie.showLedState(pinModes, gpioStates))
-        {
-            mcp.writePinMode(1, pinModes);
-            mcp.writeGPIO(1, gpioStates);
-        }
+      mcp.writePinMode(1, pinModes);
+      mcp.writeGPIO(1, gpioStates);
     }
-}
-
-void disableButtonLightness(LedToggle *led)
-{
-    led->clear();
-    buttons[0].doAction = enableButtonLightness;
-}
-
-void enableButtonLightness(LedToggle *led)
-{
-    led->set();
-    buttons[0].doAction = disableButtonLightness;
+  }
 }
 
 void keyChanged(byte key)
 {
-    buttons[0].doAction(buttons[0].led);
+  for (int i = 0; i < 6; i++)
+  {
+    matrixButtons[i].doAction(matrixButtons[i].key() == key);
+  }
 }
 
 void renderMenu()
 {
   keyb.updateKeys(writeGpio, readGpio);
-  if (output->render() || sldSong.render())
+  if (fldLightness.render() || sldSong.render() || fldVolume.render() || fldDayBright.render() || fldDayNight.render() || fldNightBright.render())
   {
     matrix.write();
   }
@@ -129,26 +169,37 @@ void renderMenu()
   {
     matrix7.writeDisplay();
   }
-  tglLightness.render();
+  for (int i = 0; i < 6; i++)
+  {
+    matrixLEDs[i]->render();
+  }
   showLedState();
 }
 
 void initMenu()
 {
-    mcp.begin(); // use default address 0
-    matrix.init();
-    matrix.fillScreen(0);
-    matrix7.begin(0x70);
-    fldLightness.render();
-    fldHours.render();
-    sldSong.render();
-    matrix.setFont(&Picopixel);
-    matrix.setCursor(4, 10);
-    matrix.setFont(&TomThumb);
-    matrix.setCursor(4, 10);
+  mcp.begin(); // use default address 0
+  matrix.init();
+  matrix.fillScreen(0);
+  matrix7.begin(0x70);
+  fldLightness.render();
+  fldVolume.render();
+  fldHours.render();
+  sldSong.render();
+  fldDayBright.render();
+  fldDayNight.render();
+  fldNightBright.render();
+  matrix.setFont(&Picopixel);
+  matrix.setCursor(4, 10);
+  matrix.setFont(&TomThumb);
+  matrix.setCursor(4, 10);
 
-    matrix.print("ALARM2");
-    matrix.write(); // Send bitmap to display
-    keyb.init(writePinModes, writePullups);
-    keyb.setCallback_keyReleased(keyChanged);
+  matrix.print("ALARM3");
+  matrix.write(); // Send bitmap to display
+  keyb.init(writePinModes, writePullups);
+  keyb.setCallback_keyReleased(keyChanged);
+}
+
+void attachRotaryEnc(bool selected)
+{
 }
