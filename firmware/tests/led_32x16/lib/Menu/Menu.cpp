@@ -11,6 +11,7 @@ bool MenuOut::render()
     return retVal;
 }
 
+PushButton::PushButton(BUTTONS key, LedToggle *led) : _key(key), _led(led) {}
 PushButton::PushButton(BUTTONS key, LedToggle *led, ParameterUpdate *param) : _key(key), _led(led), _param(param) {}
 
 BUTTONS PushButton::key()
@@ -23,18 +24,23 @@ void PushButton::doAction(bool selected)
     if (selected)
     {
         _led->set();
+        if (_doAction != nullptr)
+        {
+            _doAction(selected);
+        }
     }
     else
     {
         _led->clear();
     }
-    if (_doAction != nullptr)
-    {
-        _doAction(selected);
-    }
 }
 
-ParameterUpdate* PushButton::getParam()
+void PushButton::setAction(voidFuncPtrBool doAction)
+{
+    _doAction = doAction;
+}
+
+ParameterUpdate *PushButton::getParam()
 {
     return _param;
 }

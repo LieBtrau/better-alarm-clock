@@ -146,6 +146,7 @@ typedef void (*voidFuncPtrBool)(bool);
 class PushButton
 {
 public:
+    PushButton(BUTTONS key, LedToggle *led);
     PushButton(BUTTONS key, LedToggle *led, ParameterUpdate* param);
     BUTTONS key();
     void setAction(voidFuncPtrBool doAction);

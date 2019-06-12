@@ -15,6 +15,7 @@ bool weekdays[] = {false, false, false, false, false, false, false};
 bool bAlarmSelected = false;
 bool bMenuSelected = false;
 FieldParameter hours = {0, 12, 23, 1};
+FieldParameter minutes = {0, 15, 55, 5};
 
 void setup()
 {
@@ -25,6 +26,5 @@ void setup()
 
 void loop()
 {
-  //animation();
   renderMenu();
 }
