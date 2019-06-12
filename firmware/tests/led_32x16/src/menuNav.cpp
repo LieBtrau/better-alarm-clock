@@ -1,5 +1,7 @@
 #include "menuNav.h"
 #include "actions.h"
+#include "RotaryEncoder_MCP23017.h"
+#include "pins.h"
 
 extern FieldParameter lightness;
 extern FieldParameter volume;
@@ -14,14 +16,9 @@ extern bool matrixFields[6];
 
 extern FieldParameter hours;
 
-void attachRotaryEnc(bool selected = false);
-
 // 32x16 LED Matrix elements
 int numberOfHorizontalDisplays = 4;
 int numberOfVerticalDisplays = 2;
-const byte pinMOSI = PA7;
-const byte pinSCLK = PA5;
-const byte pinCS = PA1;
 Max72xxPanel matrix = Max72xxPanel(pinMOSI, pinSCLK, pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
 
 LedMatrixField fldLightness = LedMatrixField(&matrix, {0, 0}, {11, 2}, &lightness);
@@ -76,14 +73,16 @@ Adafruit_7segment matrix7 = Adafruit_7segment();
 SevenSegmentField fldHours = SevenSegmentField(&matrix7, SevenSegmentField::RIGHTPOS, &hours);
 
 PushButton matrixButtons[] =
-    {{LIGHTNESS, &tglLightness, attachRotaryEnc},
-     {VOLUME, &tglVolume, attachRotaryEnc},
-     {SONGCHOICE, &tglSongChoice, attachRotaryEnc},
-     {DAYDISPLAYBRIGHTNESS, &tglDayBrightness, attachRotaryEnc},
-     {DAYNIGHTLEVEL, &tglDayNight, attachRotaryEnc},
-     {NIGHTDISPLAYBRIGHTNESS, &tglNightBrightness, attachRotaryEnc}};
+    {{LIGHTNESS, &tglLightness, &fldLightness},
+     {VOLUME, &tglVolume, &fldVolume},
+     {SONGCHOICE, &tglSongChoice, &sldSong},
+     {DAYDISPLAYBRIGHTNESS, &tglDayBrightness, &fldDayBright},
+     {DAYNIGHTLEVEL, &tglDayNight, &fldDayNight},
+     {NIGHTDISPLAYBRIGHTNESS, &tglNightBrightness, &fldNightBright}};
 Adafruit_MCP23017 mcp;
 KeyboardScan keyb;
+RotaryEncoder_MCP23017 rotenc(&mcp, pinIRQ);
+ParameterUpdate *rotencProcessor = nullptr;
 
 bool dirUp = true;
 bool dirUp1 = true;
@@ -95,7 +94,7 @@ void animation()
   if (millis() > ulTimer1 + 500)
   {
     ulTimer1 = millis();
-    sldSong.next();
+    sldSong.increase();
   }
 
   if (dirUp)
@@ -155,12 +154,33 @@ void keyChanged(byte key)
   for (int i = 0; i < 6; i++)
   {
     matrixButtons[i].doAction(matrixButtons[i].key() == key);
+    if (matrixButtons[i].key() == key)
+    {
+      rotencProcessor = matrixButtons[i].getParam();
+    }
+  }
+}
+
+void increaseRotEnc()
+{
+  if (rotencProcessor)
+  {
+    rotencProcessor->increase();
+  }
+}
+
+void decreaseRotEnc()
+{
+  if (rotencProcessor)
+  {
+    rotencProcessor->decrease();
   }
 }
 
 void renderMenu()
 {
   keyb.updateKeys(writeGpio, readGpio);
+  rotenc.poll();
   if (fldLightness.render() || sldSong.render() || fldVolume.render() || fldDayBright.render() || fldDayNight.render() || fldNightBright.render())
   {
     matrix.write();
@@ -182,6 +202,9 @@ void initMenu()
   matrix.init();
   matrix.fillScreen(0);
   matrix7.begin(0x70);
+  rotenc.init();
+  rotenc.setClockwiseCallback(increaseRotEnc);
+  rotenc.setCounterClockwiseCallback(decreaseRotEnc);
   fldLightness.render();
   fldVolume.render();
   fldHours.render();
@@ -198,8 +221,4 @@ void initMenu()
   matrix.write(); // Send bitmap to display
   keyb.init(writePinModes, writePullups);
   keyb.setCallback_keyReleased(keyChanged);
-}
-
-void attachRotaryEnc(bool selected)
-{
 }

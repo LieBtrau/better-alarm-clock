@@ -27,16 +27,18 @@ void LedMatrixSelect::hide()
     _panel->fillRect(_topleft.x, _topleft.y, _botRight.x - _topleft.x, _botRight.y - _topleft.y + 1, 0);
 }
 
-void LedMatrixSelect::next()
+bool LedMatrixSelect::increase()
 {
     _par->cur = _par->cur < _par->max ? _par->cur + 1 : 0; //at maximum, loop back to minimum;
     _par->doAction(_par->cur);
     updateNeeded = true;
+    return true;
 }
 
-void LedMatrixSelect::prev()
+bool LedMatrixSelect::decrease()
 {
     _par->cur = _par->cur > 0 ? _par->cur - 1 : _par->max; //at maximum, loop back to minimum;
     _par->doAction(_par->cur);
-    updateNeeded = false;
+    updateNeeded = true;
+    return true;
 }

@@ -67,9 +67,9 @@ void updateLEDs()
   if (millis() > ulTimer + 100)
   {
     ulTimer = millis();
-    myCharlie.setLedState(ledmatrix[i], OFF);
+    myCharlie.setLedState(&ledmatrix[i], false);
     i = i + 1 > 14 ? 0 : i + 1;
-    myCharlie.setLedState(ledmatrix[i], ON);
+    myCharlie.setLedState(&ledmatrix[i], true);
   }
 }
 

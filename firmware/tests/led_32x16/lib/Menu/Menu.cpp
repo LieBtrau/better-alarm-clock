@@ -2,16 +2,16 @@
 
 bool MenuOut::render()
 {
-    if(updateNeeded)
+    if (updateNeeded)
     {
         show();
     }
     bool retVal = updateNeeded;
-    updateNeeded=false;
+    updateNeeded = false;
     return retVal;
 }
 
-PushButton::PushButton(BUTTONS key, LedToggle* led, voidFuncPtrBool doAction): _key(key), _led(led), _doAction(doAction){}
+PushButton::PushButton(BUTTONS key, LedToggle *led, ParameterUpdate *param) : _key(key), _led(led), _param(param) {}
 
 BUTTONS PushButton::key()
 {
@@ -20,12 +20,21 @@ BUTTONS PushButton::key()
 
 void PushButton::doAction(bool selected)
 {
-    if(selected)
+    if (selected)
     {
         _led->set();
-    }else
+    }
+    else
     {
         _led->clear();
     }
-    _doAction(selected);
+    if (_doAction != nullptr)
+    {
+        _doAction(selected);
+    }
+}
+
+ParameterUpdate* PushButton::getParam()
+{
+    return _param;
 }

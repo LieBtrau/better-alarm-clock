@@ -36,12 +36,19 @@ protected:
     bool updateNeeded = true;
 };
 
-class Field : public MenuOut
+class ParameterUpdate
 {
 public:
+    virtual bool increase() = 0;
+    virtual bool decrease() = 0;
+};
+
+class Field : public MenuOut, public ParameterUpdate
+{
+public:
+    virtual bool increase();
+    virtual bool decrease();
     Field(FieldParameter *par);
-    bool increase();
-    bool decrease();
 
 protected:
     FieldParameter *_val;
@@ -78,12 +85,12 @@ private:
     byte _leftPos;
 };
 
-class LedMatrixSelect : public MenuOut
+class LedMatrixSelect : public MenuOut, public ParameterUpdate
 {
 public:
     LedMatrixSelect(Max72xxPanel *panel, Coordinate topleft, Coordinate botRight, SelectParameter *par);
-    void next();
-    void prev();
+    virtual bool increase();
+    virtual bool decrease();
     void hide();
 
 protected:
@@ -139,14 +146,14 @@ typedef void (*voidFuncPtrBool)(bool);
 class PushButton
 {
 public:
-    PushButton(BUTTONS key, LedToggle* led, voidFuncPtrBool doAction);
+    PushButton(BUTTONS key, LedToggle *led, ParameterUpdate* param);
     BUTTONS key();
+    void setAction(voidFuncPtrBool doAction);
     void doAction(bool selected);
+    ParameterUpdate* getParam();
 private:
     BUTTONS _key;
-    LedToggle* _led;
+    LedToggle *_led;
     voidFuncPtrBool _doAction = nullptr;
+    ParameterUpdate* _param = nullptr;
 };
-
-
-
