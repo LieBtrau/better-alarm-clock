@@ -1,14 +1,34 @@
 #include "Menu.h"
 
-bool MenuOut::render()
+bool MenuOut::render(bool forceRender)
 {
-    if (updateNeeded)
+    if (updateNeeded || forceRender)
     {
         show();
     }
     bool retVal = updateNeeded;
     updateNeeded = false;
     return retVal;
+}
+
+bool MenuOut::flash()
+{
+    if (millis() < ulTimer + FLASH_INTERVAL)
+    {
+        return false;
+    }
+    ulTimer = millis();
+    if (visible)
+    {
+        visible = false;
+        hide();
+    }
+    else
+    {
+        visible = true;
+        render(true);
+    }
+    return true;
 }
 
 PushButton::PushButton(BUTTONS key, LedToggle *led) : _key(key), _led(led) {}

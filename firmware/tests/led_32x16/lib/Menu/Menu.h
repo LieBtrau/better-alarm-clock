@@ -28,22 +28,28 @@ struct SelectParameter
 class MenuOut
 {
 public:
-    bool render(); //returns true if content has changed since last call, which would imply a redraw is needed.
+    bool render(bool forceRender = false); //returns true if content has changed since last call, which would imply a redraw is needed.
+    bool flash();
     virtual void hide() = 0;
 
 protected:
     virtual void show() = 0;
     bool updateNeeded = true;
+
+private:
+    const unsigned long FLASH_INTERVAL = 500;
+    bool visible = false;
+    unsigned long ulTimer = millis();
 };
 
-class ParameterUpdate
+class ParameterUpdate : public MenuOut
 {
 public:
     virtual bool increase() = 0;
     virtual bool decrease() = 0;
 };
 
-class Field : public MenuOut, public ParameterUpdate
+class Field : public ParameterUpdate
 {
 public:
     virtual bool increase();
@@ -85,7 +91,7 @@ private:
     byte _leftPos;
 };
 
-class LedMatrixSelect : public MenuOut, public ParameterUpdate
+class LedMatrixSelect : public ParameterUpdate
 {
 public:
     LedMatrixSelect(Max72xxPanel *panel, Coordinate topleft, Coordinate botRight, SelectParameter *par);
@@ -147,14 +153,15 @@ class PushButton
 {
 public:
     PushButton(BUTTONS key, LedToggle *led);
-    PushButton(BUTTONS key, LedToggle *led, ParameterUpdate* param);
+    PushButton(BUTTONS key, LedToggle *led, ParameterUpdate *param);
     BUTTONS key();
     void setAction(voidFuncPtrBool doAction);
     void doAction(bool selected);
-    ParameterUpdate* getParam();
+    ParameterUpdate *getParam();
+
 private:
     BUTTONS _key;
     LedToggle *_led;
     voidFuncPtrBool _doAction = nullptr;
-    ParameterUpdate* _param = nullptr;
+    ParameterUpdate *_param = nullptr;
 };

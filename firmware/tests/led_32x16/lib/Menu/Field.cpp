@@ -71,5 +71,6 @@ void SevenSegmentField::show()
 
 void SevenSegmentField::hide()
 {
-    _panel->clear();
+    _panel->writeDigitRaw(_leftPos, 0x00);
+    _panel->writeDigitRaw(_leftPos+1, 0x00);
 }

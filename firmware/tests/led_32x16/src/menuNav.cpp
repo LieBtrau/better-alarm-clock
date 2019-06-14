@@ -1,7 +1,16 @@
+#include "Max72xxPanel.h"
+#include "Fonts/Picopixel.h"
+#include "Fonts/TomThumb.h"
+#include <SPI.h>
+#include <Wire.h> // Enable this line if using Arduino Uno, Mega, etc.
+#include <Adafruit_GFX.h>
+#include "Adafruit_LEDBackpack.h"
+#include "Adafruit_MCP23017.h"
+#include "KeyboardScan.h"
 #include "menuNav.h"
 #include "actions.h"
-#include "RotaryEncoder_MCP23017.h"
 #include "pins.h"
+#include "rotaryEncoder.h"
 
 extern FieldParameter lightness;
 extern FieldParameter volume;
@@ -9,12 +18,15 @@ extern FieldParameter dayBright;
 extern FieldParameter dayNight;
 extern FieldParameter nightBright;
 extern SelectParameter song;
+extern FieldParameter hours;
+extern FieldParameter minutes;
 extern bool weekdays[7];
 extern bool bAlarmSelected;
 extern bool bMenuSelected;
 extern bool matrixFields[6];
 
-extern FieldParameter hours;
+void setHours(bool action);
+void setMinutes(bool action);
 
 // 32x16 LED Matrix elements
 int numberOfHorizontalDisplays = 4;
@@ -70,7 +82,8 @@ LedToggle tglMenu = LedToggle(&myCharlie, &ledMatrix[MENU], &bMenuSelected);
 
 // Seven segment display elements
 Adafruit_7segment matrix7 = Adafruit_7segment();
-SevenSegmentField fldHours = SevenSegmentField(&matrix7, SevenSegmentField::RIGHTPOS, &hours);
+SevenSegmentField fldHours = SevenSegmentField(&matrix7, SevenSegmentField::LEFTPOS, &hours);
+SevenSegmentField fldMinutes = SevenSegmentField(&matrix7, SevenSegmentField::RIGHTPOS, &minutes);
 
 PushButton matrixButtons[] =
     {{LIGHTNESS, &tglLightness, &fldLightness},
@@ -79,39 +92,10 @@ PushButton matrixButtons[] =
      {DAYDISPLAYBRIGHTNESS, &tglDayBrightness, &fldDayBright},
      {DAYNIGHTLEVEL, &tglDayNight, &fldDayNight},
      {NIGHTDISPLAYBRIGHTNESS, &tglNightBrightness, &fldNightBright}};
+PushButton alarmTimeButton = {ALARMTIME, &tglAlarm};
 Adafruit_MCP23017 mcp;
 KeyboardScan keyb;
-RotaryEncoder_MCP23017 rotenc(&mcp, pinIRQ);
-ParameterUpdate *rotencProcessor = nullptr;
-
-bool dirUp = true;
-bool dirUp1 = true;
-unsigned long ulTimer = millis();
-unsigned long ulTimer1 = millis();
-
-void animation()
-{
-  if (millis() > ulTimer1 + 500)
-  {
-    ulTimer1 = millis();
-    sldSong.increase();
-  }
-
-  if (dirUp)
-  {
-    if (!fldLightness.increase())
-    {
-      dirUp = false;
-    }
-  }
-  else
-  {
-    if (!fldLightness.decrease())
-    {
-      dirUp = true;
-    }
-  }
-}
+extern RotaryEncoderConsumer rec;
 
 void writePinModes(byte data)
 {
@@ -156,36 +140,37 @@ void keyChanged(byte key)
     matrixButtons[i].doAction(matrixButtons[i].key() == key);
     if (matrixButtons[i].key() == key)
     {
-      rotencProcessor = matrixButtons[i].getParam();
+      rec.setConsumer(matrixButtons[i].getParam(), false);
+      alarmTimeButton.doAction(false);
     }
   }
-}
-
-void increaseRotEnc()
-{
-  if (rotencProcessor)
+  if (key == ALARMTIME)
   {
-    rotencProcessor->increase();
+    alarmTimeButton.doAction(true);
   }
 }
 
-void decreaseRotEnc()
+void setMinutes(bool action)
 {
-  if (rotencProcessor)
-  {
-    rotencProcessor->decrease();
-  }
+  rec.setConsumer(&fldMinutes, true);
+  alarmTimeButton.setAction(setHours);
+}
+
+void setHours(bool action)
+{
+  rec.setConsumer(&fldHours, true);
+  alarmTimeButton.setAction(setMinutes);
 }
 
 void renderMenu()
 {
+  bool flashing = rec.poll();
   keyb.updateKeys(writeGpio, readGpio);
-  rotenc.poll();
   if (fldLightness.render() || sldSong.render() || fldVolume.render() || fldDayBright.render() || fldDayNight.render() || fldNightBright.render())
   {
     matrix.write();
   }
-  if (fldHours.render())
+  if (fldHours.render() || fldMinutes.render() || flashing)
   {
     matrix7.writeDisplay();
   }
@@ -193,6 +178,7 @@ void renderMenu()
   {
     matrixLEDs[i]->render();
   }
+  tglAlarm.render();
   showLedState();
 }
 
@@ -202,21 +188,12 @@ void initMenu()
   matrix.init();
   matrix.fillScreen(0);
   matrix7.begin(0x70);
-  rotenc.init();
-  rotenc.setClockwiseCallback(increaseRotEnc);
-  rotenc.setCounterClockwiseCallback(decreaseRotEnc);
-  fldLightness.render();
-  fldVolume.render();
-  fldHours.render();
-  sldSong.render();
-  fldDayBright.render();
-  fldDayNight.render();
-  fldNightBright.render();
+  rec.init();
   matrix.setFont(&Picopixel);
   matrix.setCursor(4, 10);
   matrix.setFont(&TomThumb);
   matrix.setCursor(4, 10);
-
+  alarmTimeButton.setAction(setHours);
   matrix.print("ALARM3");
   matrix.write(); // Send bitmap to display
   keyb.init(writePinModes, writePullups);
