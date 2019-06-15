@@ -1,5 +1,4 @@
 #include "rotaryEncoder.h"
-
 #include "pins.h"
 
 extern Adafruit_MCP23017 mcp;

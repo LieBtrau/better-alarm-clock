@@ -14,9 +14,6 @@
 
 extern FieldParameter lightness;
 extern FieldParameter volume;
-extern FieldParameter dayBright;
-extern FieldParameter dayNight;
-extern FieldParameter nightBright;
 extern SelectParameter song;
 extern FieldParameter hours;
 extern FieldParameter minutes;
@@ -36,9 +33,9 @@ Max72xxPanel matrix = Max72xxPanel(pinMOSI, pinSCLK, pinCS, numberOfHorizontalDi
 LedMatrixField fldLightness = LedMatrixField(&matrix, {0, 0}, {11, 2}, &lightness);
 LedMatrixField fldVolume = LedMatrixField(&matrix, {0, 7}, {11, 9}, &volume);
 LedMatrixSelect sldSong = LedMatrixSelect(&matrix, {0, 13}, {11, 15}, &song);
-LedMatrixField fldDayBright = LedMatrixField(&matrix, {20, 0}, {31, 2}, &dayBright);
-LedMatrixField fldDayNight = LedMatrixField(&matrix, {20, 7}, {31, 9}, &dayNight);
-LedMatrixField fldNightBright = LedMatrixField(&matrix, {20, 13}, {31, 15}, &nightBright);
+LedMatrixField fldDayBright = LedMatrixField(&matrix, {20, 0}, {31, 2}, &(compar.dayBright));
+LedMatrixField fldDayNight = LedMatrixField(&matrix, {20, 7}, {31, 9}, &(compar.dayNight));
+LedMatrixField fldNightBright = LedMatrixField(&matrix, {20, 13}, {31, 15}, &(compar.nightBright));
 
 // Charlieplexed LEDs
 Chaplex myCharlie;
