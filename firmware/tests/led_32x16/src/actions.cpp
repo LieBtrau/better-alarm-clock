@@ -1,8 +1,18 @@
 #include "actions.h"
 
 void playSong(byte i)
-{/*
-  matrix7.print(i, DEC);
-  matrix7.writeDisplay();*/
+{
+  Serial.print("Song : ");
+  Serial.println(i, DEC);
 }
 
+void showLightness(byte i)
+{
+  Serial.print("Light : ");
+  Serial.println(i, DEC);
+}
+
+void stopLightness()
+{
+  Serial.println("stop lightness");
+}

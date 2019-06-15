@@ -8,16 +8,11 @@
 #include "Adafruit_MCP23017.h"
 #include "KeyboardScan.h"
 #include "menuNav.h"
-#include "actions.h"
 #include "pins.h"
 #include "rotaryEncoder.h"
+#include "parameters.h"
 
-extern FieldParameter lightness;
-extern FieldParameter volume;
-extern SelectParameter song;
-extern FieldParameter hours;
-extern FieldParameter minutes;
-extern bool weekdays[7];
+extern byte currentAlarm;
 extern bool bAlarmSelected;
 extern bool bMenuSelected;
 extern bool matrixFields[6];
@@ -30,12 +25,12 @@ int numberOfHorizontalDisplays = 4;
 int numberOfVerticalDisplays = 2;
 Max72xxPanel matrix = Max72xxPanel(pinMOSI, pinSCLK, pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
 
-LedMatrixField fldLightness = LedMatrixField(&matrix, {0, 0}, {11, 2}, &lightness);
-LedMatrixField fldVolume = LedMatrixField(&matrix, {0, 7}, {11, 9}, &volume);
-LedMatrixSelect sldSong = LedMatrixSelect(&matrix, {0, 13}, {11, 15}, &song);
-LedMatrixField fldDayBright = LedMatrixField(&matrix, {20, 0}, {31, 2}, &(compar.dayBright));
-LedMatrixField fldDayNight = LedMatrixField(&matrix, {20, 7}, {31, 9}, &(compar.dayNight));
-LedMatrixField fldNightBright = LedMatrixField(&matrix, {20, 13}, {31, 15}, &(compar.nightBright));
+LedMatrixField fldLightness = LedMatrixField(&matrix, {0, 0}, {11, 2}, &alarms[currentAlarm].lightness);
+LedMatrixField fldVolume = LedMatrixField(&matrix, {0, 7}, {11, 9}, &alarms[currentAlarm].volume);
+LedMatrixSelect sldSong = LedMatrixSelect(&matrix, {0, 13}, {11, 15}, &alarms[currentAlarm].song);
+LedMatrixField fldDayBright = LedMatrixField(&matrix, {20, 0}, {31, 2}, &compar.dayBright);
+LedMatrixField fldDayNight = LedMatrixField(&matrix, {20, 7}, {31, 9}, &compar.dayNight);
+LedMatrixField fldNightBright = LedMatrixField(&matrix, {20, 13}, {31, 15}, &compar.nightBright);
 
 // Charlieplexed LEDs
 Chaplex myCharlie;
@@ -66,21 +61,21 @@ LedToggle tglDayNight = LedToggle(&myCharlie, &ledMatrix[DAYNIGHTLEVEL], matrixF
 LedToggle tglNightBrightness = LedToggle(&myCharlie, &ledMatrix[NIGHTDISPLAYBRIGHTNESS], matrixFields + 5);
 LedToggle *matrixLEDs[] = {&tglLightness, &tglVolume, &tglSongChoice, &tglDayBrightness, &tglDayNight, &tglNightBrightness};
 
-LedToggle tglMonday = LedToggle(&myCharlie, &ledMatrix[MONDAY], weekdays);
-LedToggle tglTuesday = LedToggle(&myCharlie, &ledMatrix[TUESDAY], weekdays + 1);
-LedToggle tglWednesday = LedToggle(&myCharlie, &ledMatrix[WEDNESDAY], weekdays + 2);
-LedToggle tglThursday = LedToggle(&myCharlie, &ledMatrix[THURSDAY], weekdays + 3);
-LedToggle tglFriday = LedToggle(&myCharlie, &ledMatrix[FRIDAY], weekdays + 4);
-LedToggle tglSaturday = LedToggle(&myCharlie, &ledMatrix[SATURDAY], weekdays + 5);
-LedToggle tglSunday = LedToggle(&myCharlie, &ledMatrix[SUNDAY], weekdays + 6);
+LedToggle tglMonday = LedToggle(&myCharlie, &ledMatrix[MONDAY], alarms[currentAlarm].weekdays);
+LedToggle tglTuesday = LedToggle(&myCharlie, &ledMatrix[TUESDAY], alarms[currentAlarm].weekdays + 1);
+LedToggle tglWednesday = LedToggle(&myCharlie, &ledMatrix[WEDNESDAY], alarms[currentAlarm].weekdays + 2);
+LedToggle tglThursday = LedToggle(&myCharlie, &ledMatrix[THURSDAY], alarms[currentAlarm].weekdays + 3);
+LedToggle tglFriday = LedToggle(&myCharlie, &ledMatrix[FRIDAY], alarms[currentAlarm].weekdays + 4);
+LedToggle tglSaturday = LedToggle(&myCharlie, &ledMatrix[SATURDAY], alarms[currentAlarm].weekdays + 5);
+LedToggle tglSunday = LedToggle(&myCharlie, &ledMatrix[SUNDAY], alarms[currentAlarm].weekdays + 6);
 
 LedToggle tglAlarm = LedToggle(&myCharlie, &ledMatrix[ALARMTIME], &bAlarmSelected);
 LedToggle tglMenu = LedToggle(&myCharlie, &ledMatrix[MENU], &bMenuSelected);
 
 // Seven segment display elements
 Adafruit_7segment matrix7 = Adafruit_7segment();
-SevenSegmentField fldHours = SevenSegmentField(&matrix7, SevenSegmentField::LEFTPOS, &hours);
-SevenSegmentField fldMinutes = SevenSegmentField(&matrix7, SevenSegmentField::RIGHTPOS, &minutes);
+SevenSegmentField fldHours = SevenSegmentField(&matrix7, SevenSegmentField::LEFTPOS, &alarms[currentAlarm].hours);
+SevenSegmentField fldMinutes = SevenSegmentField(&matrix7, SevenSegmentField::RIGHTPOS, &alarms[currentAlarm].minutes);
 
 PushButton matrixButtons[] =
     {{LIGHTNESS, &tglLightness, &fldLightness},

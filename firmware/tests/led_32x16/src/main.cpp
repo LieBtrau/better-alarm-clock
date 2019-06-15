@@ -3,18 +3,15 @@
 #include "Arduino.h"
 #include "menuNav.h"
 #include "actions.h"
+#include "parameters.h"
 
 CommonParameters compar;
-FieldParameter lightness = {0, 50, 100, 5};
-FieldParameter volume = {0, 50, 100, 5};
-SelectParameter song = {3, 9, playSong};
-bool weekdays[] = {false, false, false, false, false, false, false};
+AlarmParameters alarms[2];
 
 bool matrixFields[] = {false, false, false, false, false, false};
 bool bAlarmSelected = false;
 bool bMenuSelected = false;
-FieldParameter hours = {0, 12, 23, 1};
-FieldParameter minutes = {0, 15, 55, 5};
+byte currentAlarm = 0;
 
 void setup()
 {

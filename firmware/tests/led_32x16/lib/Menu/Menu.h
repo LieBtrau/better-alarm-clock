@@ -9,20 +9,24 @@ struct Coordinate
     byte y = 0;
 };
 
+typedef void (*voidFuncPtrByte)(byte b);
+typedef void (*voidFuncPtrVoid)(void);
 struct FieldParameter
 {
     byte min = 0;
     byte cur = 0;
     byte max = 0;
     byte step = 0;
+    voidFuncPtrByte doAction = nullptr;
+    voidFuncPtrVoid stopAction = nullptr;
 };
 
-typedef void (*voidFuncPtrByte)(byte b);
 struct SelectParameter
 {
     byte cur = 0;
     byte max = 10;
     voidFuncPtrByte doAction = nullptr;
+    voidFuncPtrVoid stopAction = nullptr;
 };
 
 class MenuOut
@@ -47,6 +51,9 @@ class ParameterUpdate : public MenuOut
 public:
     virtual bool increase() = 0;
     virtual bool decrease() = 0;
+    virtual void stopAction() = 0;
+protected:
+    virtual void doAction() = 0;
 };
 
 class Field : public ParameterUpdate
@@ -55,9 +62,11 @@ public:
     virtual bool increase();
     virtual bool decrease();
     Field(FieldParameter *par);
+    virtual void stopAction();
 
 protected:
-    FieldParameter *_val;
+    virtual void doAction();
+    FieldParameter *_par;
 };
 
 class LedMatrixField : public Field
@@ -85,7 +94,7 @@ public:
 
 protected:
     virtual void show();
-
+    
 private:
     Adafruit_7segment *_panel;
     byte _leftPos;
@@ -97,9 +106,11 @@ public:
     LedMatrixSelect(Max72xxPanel *panel, Coordinate topleft, Coordinate botRight, SelectParameter *par);
     virtual bool increase();
     virtual bool decrease();
-    void hide();
+    virtual void hide();
+    virtual void stopAction();
 
 protected:
+    virtual void doAction();
     virtual void show();
 
 private:

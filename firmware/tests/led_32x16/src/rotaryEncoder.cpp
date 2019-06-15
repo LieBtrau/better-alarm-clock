@@ -18,10 +18,14 @@ void decreaseRotEnc()
 
 void RotaryEncoderConsumer::setConsumer(ParameterUpdate *p, bool flash)
 {
-  if (flashing && _p != nullptr)
+  if (_p != nullptr)
   {
+    if(flashing)
+    {
     _p->render(true); //so that it doesn't stay hidden if it was flashing
     deviceUpdateNeeded=true;
+    }
+    _p->stopAction();
   }
   _p = p;
   flashing = flash;
