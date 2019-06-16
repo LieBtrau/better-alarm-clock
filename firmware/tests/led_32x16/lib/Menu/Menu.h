@@ -14,7 +14,7 @@ typedef void (*voidFuncPtrVoid)(void);
 struct FieldParameter
 {
     byte min = 0;
-    byte cur = 0;
+    byte* cur = nullptr;
     byte max = 0;
     byte step = 0;
     voidFuncPtrByte doAction = nullptr;
@@ -23,7 +23,7 @@ struct FieldParameter
 
 struct SelectParameter
 {
-    byte cur = 0;
+    byte* cur = nullptr;
     byte max = 10;
     voidFuncPtrByte doAction = nullptr;
     voidFuncPtrVoid stopAction = nullptr;

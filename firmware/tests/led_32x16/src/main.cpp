@@ -6,12 +6,9 @@
 #include "parameters.h"
 
 CommonParameters compar;
-AlarmParameters alarms[2];
-
-bool matrixFields[] = {false, false, false, false, false, false};
-bool bAlarmSelected = false;
-bool bMenuSelected = false;
-byte currentAlarm = 0;
+AlarmParameters alarms;
+CommonConfig config1 = {50, 50, 50};
+AlarmConfig config2;
 
 void setup()
 {

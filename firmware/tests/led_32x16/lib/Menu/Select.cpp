@@ -19,7 +19,7 @@ void LedMatrixSelect::show()
     hide();
     _panel->drawLine(_botRight.x, _topleft.y, _botRight.x, _botRight.y, 1);
     _panel->drawLine(_topleft.x, _topleft.y, _topleft.x, _botRight.y, 1);
-    _panel->drawLine(_topleft.x + 1 + _par->cur, _topleft.y, _topleft.x + 1 + _par->cur, _botRight.y, 1);
+    _panel->drawLine(_topleft.x + 1 + *_par->cur, _topleft.y, _topleft.x + 1 + *_par->cur, _botRight.y, 1);
 }
 
 void LedMatrixSelect::hide()
@@ -29,7 +29,7 @@ void LedMatrixSelect::hide()
 
 bool LedMatrixSelect::increase()
 {
-    _par->cur = _par->cur < _par->max ? _par->cur + 1 : 0; //at maximum, loop back to minimum;
+    *_par->cur = *_par->cur < _par->max ? *_par->cur + 1 : 0; //at maximum, loop back to minimum;
     doAction();
     updateNeeded = true;
     return true;
@@ -37,7 +37,7 @@ bool LedMatrixSelect::increase()
 
 bool LedMatrixSelect::decrease()
 {
-    _par->cur = _par->cur > 0 ? _par->cur - 1 : _par->max; //at maximum, loop back to minimum;
+    *_par->cur = *_par->cur > 0 ? *_par->cur - 1 : _par->max; //at maximum, loop back to minimum;
     doAction();
     updateNeeded = true;
     return true;
@@ -47,7 +47,7 @@ void LedMatrixSelect::doAction()
 {
     if(_par->doAction != nullptr)
     {
-        _par->doAction(_par->cur);
+        _par->doAction(*_par->cur);
     }
 }
 
