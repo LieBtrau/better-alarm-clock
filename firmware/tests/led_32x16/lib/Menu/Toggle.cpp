@@ -31,3 +31,8 @@ void LedToggle::toggle()
     *_val = !(*_val);
     updateNeeded = true;
 }
+
+bool LedToggle::isLedOn()
+{
+    return *_val;
+}

@@ -12,10 +12,6 @@
 #include "rotaryEncoder.h"
 #include "parameters.h"
 
-// extern byte currentAlarm;
-// extern bool bAlarmSelected;
-// extern bool bMenuSelected;
-// extern bool matrixFields[6];
 bool matrixFields[] = {false, false, false, false, false, false};
 bool bAlarmSelected = false;
 bool bMenuSelected = false;
@@ -131,19 +127,28 @@ void showLedState()
 
 void keyChanged(byte key)
 {
+  static byte lastKey = 0xFF;
   for (int i = 0; i < 6; i++)
   {
-    matrixButtons[i].doAction(matrixButtons[i].key() == key);
+    matrixButtons[i].doAction((matrixButtons[i].key() == key) && (key != lastKey));
     if (matrixButtons[i].key() == key)
     {
-      rec.setConsumer(matrixButtons[i].getParam(), false);
-      alarmTimeButton.doAction(false);
+      if (key == lastKey)
+      {
+        rec.setConsumer(nullptr, false);
+      }
+      else
+      {
+        rec.setConsumer(matrixButtons[i].getParam(), false);
+        alarmTimeButton.doAction(false);
+      }
     }
   }
   if (key == ALARMTIME)
   {
     alarmTimeButton.doAction(true);
-  }
+  } 
+  lastKey = key == lastKey ? 0xFF : key;
 }
 
 void setMinutes(bool action)
@@ -180,6 +185,8 @@ void renderMenu()
 
 void initMenu()
 {
+  sldSong.setLinkedParameter(&fldVolume);
+  fldVolume.setLinkedParameter(&sldSong);
   mcp.begin(); // use default address 0
   matrix.init();
   matrix.fillScreen(0);

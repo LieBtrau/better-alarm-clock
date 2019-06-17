@@ -31,6 +31,16 @@ bool MenuOut::flash()
     return true;
 }
 
+void ParameterUpdate::setLinkedParameter(ParameterUpdate *linkedP)
+{
+    _linkedP = linkedP;
+}
+
+ParameterUpdate *ParameterUpdate::getLinkedParameter()
+{
+    return _linkedP;
+}
+
 PushButton::PushButton(BUTTONS key, LedToggle *led) : _key(key), _led(led) {}
 PushButton::PushButton(BUTTONS key, LedToggle *led, ParameterUpdate *param) : _key(key), _led(led), _param(param) {}
 

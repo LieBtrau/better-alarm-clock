@@ -14,7 +14,7 @@ typedef void (*voidFuncPtrVoid)(void);
 struct FieldParameter
 {
     byte min = 0;
-    byte* cur = nullptr;
+    byte *cur = nullptr;
     byte max = 0;
     byte step = 0;
     voidFuncPtrByte doAction = nullptr;
@@ -23,7 +23,7 @@ struct FieldParameter
 
 struct SelectParameter
 {
-    byte* cur = nullptr;
+    byte *cur = nullptr;
     byte max = 10;
     voidFuncPtrByte doAction = nullptr;
     voidFuncPtrVoid stopAction = nullptr;
@@ -52,8 +52,14 @@ public:
     virtual bool increase() = 0;
     virtual bool decrease() = 0;
     virtual void stopAction() = 0;
+    void setLinkedParameter(ParameterUpdate *linkedP);
+    ParameterUpdate *getLinkedParameter();
+
 protected:
     virtual void doAction() = 0;
+
+private:
+    ParameterUpdate *_linkedP = nullptr;
 };
 
 class Field : public ParameterUpdate
@@ -94,7 +100,7 @@ public:
 
 protected:
     virtual void show();
-    
+
 private:
     Adafruit_7segment *_panel;
     byte _leftPos;
@@ -128,6 +134,7 @@ public:
     void clear();
     void toggle();
     void hide();
+    bool isLedOn();
 
 protected:
     virtual void show();

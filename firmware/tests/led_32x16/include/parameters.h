@@ -32,8 +32,8 @@ extern AlarmConfig config2;
 struct AlarmParameters
 {
     FieldParameter lightness = {0, &config2.lightness, 100, 5, showLightness, stopLightness};
-    FieldParameter volume = {0, &config2.volume, 100, 5, nullptr, nullptr};
-    SelectParameter song = {&config2.song, 9, playSong, nullptr};
+    FieldParameter volume = {0, &config2.volume, 100, 5, setVolume, stopSong};
+    SelectParameter song = {&config2.song, 9, playSong, stopSong};
     FieldParameter hours = {0, &config2.hours, 23, 1, nullptr, nullptr};
     FieldParameter minutes = {0, &config2.minutes, 55, 5, nullptr, nullptr};
     bool* weekdays = config2.weekdays;

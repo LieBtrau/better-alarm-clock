@@ -6,9 +6,20 @@ void playSong(byte i)
   Serial.println(i, DEC);
 }
 
+void stopSong()
+{
+  Serial.println("stop song");
+}
+
 void showLightness(byte i)
 {
   Serial.print("Light : ");
+  Serial.println(i, DEC);
+}
+
+void setVolume(byte i)
+{
+  Serial.print("Volume : ");
   Serial.println(i, DEC);
 }
 
