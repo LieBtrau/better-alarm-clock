@@ -135,7 +135,7 @@ void keyChanged(byte key)
     {
       if (key == lastKey)
       {
-        rec.setConsumer(nullptr, false);
+        rec.setConsumer(nullptr, false); //pushing same button will toggle it.
       }
       else
       {
@@ -148,7 +148,7 @@ void keyChanged(byte key)
   {
     alarmTimeButton.doAction(true);
   } 
-  lastKey = key == lastKey ? 0xFF : key;
+  lastKey = key == lastKey ? 0xFF : key; // if the same button is pressed for a third time, control must be on again : toggle effect.
 }
 
 void setMinutes(bool action)
@@ -187,6 +187,7 @@ void initMenu()
 {
   sldSong.setLinkedParameter(&fldVolume);
   fldVolume.setLinkedParameter(&sldSong);
+  alarmTimeButton.setAction(setHours);
   mcp.begin(); // use default address 0
   matrix.init();
   matrix.fillScreen(0);
@@ -196,7 +197,6 @@ void initMenu()
   matrix.setCursor(4, 10);
   matrix.setFont(&TomThumb);
   matrix.setCursor(4, 10);
-  alarmTimeButton.setAction(setHours);
   matrix.print("ALARM3");
   matrix.write(); // Send bitmap to display
   keyb.init(writePinModes, writePullups);

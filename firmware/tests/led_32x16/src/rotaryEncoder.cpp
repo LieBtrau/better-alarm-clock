@@ -20,21 +20,15 @@ void RotaryEncoderConsumer::setConsumer(ParameterUpdate *p, bool flash)
 {
   if (_p != nullptr)
   {
-    if (_p == p)
+    if (flashing)
     {
+      _p->render(true); //so that it doesn't stay hidden if it was flashing
+      deviceUpdateNeeded = true;
     }
-    else
+    if (p != _p->getLinkedParameter())
     {
-      if (flashing)
-      {
-        _p->render(true); //so that it doesn't stay hidden if it was flashing
-        deviceUpdateNeeded = true;
-      }
-      //todo, pushing same button twice should start and stop action, not always stopping the action.
-      if (p != _p->getLinkedParameter())
-      {
-        _p->stopAction();
-      }
+      _p->stopAction();
+      p->doAction();
     }
   }
   _p = p;

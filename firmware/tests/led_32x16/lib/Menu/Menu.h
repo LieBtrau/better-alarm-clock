@@ -52,10 +52,8 @@ public:
     virtual bool increase() = 0;
     virtual bool decrease() = 0;
     virtual void stopAction() = 0;
-    void setLinkedParameter(ParameterUpdate *linkedP);
+    void setLinkedParameter(ParameterUpdate *linkedP); //so that music can keep playing when switching from song selection to volume control
     ParameterUpdate *getLinkedParameter();
-
-protected:
     virtual void doAction() = 0;
 
 private:
@@ -69,9 +67,9 @@ public:
     virtual bool decrease();
     Field(FieldParameter *par);
     virtual void stopAction();
+    virtual void doAction();
 
 protected:
-    virtual void doAction();
     FieldParameter *_par;
 };
 

@@ -27,3 +27,8 @@ void stopLightness()
 {
   Serial.println("stop lightness");
 }
+
+void setLedArrayBrightness(byte i)
+{
+  Serial.println("Display brightness");
+}

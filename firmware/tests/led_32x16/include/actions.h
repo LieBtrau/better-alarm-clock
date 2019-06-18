@@ -6,3 +6,4 @@ void stopSong();
 void showLightness(byte i);
 void stopLightness();
 void setVolume(byte i);
+void setLedArrayBrightness(byte i);
