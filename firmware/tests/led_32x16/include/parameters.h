@@ -4,17 +4,17 @@
 
 struct CommonConfig
 {
-    byte dayBright = 20;
+    byte dayBright = 7;
     byte dayNight = 20;
-    byte nightBright = 20;
+    byte nightBright = 7;
 };
 extern CommonConfig config1;
 
 struct CommonParameters
 {
-    FieldParameter dayBright = {0, &config1.dayBright, 100, 5, setLedArrayBrightness, nullptr};
+    FieldParameter dayBright = {0, &config1.dayBright, 15, 1, setLedArrayBrightness, nullptr};
     FieldParameter dayNight = {0, &config1.dayNight, 100, 5, nullptr, nullptr};
-    FieldParameter nightBright = {0, &config1.nightBright, 100, 5, setLedArrayBrightness, nullptr};
+    FieldParameter nightBright = {0, &config1.nightBright, 15, 1, setLedArrayBrightness, nullptr};
 };
 extern CommonParameters compar;
 

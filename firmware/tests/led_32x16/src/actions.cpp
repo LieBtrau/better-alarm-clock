@@ -1,4 +1,5 @@
 #include "actions.h"
+#include "menuNav.h"
 
 void playSong(byte i)
 {
@@ -30,5 +31,8 @@ void stopLightness()
 
 void setLedArrayBrightness(byte i)
 {
-  Serial.println("Display brightness");
+  Serial.print("Display : ");
+  Serial.println(i, DEC);
+  matrix7.setBrightness(i); // 0 -> 15
+  matrix.setIntensity(i);   // 0 -> 15
 }
