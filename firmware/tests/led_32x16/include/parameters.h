@@ -21,7 +21,7 @@ extern CommonParameters compar;
 struct AlarmConfig
 {
     byte lightness = 50;
-    byte volume = 50;
+    byte volume = 10;
     byte song = 3;
     byte hours = 12;
     byte minutes = 15;
@@ -32,8 +32,8 @@ extern AlarmConfig config2;
 struct AlarmParameters
 {
     FieldParameter lightness = {0, &config2.lightness, 100, 5, showLightness, stopLightness};
-    FieldParameter volume = {0, &config2.volume, 100, 5, setVolume, stopSong};
-    SelectParameter song = {&config2.song, 9, playSong, stopSong};
+    FieldParameter volume = {0, &config2.volume, 30, 1, setVolume, stopSong};
+    SelectParameter song = {&config2.song, 1, 10, playSong, stopSong};
     FieldParameter hours = {0, &config2.hours, 23, 1, nullptr, nullptr};
     FieldParameter minutes = {0, &config2.minutes, 55, 5, nullptr, nullptr};
     bool* weekdays = config2.weekdays;

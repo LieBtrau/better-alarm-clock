@@ -12,3 +12,8 @@ const byte pinCS = PA1;
 
 //GPIO
 const byte pinIRQ = PB1;
+const byte pinPlayBusy = PA4;
+
+//Serial2
+const byte pin_TX2 = PA2;
+const byte pin_RX2 = PA3;

@@ -1,26 +1,25 @@
 #include "actions.h"
 #include "menuNav.h"
+#include "SongPlayer.h"
 
 void playSong(byte i)
 {
-  Serial.print("Song : ");
-  Serial.println(i, DEC);
+  sPlayer.play();
+}
+
+void setVolume(byte i)
+{
+  sPlayer.changeVolume();
 }
 
 void stopSong()
 {
-  Serial.println("stop song");
+  sPlayer.stop();
 }
 
 void showLightness(byte i)
 {
   Serial.print("Light : ");
-  Serial.println(i, DEC);
-}
-
-void setVolume(byte i)
-{
-  Serial.print("Volume : ");
   Serial.println(i, DEC);
 }
 

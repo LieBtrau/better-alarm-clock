@@ -24,6 +24,7 @@ struct FieldParameter
 struct SelectParameter
 {
     byte *cur = nullptr;
+    byte min = 1;
     byte max = 10;
     voidFuncPtrByte doAction = nullptr;
     voidFuncPtrVoid stopAction = nullptr;
