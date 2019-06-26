@@ -13,7 +13,7 @@ extern CommonConfig config1;
 struct CommonParameters
 {
     FieldParameter dayBright = {0, &config1.dayBright, 15, 1, setLedArrayBrightness, nullptr};
-    FieldParameter dayNight = {0, &config1.dayNight, 100, 5, nullptr, nullptr};
+    FieldParameter dayNight = {0, &config1.dayNight, 15, 1, nullptr, nullptr}; //logarithmic parameter.  Actual threshold value will be 2^dayNight 
     FieldParameter nightBright = {0, &config1.nightBright, 15, 1, setLedArrayBrightness, nullptr};
 };
 extern CommonParameters compar;

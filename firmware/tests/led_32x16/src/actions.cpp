@@ -1,6 +1,53 @@
 #include "actions.h"
 #include "menuNav.h"
 #include "SongPlayer.h"
+#include "Adafruit_APDS9960.h"
+#include "pins.h"
+#include "parameters.h"
+
+Adafruit_APDS9960 apds;
+SongPlayer sPlayer(&Serial2, pinPlayBusy);
+extern AlarmConfig config2;
+
+bool isDark()
+{
+  //wait for color data to be ready
+  while (!apds.colorDataReady())
+  {
+    delay(5);
+  }
+  uint16_t r, g, b, c;
+  apds.getColorData(&r, &g, &b, &c);
+  return c < (1 << config1.dayNight);
+}
+
+void pollActions()
+{
+  sPlayer.poll();
+  static uint32_t ulTime = millis();
+  if (millis() > ulTime + 500)
+  {
+    ulTime = millis();
+    Serial.println(isDark() ? "night" : "day");
+  }
+}
+
+bool initPeripherals()
+{
+  if (!apds.begin())
+  {
+    return false;
+  }
+  apds.enableColor(true);
+  if (!sPlayer.init())
+  {
+    while (true)
+      ;
+  }
+  sPlayer.setSongPtr(&config2.song);
+  sPlayer.setVolumePtr(&config2.volume);
+  return true;
+}
 
 void playSong(byte i)
 {
