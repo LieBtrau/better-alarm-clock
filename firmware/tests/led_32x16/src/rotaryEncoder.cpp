@@ -28,8 +28,11 @@ void RotaryEncoderConsumer::setConsumer(ParameterUpdate *p, bool flash)
     if (p != _p->getLinkedParameter())
     {
       _p->stopAction();
-      p->doAction();
     }
+  }
+  if (p != nullptr)
+  {
+    p->doAction();
   }
   _p = p;
   flashing = flash;
