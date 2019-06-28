@@ -128,8 +128,10 @@ void showLedState()
     byte gpioStates = mcp.readGPIO(1);
     if (myCharlie.showLedState(pinModes, gpioStates))
     {
-      mcp.writePinMode(1, pinModes);
+      mcp.writePinMode(1, pinModes | 0x1F); //set all LED pins as input to avoid that unwanted LEDs light.
       mcp.writeGPIO(1, gpioStates);
+                                            //unwanted LEDs would go on here, in between the two calls to the MCP23017
+      mcp.writePinMode(1, pinModes);
     }
   }
 }
