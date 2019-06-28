@@ -41,15 +41,22 @@ ParameterUpdate *ParameterUpdate::getLinkedParameter()
     return _linkedP;
 }
 
-PushButton::PushButton(BUTTONS key, LedToggle *led) : _key(key), _led(led) {}
-PushButton::PushButton(BUTTONS key, LedToggle *led, ParameterUpdate *param) : _key(key), _led(led), _param(param) {}
+PushButton::PushButton(BUTTONS keyStroke, LedToggle* led): _key(keyStroke), _led(led){}
+TogglePushButton::TogglePushButton(BUTTONS key, LedToggle *led) : PushButton(key, led) {}
+ActionPushButton::ActionPushButton(BUTTONS key, LedToggle *led) : PushButton(key, led) {}
+ParameterPushButton::ParameterPushButton(BUTTONS key, LedToggle *led, ParameterUpdate *param) : ActionPushButton(key, led), _param(param) {}
 
 BUTTONS PushButton::key()
 {
     return _key;
 }
 
-void PushButton::doAction(bool selected)
+void TogglePushButton::toggle()
+{
+    _led->toggle();
+}
+
+void ActionPushButton::doAction(bool selected)
 {
     if (selected)
     {
@@ -65,12 +72,12 @@ void PushButton::doAction(bool selected)
     }
 }
 
-void PushButton::setAction(voidFuncPtrBool doAction)
+void ActionPushButton::setAction(voidFuncPtrBool doAction)
 {
     _doAction = doAction;
 }
 
-ParameterUpdate *PushButton::getParam()
+ParameterUpdate *ParameterPushButton::getParam()
 {
     return _param;
 }

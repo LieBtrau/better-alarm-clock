@@ -169,16 +169,37 @@ typedef void (*voidFuncPtrBool)(bool);
 class PushButton
 {
 public:
-    PushButton(BUTTONS key, LedToggle *led);
-    PushButton(BUTTONS key, LedToggle *led, ParameterUpdate *param);
+    PushButton(BUTTONS keyStroke, LedToggle* led);
     BUTTONS key();
+
+protected:
+    BUTTONS _key;
+    LedToggle *_led;
+};
+
+class TogglePushButton : public PushButton
+{
+public:
+    TogglePushButton(BUTTONS key, LedToggle *led);
+    void toggle();
+};
+
+class ActionPushButton : public PushButton
+{
+public:
+    ActionPushButton(BUTTONS key, LedToggle *led);
     void setAction(voidFuncPtrBool doAction);
     void doAction(bool selected);
+private:
+    voidFuncPtrBool _doAction = nullptr;
+};
+
+class ParameterPushButton : public ActionPushButton
+{
+public:
+    ParameterPushButton(BUTTONS key, LedToggle *led, ParameterUpdate *param);
     ParameterUpdate *getParam();
 
 private:
-    BUTTONS _key;
-    LedToggle *_led;
-    voidFuncPtrBool _doAction = nullptr;
     ParameterUpdate *_param = nullptr;
 };

@@ -21,8 +21,8 @@ void setHours(bool action);
 void setMinutes(bool action);
 
 // 32x16 LED Matrix elements
-int numberOfHorizontalDisplays = 4;
-int numberOfVerticalDisplays = 2;
+const int numberOfHorizontalDisplays = 4;
+const int numberOfVerticalDisplays = 2;
 Max72xxPanel matrix = Max72xxPanel(pinMOSI, pinSCLK, pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
 
 LedMatrixField fldLightness = LedMatrixField(&matrix, {0, 0}, {11, 2}, &alarms.lightness);
@@ -68,6 +68,7 @@ LedToggle tglThursday = LedToggle(&myCharlie, &ledMatrix[THURSDAY], alarms.weekd
 LedToggle tglFriday = LedToggle(&myCharlie, &ledMatrix[FRIDAY], alarms.weekdays + 4);
 LedToggle tglSaturday = LedToggle(&myCharlie, &ledMatrix[SATURDAY], alarms.weekdays + 5);
 LedToggle tglSunday = LedToggle(&myCharlie, &ledMatrix[SUNDAY], alarms.weekdays + 6);
+LedToggle *weekdayLEDs[] = {&tglMonday, &tglTuesday, &tglWednesday, &tglThursday, &tglFriday, &tglSaturday, &tglSunday};
 
 LedToggle tglAlarm = LedToggle(&myCharlie, &ledMatrix[ALARMTIME], &bAlarmSelected);
 LedToggle tglMenu = LedToggle(&myCharlie, &ledMatrix[MENU], &bMenuSelected);
@@ -77,14 +78,22 @@ Adafruit_7segment matrix7 = Adafruit_7segment();
 SevenSegmentField fldHours = SevenSegmentField(&matrix7, SevenSegmentField::LEFTPOS, &alarms.hours);
 SevenSegmentField fldMinutes = SevenSegmentField(&matrix7, SevenSegmentField::RIGHTPOS, &alarms.minutes);
 
-PushButton matrixButtons[] =
+ParameterPushButton matrixButtons[] =
     {{LIGHTNESS, &tglLightness, &fldLightness},
      {VOLUME, &tglVolume, &fldVolume},
      {SONGCHOICE, &tglSongChoice, &sldSong},
      {DAYDISPLAYBRIGHTNESS, &tglDayBrightness, &fldDayBright},
      {DAYNIGHTLEVEL, &tglDayNight, &fldDayNight},
      {NIGHTDISPLAYBRIGHTNESS, &tglNightBrightness, &fldNightBright}};
-PushButton alarmTimeButton = {ALARMTIME, &tglAlarm};
+TogglePushButton weekdayButtons[] =
+    {{MONDAY, &tglMonday},
+     {TUESDAY, &tglTuesday},
+     {WEDNESDAY, &tglWednesday},
+     {THURSDAY, &tglThursday},
+     {FRIDAY, &tglFriday},
+     {SATURDAY, &tglSaturday},
+     {SUNDAY, &tglSunday}};
+ActionPushButton alarmTimeButton = {ALARMTIME, &tglAlarm};
 Adafruit_MCP23017 mcp;
 KeyboardScan keyb;
 extern RotaryEncoderConsumer rec;
@@ -127,8 +136,10 @@ void showLedState()
 
 void keyChanged(byte key)
 {
+  Serial.println(key);
   static byte lastKey = 0xFF;
-  for (int i = 0; i < 6; i++)
+  byte matrixElements = sizeof(matrixButtons) / sizeof(matrixButtons[0]);
+  for (int i = 0; i < matrixElements; i++)
   {
     matrixButtons[i].doAction((matrixButtons[i].key() == key) && (key != lastKey));
     if (matrixButtons[i].key() == key)
@@ -144,10 +155,19 @@ void keyChanged(byte key)
       }
     }
   }
+  byte weekdayElements = sizeof(weekdayButtons) / sizeof(weekdayButtons[0]);
+  for (int i = 0; i < weekdayElements; i++)
+  {
+    if (weekdayButtons[i].key() == key)
+    {
+      weekdayButtons[i].toggle();
+      //rec.setConsumer(nullptr, false);  //Enable this line to disable rotary encoder on other elements
+    }
+  }
   if (key == ALARMTIME)
   {
     alarmTimeButton.doAction(true);
-  } 
+  }
   lastKey = key == lastKey ? 0xFF : key; // if the same button is pressed for a third time, control must be on again : toggle effect.
 }
 
@@ -175,9 +195,15 @@ void renderMenu()
   {
     matrix7.writeDisplay();
   }
-  for (int i = 0; i < 6; i++)
+  byte matrixElements = sizeof(matrixLEDs) / sizeof(matrixLEDs[0]);
+  for (int i = 0; i < matrixElements; i++)
   {
     matrixLEDs[i]->render();
+  }
+  byte weekdayElements = sizeof(weekdayButtons) / sizeof(weekdayButtons[0]);
+  for (int i = 0; i < weekdayElements; i++)
+  {
+    weekdayLEDs[i]->render();
   }
   tglAlarm.render();
   showLedState();

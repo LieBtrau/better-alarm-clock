@@ -24,12 +24,11 @@ bool isDark()
 void pollActions()
 {
   sPlayer.poll();
-  static uint32_t ulTime = millis();
-  if (millis() > ulTime + 500)
-  {
-    ulTime = millis();
-    Serial.println(isDark() ? "night" : "day");
-  }
+  // static uint32_t ulTime = millis();
+  // if (millis() > ulTime + 500)
+  // {
+  //   ulTime = millis();
+  // }
 }
 
 bool initPeripherals()

@@ -64,6 +64,9 @@ public:
   }
 };
 
+/* Volume and song choice are linked parameters.  When adjusting the volume, we want the correct song to be played and when selecting a song, we
+ * want it to be played at the correct volume.  Hence we need an object that is aware of both parameters.
+ */
 class SongPlayer
 {
 public:

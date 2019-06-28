@@ -15,7 +15,7 @@ public:
     bool isKeyDown(byte keyNr);
 private:
     byte curRow = 0;
-    word keyState = 0;
+    word keyState = 0xFFFF;//0xFFFF instead of 0x0000 prevents false keypresses at startup
     voidFuncPtrByte _keyPressed = nullptr;
     voidFuncPtrByte _keyReleased = nullptr;
 };

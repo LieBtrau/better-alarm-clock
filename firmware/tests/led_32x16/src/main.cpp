@@ -8,7 +8,7 @@
 
 CommonParameters compar;
 AlarmParameters alarms;
-CommonConfig config1 = {7, 20, 7};
+CommonConfig config1 = {7, 4, 7};
 AlarmConfig config2;
 
 void setup()
