@@ -11,26 +11,44 @@
 #include "pins.h"
 #include "rotaryEncoder.h"
 #include "parameters.h"
+#include "actions.h"
 
 bool matrixFields[] = {false, false, false, false, false, false};
 bool bAlarmSelected = false;
 bool bMenuSelected = false;
-byte currentAlarm = 0;
+
+FieldParameter lightness = {0, nullptr, 100, 5, showLightness, stopLightness};
+FieldParameter volume = {0, nullptr, 30, 1, setVolume, stopSong};
+SelectParameter song = {nullptr, 1, 10, playSong, stopSong};
+FieldParameter hours = {0, nullptr, 23, 1, nullptr, nullptr};
+FieldParameter minutes = {0, nullptr, 55, 5, nullptr, nullptr};
 
 void setHours(bool action);
 void setMinutes(bool action);
+void assignAlarmConfig(AlarmConfig *config);
 
 // 32x16 LED Matrix elements
 const int numberOfHorizontalDisplays = 4;
 const int numberOfVerticalDisplays = 2;
 Max72xxPanel matrix = Max72xxPanel(pinMOSI, pinSCLK, pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
 
-LedMatrixField fldLightness = LedMatrixField(&matrix, {0, 0}, {11, 2}, &alarms.lightness);
-LedMatrixField fldVolume = LedMatrixField(&matrix, {0, 7}, {11, 9}, &alarms.volume);
-LedMatrixSelect sldSong = LedMatrixSelect(&matrix, {0, 13}, {11, 15}, &alarms.song);
-LedMatrixField fldDayBright = LedMatrixField(&matrix, {20, 0}, {31, 2}, &compar.dayBright);
-LedMatrixField fldDayNight = LedMatrixField(&matrix, {20, 7}, {31, 9}, &compar.dayNight);
-LedMatrixField fldNightBright = LedMatrixField(&matrix, {20, 13}, {31, 15}, &compar.nightBright);
+FieldParameter dayBright = {0, nullptr, 15, 1, setLedArrayBrightness, nullptr};
+FieldParameter dayNight = {0, nullptr, 10, 1, nullptr, nullptr}; //logarithmic parameter.  Actual threshold value will be 2^dayNight
+FieldParameter nightBright = {0, nullptr, 15, 1, setLedArrayBrightness, nullptr};
+
+void assignCommonConfig(CommonConfig *config)
+{
+  dayBright.cur = &config->dayBright;
+  dayNight.cur = &config->dayNight;
+  nightBright.cur = &config->nightBright;
+}
+
+LedMatrixField fldLightness = LedMatrixField(&matrix, {0, 0}, {11, 2}, &lightness);
+LedMatrixField fldVolume = LedMatrixField(&matrix, {0, 7}, {11, 9}, &volume);
+LedMatrixSelect sldSong = LedMatrixSelect(&matrix, {0, 13}, {11, 15}, &song);
+LedMatrixField fldDayBright = LedMatrixField(&matrix, {20, 0}, {31, 2}, &dayBright);
+LedMatrixField fldDayNight = LedMatrixField(&matrix, {20, 7}, {31, 9}, &dayNight);
+LedMatrixField fldNightBright = LedMatrixField(&matrix, {20, 13}, {31, 15}, &nightBright);
 
 // Charlieplexed LEDs
 Chaplex myCharlie;
@@ -61,13 +79,13 @@ LedToggle tglDayNight = LedToggle(&myCharlie, &ledMatrix[DAYNIGHTLEVEL], matrixF
 LedToggle tglNightBrightness = LedToggle(&myCharlie, &ledMatrix[NIGHTDISPLAYBRIGHTNESS], matrixFields + 5);
 LedToggle *matrixLEDs[] = {&tglLightness, &tglVolume, &tglSongChoice, &tglDayBrightness, &tglDayNight, &tglNightBrightness};
 
-LedToggle tglMonday = LedToggle(&myCharlie, &ledMatrix[MONDAY], alarms.weekdays);
-LedToggle tglTuesday = LedToggle(&myCharlie, &ledMatrix[TUESDAY], alarms.weekdays + 1);
-LedToggle tglWednesday = LedToggle(&myCharlie, &ledMatrix[WEDNESDAY], alarms.weekdays + 2);
-LedToggle tglThursday = LedToggle(&myCharlie, &ledMatrix[THURSDAY], alarms.weekdays + 3);
-LedToggle tglFriday = LedToggle(&myCharlie, &ledMatrix[FRIDAY], alarms.weekdays + 4);
-LedToggle tglSaturday = LedToggle(&myCharlie, &ledMatrix[SATURDAY], alarms.weekdays + 5);
-LedToggle tglSunday = LedToggle(&myCharlie, &ledMatrix[SUNDAY], alarms.weekdays + 6);
+LedToggle tglMonday = LedToggle(&myCharlie, &ledMatrix[MONDAY], nullptr);
+LedToggle tglTuesday = LedToggle(&myCharlie, &ledMatrix[TUESDAY], nullptr);
+LedToggle tglWednesday = LedToggle(&myCharlie, &ledMatrix[WEDNESDAY], nullptr);
+LedToggle tglThursday = LedToggle(&myCharlie, &ledMatrix[THURSDAY], nullptr);
+LedToggle tglFriday = LedToggle(&myCharlie, &ledMatrix[FRIDAY], nullptr);
+LedToggle tglSaturday = LedToggle(&myCharlie, &ledMatrix[SATURDAY], nullptr);
+LedToggle tglSunday = LedToggle(&myCharlie, &ledMatrix[SUNDAY], nullptr);
 LedToggle *weekdayLEDs[] = {&tglMonday, &tglTuesday, &tglWednesday, &tglThursday, &tglFriday, &tglSaturday, &tglSunday};
 
 LedToggle tglAlarm = LedToggle(&myCharlie, &ledMatrix[ALARMTIME], &bAlarmSelected);
@@ -75,8 +93,8 @@ LedToggle tglMenu = LedToggle(&myCharlie, &ledMatrix[MENU], &bMenuSelected);
 
 // Seven segment display elements
 Adafruit_7segment matrix7 = Adafruit_7segment();
-SevenSegmentField fldHours = SevenSegmentField(&matrix7, SevenSegmentField::LEFTPOS, &alarms.hours);
-SevenSegmentField fldMinutes = SevenSegmentField(&matrix7, SevenSegmentField::RIGHTPOS, &alarms.minutes);
+SevenSegmentField fldHours = SevenSegmentField(&matrix7, SevenSegmentField::LEFTPOS, &hours);
+SevenSegmentField fldMinutes = SevenSegmentField(&matrix7, SevenSegmentField::RIGHTPOS, &minutes);
 
 ParameterPushButton matrixButtons[] =
     {{LIGHTNESS, &tglLightness, &fldLightness},
@@ -130,7 +148,7 @@ void showLedState()
     {
       mcp.writePinMode(1, pinModes | 0x1F); //set all LED pins as input to avoid that unwanted LEDs light.
       mcp.writeGPIO(1, gpioStates);
-                                            //unwanted LEDs would go on here, in between the two calls to the MCP23017
+      //unwanted LEDs would go on here, in between the two calls to the MCP23017
       mcp.writePinMode(1, pinModes);
     }
   }
@@ -138,7 +156,6 @@ void showLedState()
 
 void keyChanged(byte key)
 {
-  Serial.println(key);
   static byte lastKey = 0xFF;
   byte matrixElements = sizeof(matrixButtons) / sizeof(matrixButtons[0]);
   for (int i = 0; i < matrixElements; i++)
@@ -202,7 +219,7 @@ void renderMenu()
   {
     matrixLEDs[i]->render();
   }
-  byte weekdayElements = sizeof(weekdayButtons) / sizeof(weekdayButtons[0]);
+  byte weekdayElements = sizeof(weekdayLEDs) / sizeof(weekdayLEDs[0]);
   for (int i = 0; i < weekdayElements; i++)
   {
     weekdayLEDs[i]->render();
@@ -229,4 +246,19 @@ void initMenu()
   matrix.write(); // Send bitmap to display
   keyb.init(writePinModes, writePullups);
   keyb.setCallback_keyReleased(keyChanged);
+  tglSaturday.isLedOn();
+}
+
+void assignAlarmConfig(AlarmConfig *config)
+{
+  lightness.cur = &config->lightness;
+  volume.cur = &config->volume;
+  song.cur = &config->song;
+  hours.cur = &config->hours;
+  minutes.cur = &config->minutes;
+  byte weekdayElements = sizeof(weekdayLEDs) / sizeof(weekdayLEDs[0]);
+  for (int i = 0; i < weekdayElements; i++)
+  {
+    weekdayLEDs[i]->setSource(&config->weekdays[i]);
+  }
 }

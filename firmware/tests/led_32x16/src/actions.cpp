@@ -3,11 +3,17 @@
 #include "SongPlayer.h"
 #include "Adafruit_APDS9960.h"
 #include "pins.h"
-#include "parameters.h"
 
 Adafruit_APDS9960 apds;
 SongPlayer sPlayer(&Serial2, pinPlayBusy);
-extern AlarmConfig config2;
+static CommonConfig *pCommon;
+
+void assignActionsConfig(CommonConfig *pConfig, AlarmConfig *config)
+{
+  sPlayer.setSongPtr(&config->song);
+  sPlayer.setVolumePtr(&config->volume);
+  pCommon = pConfig;
+}
 
 bool isDark()
 {
@@ -18,7 +24,7 @@ bool isDark()
   }
   uint16_t r, g, b, c;
   apds.getColorData(&r, &g, &b, &c);
-  return c < (1 << config1.dayNight);
+  return c < (1 << pCommon->dayNight);
 }
 
 void pollActions()
@@ -43,8 +49,6 @@ bool initPeripherals()
     while (true)
       ;
   }
-  sPlayer.setSongPtr(&config2.song);
-  sPlayer.setVolumePtr(&config2.volume);
   return true;
 }
 

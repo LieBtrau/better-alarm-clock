@@ -12,6 +12,7 @@ bool SongPlayer::init()
     pinMode(_busyPin, INPUT);
     mp3.begin();
     uint16_t count = mp3.getTotalTrackCount();
+    mp3.reset();
     return count != 0;
 }
 

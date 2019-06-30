@@ -134,6 +134,7 @@ public:
     void toggle();
     void hide();
     bool isLedOn();
+    void setSource(bool* val);
 
 protected:
     virtual void show();

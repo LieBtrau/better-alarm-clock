@@ -6,14 +6,15 @@
 #include "parameters.h"
 #include "SongPlayer.h"
 
-CommonParameters compar;
-AlarmParameters alarms;
-CommonConfig config1 = {7, 4, 7};
-AlarmConfig config2;
+static CommonConfig config1;
+static AlarmConfig config2;
 
 void setup()
 {
   Serial.begin(115200);
+  assignCommonConfig(&config1);
+  assignActionsConfig(&config1, &config2);
+  assignAlarmConfig(&config2);
   initMenu();
   if(!initPeripherals())
   {

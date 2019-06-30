@@ -1,6 +1,7 @@
 #pragma once
-#include "Arduino.h"
+#include "parameters.h"
 
+void assignActionsConfig(CommonConfig *pConfig, AlarmConfig *config);
 bool isDark();
 bool initPeripherals();
 void playSong(byte i);

@@ -1,6 +1,5 @@
 #pragma once
-#include "actions.h"
-#include "Menu.h"
+#include "Arduino.h"
 
 struct CommonConfig
 {
@@ -8,15 +7,7 @@ struct CommonConfig
     byte dayNight = 4;
     byte nightBright = 7;
 };
-extern CommonConfig config1;
-
-struct CommonParameters
-{
-    FieldParameter dayBright = {0, &config1.dayBright, 15, 1, setLedArrayBrightness, nullptr};
-    FieldParameter dayNight = {0, &config1.dayNight, 10, 1, nullptr, nullptr}; //logarithmic parameter.  Actual threshold value will be 2^dayNight 
-    FieldParameter nightBright = {0, &config1.nightBright, 15, 1, setLedArrayBrightness, nullptr};
-};
-extern CommonParameters compar;
+void assignCommonConfig(CommonConfig* config);
 
 struct AlarmConfig
 {
@@ -27,15 +18,5 @@ struct AlarmConfig
     byte minutes = 15;
     bool weekdays[7] = {false, false, false, false, false, false, false};
 };
-extern AlarmConfig config2;
 
-struct AlarmParameters
-{
-    FieldParameter lightness = {0, &config2.lightness, 100, 5, showLightness, stopLightness};
-    FieldParameter volume = {0, &config2.volume, 30, 1, setVolume, stopSong};
-    SelectParameter song = {&config2.song, 1, 10, playSong, stopSong};
-    FieldParameter hours = {0, &config2.hours, 23, 1, nullptr, nullptr};
-    FieldParameter minutes = {0, &config2.minutes, 55, 5, nullptr, nullptr};
-    bool* weekdays = config2.weekdays;
-};
-extern AlarmParameters alarms;
+void assignAlarmConfig(AlarmConfig* config);
