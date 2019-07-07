@@ -1,14 +1,27 @@
 #include "Menu.h"
 
+/* forceRender can be used to force a show() when the underlying parameter hasn't changed.  This behavior is useful in the case of flashing.
+ * returns true if content has changed since last call, which would imply a redraw is needed.
+ */
 bool MenuOut::render(bool forceRender)
 {
-    if (updateNeeded || forceRender)
+    if (visible && (updateNeeded || forceRender))
     {
         show();
     }
     bool retVal = updateNeeded;
     updateNeeded = false;
     return retVal;
+}
+
+void MenuOut::setVisible(bool isVisible)
+{
+    visible = isVisible;
+    if (!visible)
+    {
+        hide();
+        updateNeeded = true;
+    }
 }
 
 bool MenuOut::flash()
@@ -18,16 +31,15 @@ bool MenuOut::flash()
         return false;
     }
     ulTimer = millis();
-    if (visible)
+    if (flashVisible)
     {
-        visible = false;
         hide();
     }
     else
     {
-        visible = true;
         render(true);
     }
+    flashVisible = !flashVisible;
     return true;
 }
 
@@ -41,7 +53,7 @@ ParameterUpdate *ParameterUpdate::getLinkedParameter()
     return _linkedP;
 }
 
-PushButton::PushButton(BUTTONS keyStroke, LedToggle* led): _key(keyStroke), _led(led){}
+PushButton::PushButton(BUTTONS keyStroke, LedToggle *led) : _key(keyStroke), _led(led) {}
 TogglePushButton::TogglePushButton(BUTTONS key, LedToggle *led) : PushButton(key, led) {}
 ActionPushButton::ActionPushButton(BUTTONS key, LedToggle *led) : PushButton(key, led) {}
 ParameterPushButton::ParameterPushButton(BUTTONS key, LedToggle *led, ParameterUpdate *param) : ActionPushButton(key, led), _param(param) {}
@@ -49,6 +61,16 @@ ParameterPushButton::ParameterPushButton(BUTTONS key, LedToggle *led, ParameterU
 BUTTONS PushButton::key()
 {
     return _key;
+}
+
+void PushButton::enable()
+{
+    isEnabled = true;
+}
+
+void PushButton::disable()
+{
+    isEnabled = false;
 }
 
 void TogglePushButton::toggle()

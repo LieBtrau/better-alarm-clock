@@ -78,6 +78,7 @@ public:
     void changeVolume();
     void stop();
     void poll();
+    uint16_t getTotalTrackCount();
 
 private:
     bool isPlaying();

@@ -43,7 +43,7 @@ int EEPROM_writeAnything(int ee, const T &value)
 }
 
 template <class T>
-boolean EEPROM_readAnything(int ee, T &value)
+bool EEPROM_readAnything(int ee, T &value)
 {
     word crcIn = 0xFFFF;
     byte *p = (byte *)(void *)&value;

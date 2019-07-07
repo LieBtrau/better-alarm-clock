@@ -15,6 +15,11 @@ void assignActionsConfig(CommonConfig *pConfig, AlarmConfig *config)
   pCommon = pConfig;
 }
 
+uint16_t getTotalTrackCount()
+{
+  return sPlayer.getTotalTrackCount();
+}
+
 bool isDark()
 {
   //wait for color data to be ready

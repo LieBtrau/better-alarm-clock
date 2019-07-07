@@ -33,17 +33,19 @@ struct SelectParameter
 class MenuOut
 {
 public:
-    bool render(bool forceRender = false); //returns true if content has changed since last call, which would imply a redraw is needed.
+    bool render(bool forceRender = false);
     bool flash();
-    virtual void hide() = 0;
+    void setVisible(bool isVisible);
 
 protected:
     virtual void show() = 0;
-    bool updateNeeded = true;
+    bool updateNeeded = true; //IO-hardware must be written to update the visuals
+    virtual void hide() = 0;
 
 private:
     const unsigned long FLASH_INTERVAL = 500;
-    bool visible = false;
+    bool visible = true;
+    bool flashVisible = true;
     unsigned long ulTimer = millis();
 };
 
@@ -134,7 +136,7 @@ public:
     void toggle();
     void hide();
     bool isLedOn();
-    void setSource(bool* val);
+    void setSource(bool *val);
 
 protected:
     virtual void show();
@@ -170,12 +172,17 @@ typedef void (*voidFuncPtrBool)(bool);
 class PushButton
 {
 public:
-    PushButton(BUTTONS keyStroke, LedToggle* led);
+    PushButton(BUTTONS keyStroke, LedToggle *led);
     BUTTONS key();
+    void enable();
+    void disable();
 
 protected:
     BUTTONS _key;
     LedToggle *_led;
+
+private:
+    bool isEnabled = true;
 };
 
 class TogglePushButton : public PushButton
@@ -191,6 +198,7 @@ public:
     ActionPushButton(BUTTONS key, LedToggle *led);
     void setAction(voidFuncPtrBool doAction);
     void doAction(bool selected);
+
 private:
     voidFuncPtrBool _doAction = nullptr;
 };

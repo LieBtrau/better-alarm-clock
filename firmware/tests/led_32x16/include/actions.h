@@ -11,3 +11,4 @@ void showLightness(byte i);
 void stopLightness();
 void setLedArrayBrightness(byte i);
 void pollActions();
+uint16_t getTotalTrackCount();

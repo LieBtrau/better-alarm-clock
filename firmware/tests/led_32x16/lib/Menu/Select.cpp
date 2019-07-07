@@ -7,9 +7,10 @@ LedMatrixSelect::LedMatrixSelect(Max72xxPanel *panel, Coordinate topleft, Coordi
         while (true)
             ;
     }
-    if(par->min >= par->max)
+    if (par->min >= par->max)
     {
-        while(true);
+        while (true)
+            ;
     }
 }
 
@@ -18,7 +19,8 @@ void LedMatrixSelect::show()
     hide();
     _panel->drawLine(_botRight.x, _topleft.y, _botRight.x, _botRight.y, 1);
     _panel->drawLine(_topleft.x, _topleft.y, _topleft.x, _botRight.y, 1);
-    _panel->drawLine(_topleft.x + *_par->cur, _topleft.y, _topleft.x + *_par->cur, _botRight.y, 1);
+    byte offset = (*_par->cur - _par->min) * (_botRight.x - _topleft.x - 1) / (_par->max - _par->min + 1);
+    _panel->drawLine(_topleft.x + 1 + offset, _topleft.y, _topleft.x + 1 + offset, _botRight.y, 1);
 }
 
 void LedMatrixSelect::hide()
@@ -44,7 +46,7 @@ bool LedMatrixSelect::decrease()
 
 void LedMatrixSelect::doAction()
 {
-    if(_par->doAction != nullptr)
+    if (_par->doAction != nullptr)
     {
         _par->doAction(*_par->cur);
     }
@@ -52,7 +54,7 @@ void LedMatrixSelect::doAction()
 
 void LedMatrixSelect::stopAction()
 {
-    if(_par->stopAction != nullptr)
+    if (_par->stopAction != nullptr)
     {
         _par->stopAction();
     }

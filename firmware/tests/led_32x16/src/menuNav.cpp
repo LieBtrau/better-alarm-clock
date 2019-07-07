@@ -12,6 +12,7 @@
 #include "rotaryEncoder.h"
 #include "parameters.h"
 #include "actions.h"
+#include "ButtonManager.h"
 
 bool matrixFields[] = {false, false, false, false, false, false};
 bool bAlarmSelected = false;
@@ -26,6 +27,9 @@ FieldParameter minutes = {0, nullptr, 55, 5, nullptr, nullptr};
 void setHours(bool action);
 void setMinutes(bool action);
 void assignAlarmConfig(AlarmConfig *config);
+void showAlarm1(bool action);
+void showAlarm2(bool action);
+void showClock(bool action);
 
 // 32x16 LED Matrix elements
 const int numberOfHorizontalDisplays = 4;
@@ -112,9 +116,11 @@ TogglePushButton weekdayButtons[] =
      {SATURDAY, &tglSaturday},
      {SUNDAY, &tglSunday}};
 ActionPushButton alarmTimeButton = {ALARMTIME, &tglAlarm};
+ActionPushButton menuButton = {MENU, &tglMenu};
 Adafruit_MCP23017 mcp;
 KeyboardScan keyb;
 extern RotaryEncoderConsumer rec;
+ButtonManager matrixButtonList;
 
 void writePinModes(byte data)
 {
@@ -156,24 +162,11 @@ void showLedState()
 
 void keyChanged(byte key)
 {
-  static byte lastKey = 0xFF;
-  byte matrixElements = sizeof(matrixButtons) / sizeof(matrixButtons[0]);
-  for (int i = 0; i < matrixElements; i++)
+  if (matrixButtonList.keyPressed(key))
   {
-    matrixButtons[i].doAction((matrixButtons[i].key() == key) && (key != lastKey));
-    if (matrixButtons[i].key() == key)
-    {
-      if (key == lastKey)
-      {
-        rec.setConsumer(nullptr, false); //pushing same button will toggle it.
-      }
-      else
-      {
-        rec.setConsumer(matrixButtons[i].getParam(), false);
-        alarmTimeButton.doAction(false);
-      }
-    }
+    alarmTimeButton.doAction(false);
   }
+  //Process weekday keys
   byte weekdayElements = sizeof(weekdayButtons) / sizeof(weekdayButtons[0]);
   for (int i = 0; i < weekdayElements; i++)
   {
@@ -183,11 +176,17 @@ void keyChanged(byte key)
       //rec.setConsumer(nullptr, false);  //Enable this line to disable rotary encoder on other elements
     }
   }
+  //Process alarm key
   if (key == ALARMTIME)
   {
     alarmTimeButton.doAction(true);
   }
-  lastKey = key == lastKey ? 0xFF : key; // if the same button is pressed for a third time, control must be on again : toggle effect.
+  //Process menu key
+  if (key == MENU)
+  {
+    rec.setConsumer(nullptr, false);
+    menuButton.doAction(true);
+  }
 }
 
 void setMinutes(bool action)
@@ -202,15 +201,55 @@ void setHours(bool action)
   alarmTimeButton.setAction(setMinutes);
 }
 
-void renderMenu()
+void showAlarm(const char *name)
 {
-  bool flashing = rec.poll();
+  matrix.fillScreen(0);
+  matrix.setFont(&Picopixel);
+  matrix.setCursor(4, 10);
+  matrix.setFont(&TomThumb);
+  matrix.setCursor(4, 10);
+  matrix.print(name);
+  matrix.write(); // Send bitmap to display
+  delay(1000);
+}
+
+void showClock(bool action)
+{
+  matrix.fillScreen(0);
+  matrix.setFont(&Picopixel);
+  matrix.setCursor(4, 10);
+  matrix.setFont(&TomThumb);
+  matrix.setCursor(4, 10);
+  matrix.print("CLOCK");
+  matrix.write(); // Send bitmap to display
+  menuButton.setAction(showAlarm1);
+}
+
+void showAlarm2(bool action)
+{
+  showAlarm("ALARM2");
+  menuButton.setAction(showClock);
+}
+
+void showAlarm1(bool action)
+{
+  showAlarm("ALARM1");
+  menuButton.setAction(showAlarm2);
+}
+
+bool pollMenu()
+{
   keyb.updateKeys(writeGpio, readGpio);
+  return rec.poll();
+}
+
+void showParameterMenu(bool isFlashing)
+{
   if (fldLightness.render() || sldSong.render() || fldVolume.render() || fldDayBright.render() || fldDayNight.render() || fldNightBright.render())
   {
     matrix.write();
   }
-  if (fldHours.render() || fldMinutes.render() || flashing)
+  if (fldHours.render() || fldMinutes.render() || isFlashing)
   {
     matrix7.writeDisplay();
   }
@@ -230,20 +269,22 @@ void renderMenu()
 
 void initMenu()
 {
+  byte matrixElements = sizeof(matrixButtons) / sizeof(matrixButtons[0]);
+  for (int i = 0; i < matrixElements; i++)
+  {
+    matrixButtonList.addButton(&matrixButtons[i]);
+  }
+  matrixButtonList.attachRotaryEncoder(&rec);
+  song.max = getTotalTrackCount();
   sldSong.setLinkedParameter(&fldVolume);
   fldVolume.setLinkedParameter(&sldSong);
   alarmTimeButton.setAction(setHours);
+  menuButton.setAction(showAlarm1);
   mcp.begin(); // use default address 0
   matrix.init();
   matrix.fillScreen(0);
   matrix7.begin(0x70);
   rec.init();
-  matrix.setFont(&Picopixel);
-  matrix.setCursor(4, 10);
-  matrix.setFont(&TomThumb);
-  matrix.setCursor(4, 10);
-  matrix.print("ALARM3");
-  matrix.write(); // Send bitmap to display
   keyb.init(writePinModes, writePullups);
   keyb.setCallback_keyReleased(keyChanged);
   tglSaturday.isLedOn();
@@ -261,4 +302,17 @@ void assignAlarmConfig(AlarmConfig *config)
   {
     weekdayLEDs[i]->setSource(&config->weekdays[i]);
   }
+}
+
+void showSplash()
+{
+  matrix.fillScreen(0);
+  matrix.setFont(&Picopixel);
+  matrix.setCursor(4, 10);
+  matrix.setFont(&TomThumb);
+  matrix.setCursor(4, 10);
+  matrix.print("SPLASH");
+  matrix.write(); // Send bitmap to display
+  delay(1000);
+  matrix.fillScreen(0);
 }

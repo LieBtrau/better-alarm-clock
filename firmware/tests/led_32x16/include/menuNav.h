@@ -6,4 +6,7 @@ extern Adafruit_7segment matrix7;
 
 void initMenu();
 void animation();
-void renderMenu();
+void showParameterMenu(bool isFlashing);
+void showSplash();
+void showClock(bool action);
+bool pollMenu();
