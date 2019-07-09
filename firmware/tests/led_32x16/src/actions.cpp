@@ -7,6 +7,9 @@
 Adafruit_APDS9960 apds;
 SongPlayer sPlayer(&Serial2, pinPlayBusy);
 static CommonConfig *pCommon;
+extern ClockFace clockface;
+static byte hours=0;
+static byte mins=0;
 
 void assignActionsConfig(CommonConfig *pConfig, AlarmConfig *config)
 {
@@ -35,11 +38,17 @@ bool isDark()
 void pollActions()
 {
   sPlayer.poll();
-  // static uint32_t ulTime = millis();
-  // if (millis() > ulTime + 500)
-  // {
-  //   ulTime = millis();
-  // }
+  static uint32_t ulTime = millis();
+  if (millis() > ulTime + 500)
+  {
+    ulTime = millis();
+    clockface.setTime(hours, mins);
+    if(++mins>59)
+    {
+      mins=0;
+      hours++;
+    }
+  }
 }
 
 bool initPeripherals()

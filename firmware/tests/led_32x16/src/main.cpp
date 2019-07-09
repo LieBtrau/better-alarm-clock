@@ -32,6 +32,7 @@ void setup()
   initMenu();
   EEPROM_writeAnything(0, config1);
   showSplash();
+  showClock(true);
 }
 
 void loop()

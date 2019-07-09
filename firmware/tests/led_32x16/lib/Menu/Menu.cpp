@@ -20,8 +20,12 @@ void MenuOut::setVisible(bool isVisible)
     if (!visible)
     {
         hide();
-        updateNeeded = true;
     }
+    else
+    {
+        show();
+    }
+    updateNeeded = true;
 }
 
 bool MenuOut::flash()
@@ -41,6 +45,29 @@ bool MenuOut::flash()
     }
     flashVisible = !flashVisible;
     return true;
+}
+
+ClockFace::ClockFace(voidFuncPtrClockTime showFunction, voidFuncPtrVoid hideFunction) : _drawFunction(showFunction), _hideFunction(hideFunction) {}
+
+void ClockFace::setTime(byte hours, byte minutes)
+{
+    if (hours != _hours || minutes != _mins)
+    {
+        updateNeeded = true;
+    }
+    _hours = hours;
+    _mins = minutes;
+}
+
+void ClockFace::show()
+{
+    hide();
+    _drawFunction({_hours, _mins});
+}
+
+void ClockFace::hide()
+{
+    _hideFunction();
 }
 
 void ParameterUpdate::setLinkedParameter(ParameterUpdate *linkedP)
@@ -65,12 +92,17 @@ BUTTONS PushButton::key()
 
 void PushButton::enable()
 {
-    isEnabled = true;
+    _isEnabled = true;
 }
 
 void PushButton::disable()
 {
-    isEnabled = false;
+    _isEnabled = false;
+}
+
+bool PushButton::isEnabled()
+{
+    return _isEnabled;
 }
 
 void TogglePushButton::toggle()

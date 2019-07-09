@@ -13,6 +13,8 @@
 #include "parameters.h"
 #include "actions.h"
 #include "ButtonManager.h"
+#include "screenManager.h"
+#include "fontBig.h"
 
 bool matrixFields[] = {false, false, false, false, false, false};
 bool bAlarmSelected = false;
@@ -30,6 +32,8 @@ void assignAlarmConfig(AlarmConfig *config);
 void showAlarm1(bool action);
 void showAlarm2(bool action);
 void showClock(bool action);
+void drawClock(ClockTime ct);
+void hideClock(void);
 
 // 32x16 LED Matrix elements
 const int numberOfHorizontalDisplays = 4;
@@ -47,6 +51,8 @@ void assignCommonConfig(CommonConfig *config)
   nightBright.cur = &config->nightBright;
 }
 
+//Objects to draw on LED matrix
+ClockFace clockface=ClockFace(drawClock, hideClock);
 LedMatrixField fldLightness = LedMatrixField(&matrix, {0, 0}, {11, 2}, &lightness);
 LedMatrixField fldVolume = LedMatrixField(&matrix, {0, 7}, {11, 9}, &volume);
 LedMatrixSelect sldSong = LedMatrixSelect(&matrix, {0, 13}, {11, 15}, &song);
@@ -121,6 +127,9 @@ Adafruit_MCP23017 mcp;
 KeyboardScan keyb;
 extern RotaryEncoderConsumer rec;
 ButtonManager matrixButtonList;
+ScreenManager matrixObjects;
+ScreenManager weekdayLedObjects;
+ScreenManager matrixLedObjects;
 
 void writePinModes(byte data)
 {
@@ -201,39 +210,71 @@ void setHours(bool action)
   alarmTimeButton.setAction(setMinutes);
 }
 
-void showAlarm(const char *name)
+void showAlarm(byte alarmNr)
 {
+  matrixObjects.setVisible(true);
+  clockface.setVisible(false);
   matrix.fillScreen(0);
-  matrix.setFont(&Picopixel);
-  matrix.setCursor(4, 10);
+  // matrix.setFont(&Picopixel);
+  // matrix.setCursor(4, 10);
   matrix.setFont(&TomThumb);
   matrix.setCursor(4, 10);
-  matrix.print(name);
+  matrix.print("ALARM");
+  matrix.print(alarmNr);
   matrix.write(); // Send bitmap to display
   delay(1000);
+  matrix.fillScreen(0);
+  matrix.setCursor(15, 10);
+  matrix.print(alarmNr);
+  matrixObjects.render(true);
+  matrix.write(); // Send bitmap to display
+}
+
+void drawClock(ClockTime ct)
+{
+  byte font=4;//0 to 4
+  matrix.drawBitmap(-3,1, bigFont[(ct.hours/10)+11*font],8,12, 1);
+  matrix.drawBitmap(5,1, bigFont[(ct.hours%10)+11*font],8,12, 1);
+  matrix.drawBitmap(16,1, bigFont[(ct.mins/10)+11*font],8,12, 1);
+  matrix.drawBitmap(24,1, bigFont[(ct.mins%10)+11*font],8,12, 1);
+  matrix.fillRect(15,4,2,2,1);
+  matrix.fillRect(15,10,2,2,1);
+  // matrix.setFont(&TomThumb);
+  // matrix.setCursor(4, 10);
+  // if(ct.hours < 0)
+  // {
+  //   matrix.print(" ");
+  // }
+  // matrix.print(ct.hours);
+  // matrix.print(":");
+  // if(ct.mins < 0)
+  // {
+  //   matrix.print("0");
+  // }
+  // matrix.print(ct.mins);
+}
+
+void hideClock(void)
+{
+  matrix.fillScreen(0);
 }
 
 void showClock(bool action)
 {
-  matrix.fillScreen(0);
-  matrix.setFont(&Picopixel);
-  matrix.setCursor(4, 10);
-  matrix.setFont(&TomThumb);
-  matrix.setCursor(4, 10);
-  matrix.print("CLOCK");
-  matrix.write(); // Send bitmap to display
+  matrixObjects.setVisible(false);
+  clockface.setVisible(true);
   menuButton.setAction(showAlarm1);
 }
 
 void showAlarm2(bool action)
 {
-  showAlarm("ALARM2");
+  showAlarm(2);
   menuButton.setAction(showClock);
 }
 
 void showAlarm1(bool action)
 {
-  showAlarm("ALARM1");
+  showAlarm(1);
   menuButton.setAction(showAlarm2);
 }
 
@@ -245,7 +286,7 @@ bool pollMenu()
 
 void showParameterMenu(bool isFlashing)
 {
-  if (fldLightness.render() || sldSong.render() || fldVolume.render() || fldDayBright.render() || fldDayNight.render() || fldNightBright.render())
+  if(matrixObjects.render() || clockface.render())
   {
     matrix.write();
   }
@@ -253,16 +294,9 @@ void showParameterMenu(bool isFlashing)
   {
     matrix7.writeDisplay();
   }
-  byte matrixElements = sizeof(matrixLEDs) / sizeof(matrixLEDs[0]);
-  for (int i = 0; i < matrixElements; i++)
-  {
-    matrixLEDs[i]->render();
-  }
-  byte weekdayElements = sizeof(weekdayLEDs) / sizeof(weekdayLEDs[0]);
-  for (int i = 0; i < weekdayElements; i++)
-  {
-    weekdayLEDs[i]->render();
-  }
+
+  matrixLedObjects.render();
+  weekdayLedObjects.render();
   tglAlarm.render();
   showLedState();
 }
@@ -274,6 +308,22 @@ void initMenu()
   {
     matrixButtonList.addButton(&matrixButtons[i]);
   }
+  byte weekdayElements = sizeof(weekdayLEDs) / sizeof(weekdayLEDs[0]);
+  for (int i = 0; i < weekdayElements; i++)
+  {
+    weekdayLedObjects.addItem(weekdayLEDs[i]);
+  }
+  matrixElements = sizeof(matrixLEDs) / sizeof(matrixLEDs[0]);
+  for (int i = 0; i < matrixElements; i++)
+  {
+    matrixLedObjects.addItem(matrixLEDs[i]);
+  }
+  matrixObjects.addItem(&fldLightness);
+  matrixObjects.addItem(&fldVolume);
+  matrixObjects.addItem(&sldSong);
+  matrixObjects.addItem(&fldDayBright);
+  matrixObjects.addItem(&fldDayNight);
+  matrixObjects.addItem(&fldNightBright);
   matrixButtonList.attachRotaryEncoder(&rec);
   song.max = getTotalTrackCount();
   sldSong.setLinkedParameter(&fldVolume);

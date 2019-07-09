@@ -25,7 +25,7 @@ void LedMatrixSelect::show()
 
 void LedMatrixSelect::hide()
 {
-    _panel->fillRect(_topleft.x, _topleft.y, _botRight.x - _topleft.x, _botRight.y - _topleft.y + 1, 0);
+    _panel->fillRect(_topleft.x, _topleft.y, _botRight.x - _topleft.x + 1, _botRight.y - _topleft.y + 1, 0);
 }
 
 bool LedMatrixSelect::increase()

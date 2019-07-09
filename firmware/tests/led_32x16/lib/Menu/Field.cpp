@@ -68,7 +68,7 @@ void LedMatrixField::show()
 
 void LedMatrixField::hide()
 {
-    _panel->fillRect(_topleft.x-1, _topleft.y-1, _botRight.x - _topleft.x + 3, _botRight.y - _topleft.y + 3, 0);
+    _panel->fillRect(_topleft.x, _topleft.y, _botRight.x - _topleft.x + 1, _botRight.y - _topleft.y + 1, 0);
 }
 
 SevenSegmentField::SevenSegmentField(Adafruit_7segment *panel, byte leftPos, FieldParameter *par) : Field(par), _panel(panel), _leftPos(leftPos)

@@ -9,6 +9,12 @@ struct Coordinate
     byte y = 0;
 };
 
+struct ClockTime
+{
+    byte hours = 0;
+    byte mins = 0;
+};
+
 typedef void (*voidFuncPtrByte)(byte b);
 typedef void (*voidFuncPtrVoid)(void);
 struct FieldParameter
@@ -47,6 +53,24 @@ private:
     bool visible = true;
     bool flashVisible = true;
     unsigned long ulTimer = millis();
+};
+
+typedef void (*voidFuncPtrClockTime)(ClockTime ct);
+class ClockFace : public MenuOut
+{
+public:
+    ClockFace(voidFuncPtrClockTime showFunction, voidFuncPtrVoid hideFunction);
+    void setTime(byte hours, byte minutes);
+
+protected:
+    virtual void show();
+    virtual void hide();
+
+private:
+    byte _hours;
+    byte _mins;
+    voidFuncPtrClockTime _drawFunction = nullptr;
+    voidFuncPtrVoid _hideFunction = nullptr;
 };
 
 class ParameterUpdate : public MenuOut
@@ -176,13 +200,14 @@ public:
     BUTTONS key();
     void enable();
     void disable();
+    bool isEnabled();
 
 protected:
     BUTTONS _key;
     LedToggle *_led;
 
 private:
-    bool isEnabled = true;
+    bool _isEnabled = true;
 };
 
 class TogglePushButton : public PushButton

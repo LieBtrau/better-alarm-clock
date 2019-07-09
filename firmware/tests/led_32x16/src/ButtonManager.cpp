@@ -14,7 +14,7 @@ bool ButtonManager::addButton(ParameterPushButton *button)
 }
 
 /**
- * \return  true when the key has been found in the list
+ * \return  true when the key has been found in the list and it wasn't a double keypress
  */
 bool ButtonManager::keyPressed(byte key)
 {
@@ -22,7 +22,7 @@ bool ButtonManager::keyPressed(byte key)
     ParameterPushButton *newActiveButton = nullptr;
     for (byte i = 0; i < _nrOfButtons; i++)
     {
-        if (_buttonlist[i]->key() == key)
+        if (_buttonlist[i]->key() == key && _buttonlist[i]->isEnabled())
         {
             newActiveButton = _buttonlist[i];
         }
