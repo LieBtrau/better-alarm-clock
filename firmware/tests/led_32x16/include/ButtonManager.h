@@ -5,14 +5,36 @@
 class ButtonManager
 {
 public:
-    bool addButton(ParameterPushButton *button);
-    bool keyPressed(byte key);
-    void attachRotaryEncoder(RotaryEncoderConsumer *rec);
+    virtual bool keyPressed(byte key) = 0;
+    virtual void enable();
+    virtual void disable();
+    virtual bool render(bool forceRender=false);
 
-private:
-    byte _prevKey = 0xFF;
+protected:
+    bool addButton(PushButton *button);
     byte _nrOfButtons = 0;
-    ParameterPushButton *_activeButton = nullptr;
-    ParameterPushButton **_buttonlist = nullptr;
+    PushButton *_activeButton = nullptr;
+    PushButton **_buttonlist = nullptr;
+};
+
+class ParameterButtonManager : public ButtonManager
+{
+public:
+    virtual bool keyPressed(byte key);
+    virtual void enable();
+    virtual void disable();
+    virtual bool render(bool forceRender=false);
+    void attachRotaryEncoder(RotaryEncoderConsumer *rec);
+    bool addButton(ParameterPushButton *button);
+private:
     RotaryEncoderConsumer *_rec = nullptr;
+};
+
+class ToggleButtonManager : public ButtonManager
+{
+public:
+    virtual bool keyPressed(byte key);
+    bool addButton(TogglePushButton *button);
+    
+private:
 };

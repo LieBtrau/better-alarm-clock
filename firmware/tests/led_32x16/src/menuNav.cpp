@@ -13,7 +13,6 @@
 #include "parameters.h"
 #include "actions.h"
 #include "ButtonManager.h"
-#include "screenManager.h"
 #include "fontBig.h"
 
 bool matrixFields[] = {false, false, false, false, false, false};
@@ -25,6 +24,7 @@ FieldParameter volume = {0, nullptr, 30, 1, setVolume, stopSong};
 SelectParameter song = {nullptr, 1, 10, playSong, stopSong};
 FieldParameter hours = {0, nullptr, 23, 1, nullptr, nullptr};
 FieldParameter minutes = {0, nullptr, 55, 5, nullptr, nullptr};
+bool weekday[7] = {false, false, false, false, false, false, false};
 
 void setHours(bool action);
 void setMinutes(bool action);
@@ -52,7 +52,7 @@ void assignCommonConfig(CommonConfig *config)
 }
 
 //Objects to draw on LED matrix
-ClockFace clockface=ClockFace(drawClock, hideClock);
+ClockFace clockface = ClockFace(drawClock, hideClock);
 LedMatrixField fldLightness = LedMatrixField(&matrix, {0, 0}, {11, 2}, &lightness);
 LedMatrixField fldVolume = LedMatrixField(&matrix, {0, 7}, {11, 9}, &volume);
 LedMatrixSelect sldSong = LedMatrixSelect(&matrix, {0, 13}, {11, 15}, &song);
@@ -81,22 +81,39 @@ CharlieLed ledMatrix[] = {
     {2, 4}  //D11 - SUNDAY = 14
 };
 
+//Objects for controlling alarm settings : sun light emulation intensity, song choice, song volume
 LedToggle tglLightness = LedToggle(&myCharlie, &ledMatrix[LIGHTNESS], matrixFields);
 LedToggle tglVolume = LedToggle(&myCharlie, &ledMatrix[VOLUME], matrixFields + 1);
 LedToggle tglSongChoice = LedToggle(&myCharlie, &ledMatrix[SONGCHOICE], matrixFields + 2);
+ParameterPushButton btnLightness = {LIGHTNESS, &tglLightness, &fldLightness};
+ParameterPushButton btnVolume = {VOLUME, &tglVolume, &fldVolume};
+ParameterPushButton btnSong = {SONGCHOICE, &tglSongChoice, &sldSong};
+ParameterButtonManager mgrBtnAlarm;
+//Extra alarm settings: enabling and disabling days of week.
+LedToggle tglMonday = LedToggle(&myCharlie, &ledMatrix[MONDAY], &weekday[0]);
+LedToggle tglTuesday = LedToggle(&myCharlie, &ledMatrix[TUESDAY], &weekday[1]);
+LedToggle tglWednesday = LedToggle(&myCharlie, &ledMatrix[WEDNESDAY], &weekday[2]);
+LedToggle tglThursday = LedToggle(&myCharlie, &ledMatrix[THURSDAY], &weekday[3]);
+LedToggle tglFriday = LedToggle(&myCharlie, &ledMatrix[FRIDAY], &weekday[4]);
+LedToggle tglSaturday = LedToggle(&myCharlie, &ledMatrix[SATURDAY], &weekday[5]);
+LedToggle tglSunday = LedToggle(&myCharlie, &ledMatrix[SUNDAY], &weekday[6]);
+TogglePushButton btnMonday = {MONDAY, &tglMonday};
+TogglePushButton btnTuesday = {TUESDAY, &tglTuesday};
+TogglePushButton btnWednesday = {WEDNESDAY, &tglWednesday};
+TogglePushButton btnThursday = {THURSDAY, &tglThursday};
+TogglePushButton btnFriday = {FRIDAY, &tglFriday};
+TogglePushButton btnSaturday = {SATURDAY, &tglSaturday};
+TogglePushButton btnSunday = {SUNDAY, &tglSunday};
+ToggleButtonManager mgrBtnWeekday;
+
+//Objects for controlling LED array brightness
 LedToggle tglDayBrightness = LedToggle(&myCharlie, &ledMatrix[DAYDISPLAYBRIGHTNESS], matrixFields + 3);
 LedToggle tglDayNight = LedToggle(&myCharlie, &ledMatrix[DAYNIGHTLEVEL], matrixFields + 4);
 LedToggle tglNightBrightness = LedToggle(&myCharlie, &ledMatrix[NIGHTDISPLAYBRIGHTNESS], matrixFields + 5);
-LedToggle *matrixLEDs[] = {&tglLightness, &tglVolume, &tglSongChoice, &tglDayBrightness, &tglDayNight, &tglNightBrightness};
-
-LedToggle tglMonday = LedToggle(&myCharlie, &ledMatrix[MONDAY], nullptr);
-LedToggle tglTuesday = LedToggle(&myCharlie, &ledMatrix[TUESDAY], nullptr);
-LedToggle tglWednesday = LedToggle(&myCharlie, &ledMatrix[WEDNESDAY], nullptr);
-LedToggle tglThursday = LedToggle(&myCharlie, &ledMatrix[THURSDAY], nullptr);
-LedToggle tglFriday = LedToggle(&myCharlie, &ledMatrix[FRIDAY], nullptr);
-LedToggle tglSaturday = LedToggle(&myCharlie, &ledMatrix[SATURDAY], nullptr);
-LedToggle tglSunday = LedToggle(&myCharlie, &ledMatrix[SUNDAY], nullptr);
-LedToggle *weekdayLEDs[] = {&tglMonday, &tglTuesday, &tglWednesday, &tglThursday, &tglFriday, &tglSaturday, &tglSunday};
+ParameterPushButton btnDayBright = {DAYDISPLAYBRIGHTNESS, &tglDayBrightness, &fldDayBright};
+ParameterPushButton btnDayNight = {DAYNIGHTLEVEL, &tglDayNight, &fldDayNight};
+ParameterPushButton btnNightBright = {NIGHTDISPLAYBRIGHTNESS, &tglNightBrightness, &fldNightBright};
+ParameterButtonManager mgrBtnBrightness;
 
 LedToggle tglAlarm = LedToggle(&myCharlie, &ledMatrix[ALARMTIME], &bAlarmSelected);
 LedToggle tglMenu = LedToggle(&myCharlie, &ledMatrix[MENU], &bMenuSelected);
@@ -106,30 +123,11 @@ Adafruit_7segment matrix7 = Adafruit_7segment();
 SevenSegmentField fldHours = SevenSegmentField(&matrix7, SevenSegmentField::LEFTPOS, &hours);
 SevenSegmentField fldMinutes = SevenSegmentField(&matrix7, SevenSegmentField::RIGHTPOS, &minutes);
 
-ParameterPushButton matrixButtons[] =
-    {{LIGHTNESS, &tglLightness, &fldLightness},
-     {VOLUME, &tglVolume, &fldVolume},
-     {SONGCHOICE, &tglSongChoice, &sldSong},
-     {DAYDISPLAYBRIGHTNESS, &tglDayBrightness, &fldDayBright},
-     {DAYNIGHTLEVEL, &tglDayNight, &fldDayNight},
-     {NIGHTDISPLAYBRIGHTNESS, &tglNightBrightness, &fldNightBright}};
-TogglePushButton weekdayButtons[] =
-    {{MONDAY, &tglMonday},
-     {TUESDAY, &tglTuesday},
-     {WEDNESDAY, &tglWednesday},
-     {THURSDAY, &tglThursday},
-     {FRIDAY, &tglFriday},
-     {SATURDAY, &tglSaturday},
-     {SUNDAY, &tglSunday}};
 ActionPushButton alarmTimeButton = {ALARMTIME, &tglAlarm};
 ActionPushButton menuButton = {MENU, &tglMenu};
 Adafruit_MCP23017 mcp;
 KeyboardScan keyb;
 extern RotaryEncoderConsumer rec;
-ButtonManager matrixButtonList;
-ScreenManager matrixObjects;
-ScreenManager weekdayLedObjects;
-ScreenManager matrixLedObjects;
 
 void writePinModes(byte data)
 {
@@ -171,26 +169,19 @@ void showLedState()
 
 void keyChanged(byte key)
 {
-  if (matrixButtonList.keyPressed(key))
+  if (mgrBtnBrightness.keyPressed(key))
   {
     alarmTimeButton.doAction(false);
   }
-  //Process weekday keys
-  byte weekdayElements = sizeof(weekdayButtons) / sizeof(weekdayButtons[0]);
-  for (int i = 0; i < weekdayElements; i++)
+  if (mgrBtnAlarm.keyPressed(key))
   {
-    if (weekdayButtons[i].key() == key)
-    {
-      weekdayButtons[i].toggle();
-      //rec.setConsumer(nullptr, false);  //Enable this line to disable rotary encoder on other elements
-    }
+    alarmTimeButton.doAction(false);
   }
-  //Process alarm key
-  if (key == ALARMTIME)
+  mgrBtnWeekday.keyPressed(key);
+  if (key == ALARMTIME && alarmTimeButton.isEnabled())
   {
     alarmTimeButton.doAction(true);
   }
-  //Process menu key
   if (key == MENU)
   {
     rec.setConsumer(nullptr, false);
@@ -210,13 +201,26 @@ void setHours(bool action)
   alarmTimeButton.setAction(setMinutes);
 }
 
+void drawClock(ClockTime ct)
+{
+  byte font = 4; //0 to 4
+  matrix.drawBitmap(-3, 1, bigFont[(ct.hours / 10 != 0 ? ct.hours / 10 : 10) + 11 * font], 8, 12, 1);
+  matrix.drawBitmap(5, 1, bigFont[(ct.hours % 10) + 11 * font], 8, 12, 1);
+  matrix.drawBitmap(16, 1, bigFont[(ct.mins / 10 != 0 ? ct.mins / 10 : 10) + 11 * font], 8, 12, 1);
+  matrix.drawBitmap(24, 1, bigFont[(ct.mins % 10) + 11 * font], 8, 12, 1);
+  matrix.fillRect(15, 4, 2, 2, 1);
+  matrix.fillRect(15, 10, 2, 2, 1);
+}
+
+void hideClock(void)
+{
+  matrix.fillScreen(0);
+}
+
 void showAlarm(byte alarmNr)
 {
-  matrixObjects.setVisible(true);
   clockface.setVisible(false);
   matrix.fillScreen(0);
-  // matrix.setFont(&Picopixel);
-  // matrix.setCursor(4, 10);
   matrix.setFont(&TomThumb);
   matrix.setCursor(4, 10);
   matrix.print("ALARM");
@@ -226,42 +230,17 @@ void showAlarm(byte alarmNr)
   matrix.fillScreen(0);
   matrix.setCursor(15, 10);
   matrix.print(alarmNr);
-  matrixObjects.render(true);
+  mgrBtnAlarm.enable();
+  mgrBtnWeekday.enable();
   matrix.write(); // Send bitmap to display
-}
-
-void drawClock(ClockTime ct)
-{
-  byte font=4;//0 to 4
-  matrix.drawBitmap(-3,1, bigFont[(ct.hours/10)+11*font],8,12, 1);
-  matrix.drawBitmap(5,1, bigFont[(ct.hours%10)+11*font],8,12, 1);
-  matrix.drawBitmap(16,1, bigFont[(ct.mins/10)+11*font],8,12, 1);
-  matrix.drawBitmap(24,1, bigFont[(ct.mins%10)+11*font],8,12, 1);
-  matrix.fillRect(15,4,2,2,1);
-  matrix.fillRect(15,10,2,2,1);
-  // matrix.setFont(&TomThumb);
-  // matrix.setCursor(4, 10);
-  // if(ct.hours < 0)
-  // {
-  //   matrix.print(" ");
-  // }
-  // matrix.print(ct.hours);
-  // matrix.print(":");
-  // if(ct.mins < 0)
-  // {
-  //   matrix.print("0");
-  // }
-  // matrix.print(ct.mins);
-}
-
-void hideClock(void)
-{
-  matrix.fillScreen(0);
+  alarmTimeButton.enable();
 }
 
 void showClock(bool action)
 {
-  matrixObjects.setVisible(false);
+  mgrBtnAlarm.disable();
+  mgrBtnWeekday.disable();
+  alarmTimeButton.disable();
   clockface.setVisible(true);
   menuButton.setAction(showAlarm1);
 }
@@ -286,7 +265,7 @@ bool pollMenu()
 
 void showParameterMenu(bool isFlashing)
 {
-  if(matrixObjects.render() || clockface.render())
+  if (mgrBtnAlarm.render() || clockface.render() || mgrBtnBrightness.render())
   {
     matrix.write();
   }
@@ -294,37 +273,30 @@ void showParameterMenu(bool isFlashing)
   {
     matrix7.writeDisplay();
   }
-
-  matrixLedObjects.render();
-  weekdayLedObjects.render();
-  tglAlarm.render();
+  mgrBtnWeekday.render();
+  alarmTimeButton.render();
   showLedState();
 }
 
 void initMenu()
 {
-  byte matrixElements = sizeof(matrixButtons) / sizeof(matrixButtons[0]);
-  for (int i = 0; i < matrixElements; i++)
-  {
-    matrixButtonList.addButton(&matrixButtons[i]);
-  }
-  byte weekdayElements = sizeof(weekdayLEDs) / sizeof(weekdayLEDs[0]);
-  for (int i = 0; i < weekdayElements; i++)
-  {
-    weekdayLedObjects.addItem(weekdayLEDs[i]);
-  }
-  matrixElements = sizeof(matrixLEDs) / sizeof(matrixLEDs[0]);
-  for (int i = 0; i < matrixElements; i++)
-  {
-    matrixLedObjects.addItem(matrixLEDs[i]);
-  }
-  matrixObjects.addItem(&fldLightness);
-  matrixObjects.addItem(&fldVolume);
-  matrixObjects.addItem(&sldSong);
-  matrixObjects.addItem(&fldDayBright);
-  matrixObjects.addItem(&fldDayNight);
-  matrixObjects.addItem(&fldNightBright);
-  matrixButtonList.attachRotaryEncoder(&rec);
+  mgrBtnAlarm.addButton(&btnLightness);
+  mgrBtnAlarm.addButton(&btnVolume);
+  mgrBtnAlarm.addButton(&btnSong);
+  mgrBtnAlarm.attachRotaryEncoder(&rec);
+
+  mgrBtnWeekday.addButton(&btnMonday);
+  mgrBtnWeekday.addButton(&btnTuesday);
+  mgrBtnWeekday.addButton(&btnWednesday);
+  mgrBtnWeekday.addButton(&btnThursday);
+  mgrBtnWeekday.addButton(&btnFriday);
+  mgrBtnWeekday.addButton(&btnSaturday);
+  mgrBtnWeekday.addButton(&btnSunday);
+
+  mgrBtnBrightness.addButton(&btnNightBright);
+  mgrBtnBrightness.addButton(&btnDayNight);
+  mgrBtnBrightness.addButton(&btnDayBright);
+  mgrBtnBrightness.attachRotaryEncoder(&rec);
   song.max = getTotalTrackCount();
   sldSong.setLinkedParameter(&fldVolume);
   fldVolume.setLinkedParameter(&sldSong);
@@ -347,10 +319,9 @@ void assignAlarmConfig(AlarmConfig *config)
   song.cur = &config->song;
   hours.cur = &config->hours;
   minutes.cur = &config->minutes;
-  byte weekdayElements = sizeof(weekdayLEDs) / sizeof(weekdayLEDs[0]);
-  for (int i = 0; i < weekdayElements; i++)
+  for (int i = 0; i < 7; i++)
   {
-    weekdayLEDs[i]->setSource(&config->weekdays[i]);
+    weekday[i] = config->weekdays[i];
   }
 }
 

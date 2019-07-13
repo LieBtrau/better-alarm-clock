@@ -160,7 +160,6 @@ public:
     void toggle();
     void hide();
     bool isLedOn();
-    void setSource(bool *val);
 
 protected:
     virtual void show();
@@ -201,7 +200,8 @@ public:
     void enable();
     void disable();
     bool isEnabled();
-
+    bool render(bool forceRender = false);
+    
 protected:
     BUTTONS _key;
     LedToggle *_led;

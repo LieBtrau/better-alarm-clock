@@ -46,7 +46,7 @@ void pollActions()
     if(++mins>59)
     {
       mins=0;
-      hours++;
+      if(++hours>59)hours=0;
     }
   }
 }

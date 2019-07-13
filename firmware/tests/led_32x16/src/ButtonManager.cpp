@@ -1,8 +1,8 @@
 #include "ButtonManager.h"
 
-bool ButtonManager::addButton(ParameterPushButton *button)
+bool ButtonManager::addButton(PushButton *button)
 {
-    ParameterPushButton **moreButtons = (ParameterPushButton **)realloc(_buttonlist, ++_nrOfButtons * sizeof(ParameterPushButton *));
+    PushButton **moreButtons = (PushButton **)realloc(_buttonlist, ++_nrOfButtons * sizeof(PushButton *));
     if (moreButtons == nullptr)
     {
         free(moreButtons);
@@ -13,10 +13,41 @@ bool ButtonManager::addButton(ParameterPushButton *button)
     return true;
 }
 
+bool ButtonManager::render(bool forceRender)
+{
+    bool redrawNeeded = false;
+    for (byte i = 0; i < _nrOfButtons; i++)
+    {
+        redrawNeeded |= _buttonlist[i]->render(forceRender);
+    }
+    return redrawNeeded;
+}
+
+bool ParameterButtonManager::render(bool forceRender)
+{
+    bool redrawNeeded = false;
+    for (byte i = 0; i < _nrOfButtons; i++)
+    {
+        redrawNeeded |= _buttonlist[i]->render(forceRender);
+        redrawNeeded |= ((ParameterPushButton *)_buttonlist[i])->getParam()->render(forceRender);
+    }
+    return redrawNeeded;
+}
+
+bool ParameterButtonManager::addButton(ParameterPushButton *button)
+{
+    return ButtonManager::addButton(button);
+}
+
+bool ToggleButtonManager::addButton(TogglePushButton *button)
+{
+    return ButtonManager::addButton(button);
+}
+
 /**
  * \return  true when the key has been found in the list and it wasn't a double keypress
  */
-bool ButtonManager::keyPressed(byte key)
+bool ParameterButtonManager::keyPressed(byte key)
 {
     bool retVal = false;
     ParameterPushButton *newActiveButton = nullptr;
@@ -24,13 +55,13 @@ bool ButtonManager::keyPressed(byte key)
     {
         if (_buttonlist[i]->key() == key && _buttonlist[i]->isEnabled())
         {
-            newActiveButton = _buttonlist[i];
+            newActiveButton = (ParameterPushButton *)_buttonlist[i];
         }
     }
     if (_activeButton != nullptr)
     {
         //In case previous key was valid, disable it
-        _activeButton->doAction(false);
+        ((ParameterPushButton *)_activeButton)->doAction(false);
     }
     if ((newActiveButton == _activeButton) || newActiveButton == nullptr)
     {
@@ -55,7 +86,57 @@ bool ButtonManager::keyPressed(byte key)
     return retVal;
 }
 
-void ButtonManager::attachRotaryEncoder(RotaryEncoderConsumer *rec)
+
+
+bool ToggleButtonManager::keyPressed(byte key)
+{
+    bool pressed = false;
+    for (int i = 0; i < _nrOfButtons; i++)
+    {
+        if (_buttonlist[i]->key() == key && _buttonlist[i]->isEnabled())
+        {
+            ((TogglePushButton *)_buttonlist[i])->toggle();
+            pressed = true;
+        }
+    }
+    return pressed;
+}
+
+void ParameterButtonManager::attachRotaryEncoder(RotaryEncoderConsumer *rec)
 {
     _rec = rec;
+}
+
+void ButtonManager::enable()
+{
+    for (byte i = 0; i < _nrOfButtons; i++)
+    {
+        _buttonlist[i]->enable();
+    }
+}
+
+void ButtonManager::disable()
+{
+    for (byte i = 0; i < _nrOfButtons; i++)
+    {
+        _buttonlist[i]->disable();
+    }
+}
+
+void ParameterButtonManager::enable()
+{
+    for (byte i = 0; i < _nrOfButtons; i++)
+    {
+        _buttonlist[i]->enable();
+        ((ParameterPushButton *)_buttonlist[i])->getParam()->setVisible(true);
+    }
+}
+
+void ParameterButtonManager::disable()
+{
+    for (byte i = 0; i < _nrOfButtons; i++)
+    {
+        _buttonlist[i]->disable();
+        ((ParameterPushButton *)_buttonlist[i])->getParam()->setVisible(false);
+    }
 }

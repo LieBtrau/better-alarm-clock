@@ -98,11 +98,17 @@ void PushButton::enable()
 void PushButton::disable()
 {
     _isEnabled = false;
+    _led->clear();
 }
 
 bool PushButton::isEnabled()
 {
     return _isEnabled;
+}
+
+bool PushButton::render(bool forceRender)
+{
+    return _led->render(forceRender);
 }
 
 void TogglePushButton::toggle()
