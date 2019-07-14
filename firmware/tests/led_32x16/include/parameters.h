@@ -16,7 +16,7 @@ struct AlarmConfig
     byte song = 3;
     byte hours = 12;
     byte minutes = 15;
-    bool weekdays[7] = {false, false, false, false, false, false, false};
+    bool weekdays[7] = {false, false, false, false, false, false, true};
 };
 
 void assignAlarmConfig(AlarmConfig* config);

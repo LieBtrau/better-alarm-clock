@@ -26,14 +26,16 @@ FieldParameter hours = {0, nullptr, 23, 1, nullptr, nullptr};
 FieldParameter minutes = {0, nullptr, 55, 5, nullptr, nullptr};
 bool weekday[7] = {false, false, false, false, false, false, false};
 
+//Some C++ boiler plate
 void setHours(bool action);
 void setMinutes(bool action);
 void assignAlarmConfig(AlarmConfig *config);
+void showAlarm(byte alarmNr);
 void showAlarm1(bool action);
 void showAlarm2(bool action);
-void showClock(bool action);
 void drawClock(ClockTime ct);
 void hideClock(void);
+void showClock(bool action);
 
 // 32x16 LED Matrix elements
 const int numberOfHorizontalDisplays = 4;
@@ -169,22 +171,25 @@ void showLedState()
 
 void keyChanged(byte key)
 {
-  if (mgrBtnBrightness.keyPressed(key))
+  bool encoderCoupled=false;
+  if (mgrBtnBrightness.keyPressed(key) || mgrBtnAlarm.keyPressed(key))
   {
     alarmTimeButton.doAction(false);
+    encoderCoupled = true;
   }
-  if (mgrBtnAlarm.keyPressed(key))
-  {
-    alarmTimeButton.doAction(false);
-  }
-  mgrBtnWeekday.keyPressed(key);
   if (key == ALARMTIME && alarmTimeButton.isEnabled())
   {
     alarmTimeButton.doAction(true);
+    encoderCoupled = true;
   }
-  if (key == MENU)
+  if(!encoderCoupled)
   {
     rec.setConsumer(nullptr, false);
+  }
+  mgrBtnWeekday.keyPressed(key);
+  if (key == MENU)
+  {
+    alarmTimeButton.doAction(false);
     menuButton.doAction(true);
   }
 }
@@ -199,41 +204,6 @@ void setHours(bool action)
 {
   rec.setConsumer(&fldHours, true);
   alarmTimeButton.setAction(setMinutes);
-}
-
-void drawClock(ClockTime ct)
-{
-  byte font = 4; //0 to 4
-  matrix.drawBitmap(-3, 1, bigFont[(ct.hours / 10 != 0 ? ct.hours / 10 : 10) + 11 * font], 8, 12, 1);
-  matrix.drawBitmap(5, 1, bigFont[(ct.hours % 10) + 11 * font], 8, 12, 1);
-  matrix.drawBitmap(16, 1, bigFont[(ct.mins / 10 != 0 ? ct.mins / 10 : 10) + 11 * font], 8, 12, 1);
-  matrix.drawBitmap(24, 1, bigFont[(ct.mins % 10) + 11 * font], 8, 12, 1);
-  matrix.fillRect(15, 4, 2, 2, 1);
-  matrix.fillRect(15, 10, 2, 2, 1);
-}
-
-void hideClock(void)
-{
-  matrix.fillScreen(0);
-}
-
-void showAlarm(byte alarmNr)
-{
-  clockface.setVisible(false);
-  matrix.fillScreen(0);
-  matrix.setFont(&TomThumb);
-  matrix.setCursor(4, 10);
-  matrix.print("ALARM");
-  matrix.print(alarmNr);
-  matrix.write(); // Send bitmap to display
-  delay(1000);
-  matrix.fillScreen(0);
-  matrix.setCursor(15, 10);
-  matrix.print(alarmNr);
-  mgrBtnAlarm.enable();
-  mgrBtnWeekday.enable();
-  matrix.write(); // Send bitmap to display
-  alarmTimeButton.enable();
 }
 
 void showClock(bool action)
@@ -265,7 +235,7 @@ bool pollMenu()
 
 void showParameterMenu(bool isFlashing)
 {
-  if (mgrBtnAlarm.render() || clockface.render() || mgrBtnBrightness.render())
+  if (mgrBtnBrightness.render() || mgrBtnAlarm.render() || clockface.render())
   {
     matrix.write();
   }
@@ -309,7 +279,6 @@ void initMenu()
   rec.init();
   keyb.init(writePinModes, writePullups);
   keyb.setCallback_keyReleased(keyChanged);
-  tglSaturday.isLedOn();
 }
 
 void assignAlarmConfig(AlarmConfig *config)
@@ -336,4 +305,39 @@ void showSplash()
   matrix.write(); // Send bitmap to display
   delay(1000);
   matrix.fillScreen(0);
+}
+
+void drawClock(ClockTime ct)
+{
+  byte font = 4; //0 to 4
+  matrix.drawBitmap(-3, 1, bigFont[(ct.hours / 10 != 0 ? ct.hours / 10 : 10) + 11 * font], 8, 12, 1);
+  matrix.drawBitmap(5, 1, bigFont[(ct.hours % 10) + 11 * font], 8, 12, 1);
+  matrix.drawBitmap(16, 1, bigFont[(ct.mins / 10 != 0 ? ct.mins / 10 : 10) + 11 * font], 8, 12, 1);
+  matrix.drawBitmap(24, 1, bigFont[(ct.mins % 10) + 11 * font], 8, 12, 1);
+  matrix.fillRect(15, 4, 2, 2, 1);
+  matrix.fillRect(15, 10, 2, 2, 1);
+}
+
+void hideClock(void)
+{
+  matrix.fillScreen(0);
+}
+
+void showAlarm(byte alarmNr)
+{
+  clockface.setVisible(false);
+  matrix.fillScreen(0);
+  matrix.setFont(&TomThumb);
+  matrix.setCursor(4, 10);
+  matrix.print("ALARM");
+  matrix.print(alarmNr);
+  matrix.write(); // Send bitmap to display
+  delay(1000);
+  matrix.fillScreen(0);
+  matrix.setCursor(15, 10);
+  matrix.print(alarmNr);
+  mgrBtnAlarm.enable();
+  mgrBtnWeekday.enable();
+  matrix.write(); // Send bitmap to display
+  alarmTimeButton.enable();
 }

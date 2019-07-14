@@ -67,10 +67,6 @@ bool ParameterButtonManager::keyPressed(byte key)
     {
         //Same key pushed twice or no pushed key doesn't belong to this list ->  Disable functionality
         newActiveButton = nullptr;
-        if (_rec != nullptr)
-        {
-            _rec->setConsumer(nullptr, false);
-        }
     }
     else
     {

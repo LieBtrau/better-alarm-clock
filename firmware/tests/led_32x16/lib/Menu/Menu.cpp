@@ -93,12 +93,13 @@ BUTTONS PushButton::key()
 void PushButton::enable()
 {
     _isEnabled = true;
+    _led->setVisible(true);
 }
 
 void PushButton::disable()
 {
     _isEnabled = false;
-    _led->clear();
+    _led->setVisible(false);
 }
 
 bool PushButton::isEnabled()
