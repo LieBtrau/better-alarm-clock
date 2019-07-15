@@ -25,7 +25,7 @@ void RotaryEncoderConsumer::setConsumer(ParameterUpdate *p, bool flash)
       _p->render(true); //so that it doesn't stay hidden if it was flashing
       deviceUpdateNeeded = true;
     }
-    if (p != _p->getLinkedParameter())
+    if ((p != _p->getLinkedParameter()) || p==nullptr)
     {
       _p->stopAction();
     }

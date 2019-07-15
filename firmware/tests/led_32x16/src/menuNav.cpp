@@ -36,6 +36,7 @@ void showAlarm2(bool action);
 void drawClock(ClockTime ct);
 void hideClock(void);
 void showClock(bool action);
+void showDayBrightness(bool action);
 
 // 32x16 LED Matrix elements
 const int numberOfHorizontalDisplays = 4;
@@ -235,7 +236,15 @@ bool pollMenu()
 
 void showParameterMenu(bool isFlashing)
 {
-  if (mgrBtnBrightness.render() || mgrBtnAlarm.render() || clockface.render())
+  if (mgrBtnBrightness.render() )
+  {
+    matrix.write();
+  }
+  if (mgrBtnAlarm.render())
+  {
+    matrix.write();
+  }
+  if(clockface.render())
   {
     matrix.write();
   }
@@ -267,6 +276,8 @@ void initMenu()
   mgrBtnBrightness.addButton(&btnDayNight);
   mgrBtnBrightness.addButton(&btnDayBright);
   mgrBtnBrightness.attachRotaryEncoder(&rec);
+  btnDayBright.setAction(showDayBrightness);
+
   song.max = getTotalTrackCount();
   sldSong.setLinkedParameter(&fldVolume);
   fldVolume.setLinkedParameter(&sldSong);
@@ -340,4 +351,10 @@ void showAlarm(byte alarmNr)
   mgrBtnWeekday.enable();
   matrix.write(); // Send bitmap to display
   alarmTimeButton.enable();
+}
+
+void showDayBrightness(bool action)
+{
+  
+  fldDayBright.setVisible(action);
 }
