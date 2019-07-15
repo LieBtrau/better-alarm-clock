@@ -16,6 +16,10 @@ bool MenuOut::render(bool forceRender)
 
 void MenuOut::setVisible(bool isVisible)
 {
+    if((!isVisible) && (!visible))
+    {
+        return;
+    }
     visible = isVisible;
     if (!visible)
     {
