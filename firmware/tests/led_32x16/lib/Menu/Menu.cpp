@@ -16,7 +16,7 @@ bool MenuOut::render(bool forceRender)
 
 void MenuOut::setVisible(bool isVisible)
 {
-    if((!isVisible) && (!visible))
+    if ((!isVisible) && (!visible))
     {
         return;
     }
@@ -126,14 +126,14 @@ void ActionPushButton::doAction(bool selected)
     if (selected)
     {
         _led->set();
-        if (_doAction != nullptr)
-        {
-            _doAction(selected);
-        }
     }
     else
     {
         _led->clear();
+    }
+    if (_doAction != nullptr)
+    {
+        _doAction(selected);
     }
 }
 

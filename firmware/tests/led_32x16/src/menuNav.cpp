@@ -37,6 +37,8 @@ void drawClock(ClockTime ct);
 void hideClock(void);
 void showClock(bool action);
 void showDayBrightness(bool action);
+void shownNightBrightness(bool action);
+void showDayNight(bool action);
 
 // 32x16 LED Matrix elements
 const int numberOfHorizontalDisplays = 4;
@@ -172,7 +174,7 @@ void showLedState()
 
 void keyChanged(byte key)
 {
-  bool encoderCoupled=false;
+  bool encoderCoupled = false;
   if (mgrBtnBrightness.keyPressed(key) || mgrBtnAlarm.keyPressed(key))
   {
     alarmTimeButton.doAction(false);
@@ -183,7 +185,7 @@ void keyChanged(byte key)
     alarmTimeButton.doAction(true);
     encoderCoupled = true;
   }
-  if(!encoderCoupled)
+  if (!encoderCoupled)
   {
     rec.setConsumer(nullptr, false);
   }
@@ -197,14 +199,20 @@ void keyChanged(byte key)
 
 void setMinutes(bool action)
 {
-  rec.setConsumer(&fldMinutes, true);
-  alarmTimeButton.setAction(setHours);
+  if (action)
+  {
+    rec.setConsumer(&fldMinutes, true);
+    alarmTimeButton.setAction(setHours);
+  }
 }
 
 void setHours(bool action)
 {
-  rec.setConsumer(&fldHours, true);
-  alarmTimeButton.setAction(setMinutes);
+  if (action)
+  {
+    rec.setConsumer(&fldHours, true);
+    alarmTimeButton.setAction(setMinutes);
+  }
 }
 
 void showClock(bool action)
@@ -236,7 +244,7 @@ bool pollMenu()
 
 void showParameterMenu(bool isFlashing)
 {
-  if (mgrBtnBrightness.render() )
+  if (mgrBtnBrightness.render())
   {
     matrix.write();
   }
@@ -244,7 +252,7 @@ void showParameterMenu(bool isFlashing)
   {
     matrix.write();
   }
-  if(clockface.render())
+  if (clockface.render())
   {
     matrix.write();
   }
@@ -277,6 +285,8 @@ void initMenu()
   mgrBtnBrightness.addButton(&btnDayBright);
   mgrBtnBrightness.attachRotaryEncoder(&rec);
   btnDayBright.setAction(showDayBrightness);
+  btnNightBright.setAction(shownNightBrightness);
+  btnDayNight.setAction(showDayNight);
 
   song.max = getTotalTrackCount();
   sldSong.setLinkedParameter(&fldVolume);
@@ -355,6 +365,15 @@ void showAlarm(byte alarmNr)
 
 void showDayBrightness(bool action)
 {
-  
   fldDayBright.setVisible(action);
+}
+
+void shownNightBrightness(bool action)
+{
+  fldNightBright.setVisible(action);
+}
+
+void showDayNight(bool action)
+{
+  fldDayNight.setVisible(action);
 }
