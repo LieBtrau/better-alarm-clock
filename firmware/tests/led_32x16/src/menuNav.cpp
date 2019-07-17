@@ -18,6 +18,7 @@
 bool matrixFields[] = {false, false, false, false, false, false};
 bool bAlarmSelected = false;
 bool bMenuSelected = false;
+bool clockMode = true;
 
 FieldParameter lightness = {0, nullptr, 100, 5, showLightness, stopLightness};
 FieldParameter volume = {0, nullptr, 30, 1, setVolume, stopSong};
@@ -222,6 +223,7 @@ void showClock(bool action)
   alarmTimeButton.disable();
   clockface.setVisible(true);
   menuButton.setAction(showAlarm1);
+  clockMode = true;
 }
 
 void showAlarm2(bool action)
@@ -361,19 +363,32 @@ void showAlarm(byte alarmNr)
   mgrBtnWeekday.enable();
   matrix.write(); // Send bitmap to display
   alarmTimeButton.enable();
+  clockMode = false;
 }
 
 void showDayBrightness(bool action)
 {
+  if (clockMode)
+  {
+    clockface.setVisible(!action);
+  }
   fldDayBright.setVisible(action);
 }
 
 void shownNightBrightness(bool action)
 {
+  if (clockMode)
+  {
+    clockface.setVisible(!action);
+  }
   fldNightBright.setVisible(action);
 }
 
 void showDayNight(bool action)
 {
+  if (clockMode)
+  {
+    clockface.setVisible(!action);
+  }
   fldDayNight.setVisible(action);
 }
