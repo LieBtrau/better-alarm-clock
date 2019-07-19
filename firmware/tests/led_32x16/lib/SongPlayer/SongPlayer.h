@@ -87,5 +87,3 @@ private:
     byte *song = nullptr;
     byte *volume = nullptr;
 };
-
-extern SongPlayer sPlayer;

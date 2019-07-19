@@ -7,37 +7,46 @@
 #include "SongPlayer.h"
 #include "EEPROMAnything.h"
 
-static CommonConfig config1;
-static AlarmConfig config2;
+typedef struct 
+{
+  CommonConfig commConfig;
+  AlarmConfig alarmConfig1;
+  AlarmConfig alarmConfig2;
+} EepromConfig;
+
+EepromConfig config;
+
+extern ActionMgr actionMgr;
 
 void setup()
 {
   Serial.begin(115200);
   //config1.dayNight = 8;
   //Serial.println(EEPROM_writeAnything(0, config1), DEC);
-  if (!EEPROM_readAnything(0, config1))
+  EepromConfig tempConfig;
+  if (EEPROM_readAnything(0, tempConfig))
   {
-    //factory default settings
-    config1.dayNight = 0;
+    memcpy(&config, &tempConfig, sizeof(config));
   }
-  assignCommonConfig(&config1);
-  assignActionsConfig(&config1, &config2);
-  assignAlarmConfig(&config2);
-  if (!initPeripherals())
+  assignCommonConfig(&config.commConfig);
+  assignAlarmConfig(&config.alarmConfig1);
+  actionMgr.assignCommonConfig(&config.commConfig);
+  actionMgr.assignAlarmConfig(&config.alarmConfig1);
+  if (!actionMgr.initPeripherals())
   {
     Serial.println("Can't init peripherals");
     while (true)
       ;
   }
-  initMenu();
-  EEPROM_writeAnything(0, config1);
+  initMenu(actionMgr.getTotalTrackCount());
+  //EEPROM_writeAnything(0, config1);
   showSplash();
   showClock(true);
 }
 
 void loop()
 {
-  pollActions();
+  actionMgr.pollActions();
   bool flashing = pollMenu();
   showParameterMenu(flashing);
 }

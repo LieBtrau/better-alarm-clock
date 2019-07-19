@@ -1,29 +1,22 @@
 #include "actions.h"
 #include "menuNav.h"
-#include "SongPlayer.h"
-#include "Adafruit_APDS9960.h"
-#include "pins.h"
 
-Adafruit_APDS9960 apds;
-SongPlayer sPlayer(&Serial2, pinPlayBusy);
-static CommonConfig *pCommon;
+ActionMgr actionMgr;
 extern ClockFace clockface;
-static byte hours=0;
-static byte mins=0;
+static SongPlayer sPlayer(&Serial2, pinPlayBusy);
 
-void assignActionsConfig(CommonConfig *pConfig, AlarmConfig *config)
+void ActionMgr::assignCommonConfig(CommonConfig *pConfig)
 {
-  sPlayer.setSongPtr(&config->song);
-  sPlayer.setVolumePtr(&config->volume);
   pCommon = pConfig;
 }
 
-uint16_t getTotalTrackCount()
+void ActionMgr::assignAlarmConfig(AlarmConfig *config)
 {
-  return sPlayer.getTotalTrackCount();
+  sPlayer.setSongPtr(&config->song);
+  sPlayer.setVolumePtr(&config->volume);
 }
 
-bool isDark()
+bool ActionMgr::isDark()
 {
   //wait for color data to be ready
   while (!apds.colorDataReady())
@@ -35,23 +28,26 @@ bool isDark()
   return c < (1 << pCommon->dayNight);
 }
 
-void pollActions()
+void ActionMgr::pollActions()
 {
-  sPlayer.poll();
+  static byte hours = 0;
+  static byte mins = 0;
   static uint32_t ulTime = millis();
+  sPlayer.poll();
   if (millis() > ulTime + 500)
   {
     ulTime = millis();
     clockface.setTime(hours, mins);
-    if(++mins>59)
+    if (++mins > 59)
     {
-      mins=0;
-      if(++hours>59)hours=0;
+      mins = 0;
+      if (++hours > 59)
+        hours = 0;
     }
   }
 }
 
-bool initPeripherals()
+bool ActionMgr::initPeripherals()
 {
   if (!apds.begin())
   {
@@ -66,6 +62,14 @@ bool initPeripherals()
   return true;
 }
 
+uint16_t ActionMgr::getTotalTrackCount()
+{
+  return sPlayer.getTotalTrackCount();
+}
+
+//---------------------------------------------------------------------------------------------------------------------------
+//  Encapsulating functions, to be used as function pointers in events
+//---------------------------------------------------------------------------------------------------------------------------
 void playSong(byte i)
 {
   sPlayer.play();

@@ -18,7 +18,7 @@ bool SongPlayer::init()
 
 uint16_t SongPlayer::getTotalTrackCount()
 {
-    return mp3.getTotalTrackCount();
+    return mp3.getTotalTrackCount()>>1; //for some reason 24 is returned while there are only 12 tracks on the sd-card.);;
 }
 
 void SongPlayer::setVolumePtr(byte *volume)

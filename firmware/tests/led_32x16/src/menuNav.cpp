@@ -267,7 +267,7 @@ void showParameterMenu(bool isFlashing)
   showLedState();
 }
 
-void initMenu()
+void initMenu(byte totalTrackCount)
 {
   mgrBtnAlarm.addButton(&btnLightness);
   mgrBtnAlarm.addButton(&btnVolume);
@@ -290,7 +290,7 @@ void initMenu()
   btnNightBright.setAction(shownNightBrightness);
   btnDayNight.setAction(showDayNight);
 
-  song.max = getTotalTrackCount();
+  song.max = totalTrackCount;
   sldSong.setLinkedParameter(&fldVolume);
   fldVolume.setLinkedParameter(&sldSong);
   alarmTimeButton.setAction(setHours);

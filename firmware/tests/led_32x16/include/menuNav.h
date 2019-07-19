@@ -4,7 +4,7 @@
 extern Max72xxPanel matrix;
 extern Adafruit_7segment matrix7;
 
-void initMenu();
+void initMenu(byte totalTrackCount);
 void animation();
 void showParameterMenu(bool isFlashing);
 void showSplash();
