@@ -160,7 +160,7 @@ public:
     void toggle();
     void hide();
     bool isLedOn();
-
+    void setSource(bool* value);
 protected:
     virtual void show();
 

@@ -36,3 +36,8 @@ bool LedToggle::isLedOn()
 {
     return *_val;
 }
+
+void LedToggle::setSource(bool* value)
+{
+    _val=value;
+}

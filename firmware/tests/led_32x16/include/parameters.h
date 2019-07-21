@@ -7,7 +7,6 @@ struct CommonConfig
     byte dayNight = 4;
     byte nightBright = 7;
 };
-void assignCommonConfig(CommonConfig* config);
 
 struct AlarmConfig
 {
@@ -18,4 +17,3 @@ struct AlarmConfig
     byte minutes = 15;
     bool weekdays[7] = {false, false, false, false, false, false, true};
 };
-void assignAlarmConfig(AlarmConfig* config);

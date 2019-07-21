@@ -15,22 +15,22 @@
 #include "ButtonManager.h"
 #include "fontBig.h"
 
+extern ActionMgr actionMgr;
 bool matrixFields[] = {false, false, false, false, false, false};
 bool bAlarmSelected = false;
 bool bMenuSelected = false;
 bool clockMode = true;
 
+MenuMgr menuMgr;
 FieldParameter lightness = {0, nullptr, 100, 5, showLightness, stopLightness};
 FieldParameter volume = {0, nullptr, 30, 1, setVolume, stopSong};
 SelectParameter song = {nullptr, 1, 10, playSong, stopSong};
 FieldParameter hours = {0, nullptr, 23, 1, nullptr, nullptr};
 FieldParameter minutes = {0, nullptr, 55, 5, nullptr, nullptr};
-bool weekday[7] = {false, false, false, false, false, false, false};
 
 //Some C++ boiler plate
 void setHours(bool action);
 void setMinutes(bool action);
-void assignAlarmConfig(AlarmConfig *config);
 void showAlarm(byte alarmNr);
 void showAlarm1(bool action);
 void showAlarm2(bool action);
@@ -40,6 +40,7 @@ void showClock(bool action);
 void showDayBrightness(bool action);
 void shownNightBrightness(bool action);
 void showDayNight(bool action);
+extern void getAlarmConfig(byte nr);
 
 // 32x16 LED Matrix elements
 const int numberOfHorizontalDisplays = 4;
@@ -49,13 +50,6 @@ Max72xxPanel matrix = Max72xxPanel(pinMOSI, pinSCLK, pinCS, numberOfHorizontalDi
 FieldParameter dayBright = {0, nullptr, 15, 1, setLedArrayBrightness, nullptr};
 FieldParameter dayNight = {0, nullptr, 10, 1, nullptr, nullptr}; //logarithmic parameter.  Actual threshold value will be 2^dayNight
 FieldParameter nightBright = {0, nullptr, 15, 1, setLedArrayBrightness, nullptr};
-
-void assignCommonConfig(CommonConfig *config)
-{
-  dayBright.cur = &config->dayBright;
-  dayNight.cur = &config->dayNight;
-  nightBright.cur = &config->nightBright;
-}
 
 //Objects to draw on LED matrix
 ClockFace clockface = ClockFace(drawClock, hideClock);
@@ -96,13 +90,13 @@ ParameterPushButton btnVolume = {VOLUME, &tglVolume, &fldVolume};
 ParameterPushButton btnSong = {SONGCHOICE, &tglSongChoice, &sldSong};
 ParameterButtonManager mgrBtnAlarm;
 //Extra alarm settings: enabling and disabling days of week.
-LedToggle tglMonday = LedToggle(&myCharlie, &ledMatrix[MONDAY], &weekday[0]);
-LedToggle tglTuesday = LedToggle(&myCharlie, &ledMatrix[TUESDAY], &weekday[1]);
-LedToggle tglWednesday = LedToggle(&myCharlie, &ledMatrix[WEDNESDAY], &weekday[2]);
-LedToggle tglThursday = LedToggle(&myCharlie, &ledMatrix[THURSDAY], &weekday[3]);
-LedToggle tglFriday = LedToggle(&myCharlie, &ledMatrix[FRIDAY], &weekday[4]);
-LedToggle tglSaturday = LedToggle(&myCharlie, &ledMatrix[SATURDAY], &weekday[5]);
-LedToggle tglSunday = LedToggle(&myCharlie, &ledMatrix[SUNDAY], &weekday[6]);
+LedToggle tglMonday = LedToggle(&myCharlie, &ledMatrix[MONDAY], nullptr);
+LedToggle tglTuesday = LedToggle(&myCharlie, &ledMatrix[TUESDAY], nullptr);
+LedToggle tglWednesday = LedToggle(&myCharlie, &ledMatrix[WEDNESDAY], nullptr);
+LedToggle tglThursday = LedToggle(&myCharlie, &ledMatrix[THURSDAY], nullptr);
+LedToggle tglFriday = LedToggle(&myCharlie, &ledMatrix[FRIDAY], nullptr);
+LedToggle tglSaturday = LedToggle(&myCharlie, &ledMatrix[SATURDAY], nullptr);
+LedToggle tglSunday = LedToggle(&myCharlie, &ledMatrix[SUNDAY], nullptr);
 TogglePushButton btnMonday = {MONDAY, &tglMonday};
 TogglePushButton btnTuesday = {TUESDAY, &tglTuesday};
 TogglePushButton btnWednesday = {WEDNESDAY, &tglWednesday};
@@ -223,17 +217,21 @@ void showClock(bool action)
   alarmTimeButton.disable();
   clockface.setVisible(true);
   menuButton.setAction(showAlarm1);
+  fldHours.setVisible(false);
+  fldMinutes.setVisible(false);
   clockMode = true;
 }
 
 void showAlarm2(bool action)
 {
+  getAlarmConfig(2);
   showAlarm(2);
   menuButton.setAction(showClock);
 }
 
 void showAlarm1(bool action)
 {
+  getAlarmConfig(1);
   showAlarm(1);
   menuButton.setAction(showAlarm2);
 }
@@ -304,19 +302,6 @@ void initMenu(byte totalTrackCount)
   keyb.setCallback_keyReleased(keyChanged);
 }
 
-void assignAlarmConfig(AlarmConfig *config)
-{
-  lightness.cur = &config->lightness;
-  volume.cur = &config->volume;
-  song.cur = &config->song;
-  hours.cur = &config->hours;
-  minutes.cur = &config->minutes;
-  for (int i = 0; i < 7; i++)
-  {
-    weekday[i] = config->weekdays[i];
-  }
-}
-
 void showSplash()
 {
   matrix.fillScreen(0);
@@ -339,6 +324,7 @@ void drawClock(ClockTime ct)
   matrix.drawBitmap(24, 1, bigFont[(ct.mins % 10) + 11 * font], 8, 12, 1);
   matrix.fillRect(15, 4, 2, 2, 1);
   matrix.fillRect(15, 10, 2, 2, 1);
+  setLedArrayBrightness(actionMgr.isDark() ? *nightBright.cur : *dayBright.cur);
 }
 
 void hideClock(void)
@@ -361,6 +347,8 @@ void showAlarm(byte alarmNr)
   matrix.print(alarmNr);
   mgrBtnAlarm.enable();
   mgrBtnWeekday.enable();
+  fldHours.setVisible(true);
+  fldMinutes.setVisible(true);
   matrix.write(); // Send bitmap to display
   alarmTimeButton.enable();
   clockMode = false;
@@ -391,4 +379,27 @@ void showDayNight(bool action)
     clockface.setVisible(!action);
   }
   fldDayNight.setVisible(action);
+}
+
+void MenuMgr::assignCommonConfig(CommonConfig *config)
+{
+  dayBright.cur = &config->dayBright;
+  dayNight.cur = &config->dayNight;
+  nightBright.cur = &config->nightBright;
+}
+
+void MenuMgr::assignAlarmConfig(AlarmConfig *config)
+{
+  lightness.cur = &config->lightness;
+  volume.cur = &config->volume;
+  song.cur = &config->song;
+  hours.cur = &config->hours;
+  minutes.cur = &config->minutes;
+  tglMonday.setSource(&config->weekdays[0]);
+  tglTuesday.setSource(&config->weekdays[1]);
+  tglWednesday.setSource(&config->weekdays[2]);
+  tglThursday.setSource(&config->weekdays[3]);
+  tglFriday.setSource(&config->weekdays[4]);
+  tglSaturday.setSource(&config->weekdays[5]);
+  tglSunday.setSource(&config->weekdays[6]);
 }
