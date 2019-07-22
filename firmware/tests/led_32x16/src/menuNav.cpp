@@ -170,7 +170,7 @@ void showLedState()
 void keyChanged(byte key)
 {
   bool encoderCoupled = false;
-  if (mgrBtnBrightness.keyPressed(key) || mgrBtnAlarm.keyPressed(key))
+  if (mgrBtnBrightness.keyPressed(key) | mgrBtnAlarm.keyPressed(key))
   {
     alarmTimeButton.doAction(false);
     encoderCoupled = true;
@@ -244,19 +244,11 @@ bool pollMenu()
 
 void showParameterMenu(bool isFlashing)
 {
-  if (mgrBtnBrightness.render())
+  if (mgrBtnAlarm.render() | mgrBtnBrightness.render() | clockface.render())
   {
     matrix.write();
   }
-  if (mgrBtnAlarm.render())
-  {
-    matrix.write();
-  }
-  if (clockface.render())
-  {
-    matrix.write();
-  }
-  if (fldHours.render() || fldMinutes.render() || isFlashing)
+  if (fldHours.render() | fldMinutes.render() | isFlashing)
   {
     matrix7.writeDisplay();
   }
