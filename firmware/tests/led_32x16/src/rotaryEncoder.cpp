@@ -59,9 +59,13 @@ void RotaryEncoderConsumer::decrease()
   }
 }
 
-bool RotaryEncoderConsumer::poll()
+void RotaryEncoderConsumer::poll()
 {
   rotenc.poll();
+}
+
+bool RotaryEncoderConsumer::render()
+{
   bool ret = deviceUpdateNeeded;
   deviceUpdateNeeded = false;
   if (flashing && _p != nullptr)

@@ -3,6 +3,7 @@
 
 ActionMgr actionMgr;
 extern ClockFace clockface;
+extern MenuMgr menuMgr;
 static SongPlayer sPlayer(&Serial2, pinPlayBusy);
 
 void ActionMgr::assignCommonConfig(CommonConfig *pConfig)
@@ -100,6 +101,5 @@ void setLedArrayBrightness(byte i)
 {
   Serial.print("Display : ");
   Serial.println(i, DEC);
-  matrix7.setBrightness(i); // 0 -> 15
-  matrix.setIntensity(i);   // 0 -> 15
+  menuMgr.setBrightness(i);
 }

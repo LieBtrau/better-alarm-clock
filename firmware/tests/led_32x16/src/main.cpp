@@ -16,17 +16,18 @@ typedef struct
 
 void getAlarmConfig(byte nr);
 EepromConfig config;
+static EepromConfig readConfig;
 extern ActionMgr actionMgr;
 extern MenuMgr menuMgr;
-
+bool isAmbientDark;
 void setup()
 {
   Serial.begin(115200);
-  EepromConfig tempConfig;
-  if (EEPROM_readAnything(0, tempConfig))
+  
+  if (EEPROM_readAnything(0, readConfig))
   {
     Serial.println("Using config from EEPROM.");
-    memcpy(&config, &tempConfig, sizeof(config));
+    memcpy(&config, &readConfig, sizeof(config));
   }
   menuMgr.assignCommonConfig(&config.commConfig);
   actionMgr.assignCommonConfig(&config.commConfig);
@@ -36,17 +37,21 @@ void setup()
     while (true)
       ;
   }
-  initMenu(actionMgr.getTotalTrackCount());
-  //EEPROM_writeAnything(0, config1);
-  showSplash();
+  menuMgr.initMenu(actionMgr.getTotalTrackCount());
+  menuMgr.showSplash();
   showClock(true);
 }
 
 void loop()
 {
   actionMgr.pollActions();
-  bool flashing = pollMenu();
-  showParameterMenu(flashing);
+  menuMgr.pollMenu();
+  if(actionMgr.isDark() != isAmbientDark)
+  {
+    isAmbientDark = actionMgr.isDark();
+    menuMgr.setBrightness(isAmbientDark ? config.commConfig.nightBright : config.commConfig.dayBright);
+  }
+  menuMgr.showParameterMenu();
 }
 
 void getAlarmConfig(byte nr)
@@ -63,5 +68,14 @@ void getAlarmConfig(byte nr)
     break;
   default:
     return;
+  }
+}
+
+void saveConfig()
+{
+  if(memcmp(&config, &readConfig, sizeof(config)))
+  {
+    //only write to EEPROM if current config is different from the one read from the EEPROM
+    EEPROM_writeAnything(0, config);
   }
 }

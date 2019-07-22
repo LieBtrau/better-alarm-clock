@@ -1,5 +1,5 @@
 #include "Max72xxPanel.h"
-#include "Fonts/Picopixel.h"
+//#include "Fonts/Picopixel.h"
 #include "Fonts/TomThumb.h"
 #include <SPI.h>
 #include <Wire.h> // Enable this line if using Arduino Uno, Mega, etc.
@@ -15,7 +15,6 @@
 #include "ButtonManager.h"
 #include "fontBig.h"
 
-extern ActionMgr actionMgr;
 bool matrixFields[] = {false, false, false, false, false, false};
 bool bAlarmSelected = false;
 bool bMenuSelected = false;
@@ -31,21 +30,21 @@ FieldParameter minutes = {0, nullptr, 55, 5, nullptr, nullptr};
 //Some C++ boiler plate
 void setHours(bool action);
 void setMinutes(bool action);
-void showAlarm(byte alarmNr);
 void showAlarm1(bool action);
 void showAlarm2(bool action);
 void drawClock(ClockTime ct);
 void hideClock(void);
-void showClock(bool action);
+
 void showDayBrightness(bool action);
 void shownNightBrightness(bool action);
 void showDayNight(bool action);
 extern void getAlarmConfig(byte nr);
+extern void saveConfig();
 
 // 32x16 LED Matrix elements
 const int numberOfHorizontalDisplays = 4;
 const int numberOfVerticalDisplays = 2;
-Max72xxPanel matrix = Max72xxPanel(pinMOSI, pinSCLK, pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
+static Max72xxPanel matrix = Max72xxPanel(pinMOSI, pinSCLK, pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
 
 FieldParameter dayBright = {0, nullptr, 15, 1, setLedArrayBrightness, nullptr};
 FieldParameter dayNight = {0, nullptr, 10, 1, nullptr, nullptr}; //logarithmic parameter.  Actual threshold value will be 2^dayNight
@@ -119,7 +118,7 @@ LedToggle tglAlarm = LedToggle(&myCharlie, &ledMatrix[ALARMTIME], &bAlarmSelecte
 LedToggle tglMenu = LedToggle(&myCharlie, &ledMatrix[MENU], &bMenuSelected);
 
 // Seven segment display elements
-Adafruit_7segment matrix7 = Adafruit_7segment();
+static Adafruit_7segment matrix7 = Adafruit_7segment();
 SevenSegmentField fldHours = SevenSegmentField(&matrix7, SevenSegmentField::LEFTPOS, &hours);
 SevenSegmentField fldMinutes = SevenSegmentField(&matrix7, SevenSegmentField::RIGHTPOS, &minutes);
 
@@ -147,24 +146,6 @@ void writeGpio(byte data)
 byte readGpio()
 {
   return mcp.readGPIO(0);
-}
-
-void showLedState()
-{
-  static unsigned long ultimer = 0;
-  if (millis() > ultimer + 5)
-  {
-    ultimer = millis();
-    byte pinModes = mcp.readPinMode(1);
-    byte gpioStates = mcp.readGPIO(1);
-    if (myCharlie.showLedState(pinModes, gpioStates))
-    {
-      mcp.writePinMode(1, pinModes | 0x1F); //set all LED pins as input to avoid that unwanted LEDs light.
-      mcp.writeGPIO(1, gpioStates);
-      //unwanted LEDs would go on here, in between the two calls to the MCP23017
-      mcp.writePinMode(1, pinModes);
-    }
-  }
 }
 
 void keyChanged(byte key)
@@ -210,6 +191,31 @@ void setHours(bool action)
   }
 }
 
+void showAlarm2(bool action)
+{
+  getAlarmConfig(2);
+  menuMgr.showAlarm(2);
+  menuButton.setAction(showClock);
+}
+
+void showAlarm1(bool action)
+{
+  getAlarmConfig(1);
+  menuMgr.showAlarm(1);
+  menuButton.setAction(showAlarm2);
+}
+
+void drawClock(ClockTime ct)
+{
+  byte font = 4; //0 to 4
+  matrix.drawBitmap(-3, 1, bigFont[(ct.hours / 10 != 0 ? ct.hours / 10 : 10) + 11 * font], 8, 12, 1);
+  matrix.drawBitmap(5, 1, bigFont[(ct.hours % 10) + 11 * font], 8, 12, 1);
+  matrix.drawBitmap(16, 1, bigFont[(ct.mins / 10 != 0 ? ct.mins / 10 : 10) + 11 * font], 8, 12, 1);
+  matrix.drawBitmap(24, 1, bigFont[(ct.mins % 10) + 11 * font], 8, 12, 1);
+  matrix.fillRect(15, 4, 2, 2, 1);
+  matrix.fillRect(15, 10, 2, 2, 1);
+}
+
 void showClock(bool action)
 {
   mgrBtnAlarm.disable();
@@ -220,44 +226,83 @@ void showClock(bool action)
   fldHours.setVisible(false);
   fldMinutes.setVisible(false);
   clockMode = true;
+  saveConfig();
 }
 
-void showAlarm2(bool action)
+void hideClock(void)
 {
-  getAlarmConfig(2);
-  showAlarm(2);
-  menuButton.setAction(showClock);
+  matrix.fillScreen(0);
 }
 
-void showAlarm1(bool action)
+void showDayBrightness(bool action)
 {
-  getAlarmConfig(1);
-  showAlarm(1);
-  menuButton.setAction(showAlarm2);
-}
-
-bool pollMenu()
-{
-  keyb.updateKeys(writeGpio, readGpio);
-  return rec.poll();
-}
-
-void showParameterMenu(bool isFlashing)
-{
-  if (mgrBtnAlarm.render() | mgrBtnBrightness.render() | clockface.render())
+  if (clockMode)
   {
-    matrix.write();
+    clockface.setVisible(!action);
   }
-  if (fldHours.render() | fldMinutes.render() | isFlashing)
+  fldDayBright.setVisible(action);
+  if(!action)
   {
-    matrix7.writeDisplay();
+    saveConfig();
   }
-  mgrBtnWeekday.render();
-  alarmTimeButton.render();
-  showLedState();
 }
 
-void initMenu(byte totalTrackCount)
+void shownNightBrightness(bool action)
+{
+  if (clockMode)
+  {
+    clockface.setVisible(!action);
+  }
+  fldNightBright.setVisible(action);
+  if(!action)
+  {
+    saveConfig();
+  }
+}
+
+void showDayNight(bool action)
+{
+  if (clockMode)
+  {
+    clockface.setVisible(!action);
+  }
+  fldDayNight.setVisible(action);
+  if(!action)
+  {
+    saveConfig();
+  }
+}
+
+void MenuMgr::assignCommonConfig(CommonConfig *config)
+{
+  dayBright.cur = &config->dayBright;
+  dayNight.cur = &config->dayNight;
+  nightBright.cur = &config->nightBright;
+}
+
+void MenuMgr::assignAlarmConfig(AlarmConfig *config)
+{
+  lightness.cur = &config->lightness;
+  volume.cur = &config->volume;
+  song.cur = &config->song;
+  hours.cur = &config->hours;
+  minutes.cur = &config->minutes;
+  tglMonday.setSource(&config->weekdays[0]);
+  tglTuesday.setSource(&config->weekdays[1]);
+  tglWednesday.setSource(&config->weekdays[2]);
+  tglThursday.setSource(&config->weekdays[3]);
+  tglFriday.setSource(&config->weekdays[4]);
+  tglSaturday.setSource(&config->weekdays[5]);
+  tglSunday.setSource(&config->weekdays[6]);
+}
+
+void MenuMgr::setBrightness(byte i)
+{
+  matrix7.setBrightness(i); // 0 -> 15
+  matrix.setIntensity(i);   // 0 -> 15
+}
+
+void MenuMgr::initMenu(byte totalTrackCount)
 {
   mgrBtnAlarm.addButton(&btnLightness);
   mgrBtnAlarm.addButton(&btnVolume);
@@ -294,11 +339,26 @@ void initMenu(byte totalTrackCount)
   keyb.setCallback_keyReleased(keyChanged);
 }
 
-void showSplash()
+void MenuMgr::showParameterMenu()
+{
+  if (mgrBtnAlarm.render() | mgrBtnBrightness.render() | clockface.render())
+  {
+    matrix.write();
+  }
+  if (fldHours.render() | fldMinutes.render() | rec.render())
+  {
+    matrix7.writeDisplay();
+  }
+  mgrBtnWeekday.render();
+  alarmTimeButton.render();
+  showLedState();
+}
+
+void MenuMgr::showSplash()
 {
   matrix.fillScreen(0);
-  matrix.setFont(&Picopixel);
-  matrix.setCursor(4, 10);
+  // matrix.setFont(&Picopixel);
+  // matrix.setCursor(4, 10);
   matrix.setFont(&TomThumb);
   matrix.setCursor(4, 10);
   matrix.print("SPLASH");
@@ -307,24 +367,13 @@ void showSplash()
   matrix.fillScreen(0);
 }
 
-void drawClock(ClockTime ct)
+void MenuMgr::pollMenu()
 {
-  byte font = 4; //0 to 4
-  matrix.drawBitmap(-3, 1, bigFont[(ct.hours / 10 != 0 ? ct.hours / 10 : 10) + 11 * font], 8, 12, 1);
-  matrix.drawBitmap(5, 1, bigFont[(ct.hours % 10) + 11 * font], 8, 12, 1);
-  matrix.drawBitmap(16, 1, bigFont[(ct.mins / 10 != 0 ? ct.mins / 10 : 10) + 11 * font], 8, 12, 1);
-  matrix.drawBitmap(24, 1, bigFont[(ct.mins % 10) + 11 * font], 8, 12, 1);
-  matrix.fillRect(15, 4, 2, 2, 1);
-  matrix.fillRect(15, 10, 2, 2, 1);
-  setLedArrayBrightness(actionMgr.isDark() ? *nightBright.cur : *dayBright.cur);
+  keyb.updateKeys(writeGpio, readGpio);
+  rec.poll();
 }
 
-void hideClock(void)
-{
-  matrix.fillScreen(0);
-}
-
-void showAlarm(byte alarmNr)
+void MenuMgr::showAlarm(byte alarmNr)
 {
   clockface.setVisible(false);
   matrix.fillScreen(0);
@@ -346,52 +395,25 @@ void showAlarm(byte alarmNr)
   clockMode = false;
 }
 
-void showDayBrightness(bool action)
+void MenuMgr::showLedState()
 {
-  if (clockMode)
+  static unsigned long ultimer = 0;
+  if (millis() > ultimer + 5)
   {
-    clockface.setVisible(!action);
+    ultimer = millis();
+    byte pinModes = mcp.readPinMode(1);
+    byte gpioStates = mcp.readGPIO(1);
+    if (myCharlie.showLedState(pinModes, gpioStates))
+    {
+      mcp.writePinMode(1, pinModes | 0x1F); //set all LED pins as input to avoid that unwanted LEDs light.
+      mcp.writeGPIO(1, gpioStates);
+      //unwanted LEDs would go on here, in between the two calls to the MCP23017
+      mcp.writePinMode(1, pinModes);
+    }
   }
-  fldDayBright.setVisible(action);
 }
 
-void shownNightBrightness(bool action)
-{
-  if (clockMode)
+  void MenuMgr::setDisplayOn(bool on)
   {
-    clockface.setVisible(!action);
+    
   }
-  fldNightBright.setVisible(action);
-}
-
-void showDayNight(bool action)
-{
-  if (clockMode)
-  {
-    clockface.setVisible(!action);
-  }
-  fldDayNight.setVisible(action);
-}
-
-void MenuMgr::assignCommonConfig(CommonConfig *config)
-{
-  dayBright.cur = &config->dayBright;
-  dayNight.cur = &config->dayNight;
-  nightBright.cur = &config->nightBright;
-}
-
-void MenuMgr::assignAlarmConfig(AlarmConfig *config)
-{
-  lightness.cur = &config->lightness;
-  volume.cur = &config->volume;
-  song.cur = &config->song;
-  hours.cur = &config->hours;
-  minutes.cur = &config->minutes;
-  tglMonday.setSource(&config->weekdays[0]);
-  tglTuesday.setSource(&config->weekdays[1]);
-  tglWednesday.setSource(&config->weekdays[2]);
-  tglThursday.setSource(&config->weekdays[3]);
-  tglFriday.setSource(&config->weekdays[4]);
-  tglSaturday.setSource(&config->weekdays[5]);
-  tglSunday.setSource(&config->weekdays[6]);
-}

@@ -11,7 +11,8 @@ public:
   ParameterUpdate *getConsumer();
   void increase();
   void decrease();
-  bool poll();
+  void poll();
+  bool render();
 private:
   RotaryEncoder_MCP23017 rotenc;
   ParameterUpdate *_p = nullptr;

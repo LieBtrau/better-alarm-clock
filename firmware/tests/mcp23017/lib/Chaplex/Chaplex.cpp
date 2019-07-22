@@ -52,7 +52,10 @@ void Chaplex::setSingleLed(CharlieLed* led, bool on)
     pDigitalWrite(pins[led.c], LOW);*/
 }
 
-// Write led states to pins.  Needs to be called regularly for persistance of vision.
+/**
+ * \brief   Write led states to pins.  Needs to be called regularly for persistance of vision.
+ * \return  true when this row needs data to be written to the IO-expander, else false
+ */
 bool Chaplex::showLedState(byte &pinModes, byte &gpioStates)
 {
     if (++ledRow >= 5)
