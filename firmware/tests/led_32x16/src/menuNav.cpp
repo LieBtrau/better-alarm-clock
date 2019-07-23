@@ -241,7 +241,8 @@ void showDayBrightness(bool action)
     clockface.setVisible(!action);
   }
   fldDayBright.setVisible(action);
-  if(!action)
+  menuMgr.brightnessSession(action);
+  if (!action)
   {
     saveConfig();
   }
@@ -254,7 +255,8 @@ void shownNightBrightness(bool action)
     clockface.setVisible(!action);
   }
   fldNightBright.setVisible(action);
-  if(!action)
+  menuMgr.brightnessSession(action);
+  if (!action)
   {
     saveConfig();
   }
@@ -267,7 +269,7 @@ void showDayNight(bool action)
     clockface.setVisible(!action);
   }
   fldDayNight.setVisible(action);
-  if(!action)
+  if (!action)
   {
     saveConfig();
   }
@@ -298,9 +300,29 @@ void MenuMgr::assignAlarmConfig(AlarmConfig *config)
 
 void MenuMgr::setBrightness(byte i)
 {
-  matrix7.setBrightness(i); // 0 -> 15
-  matrix.setIntensity(i);   // 0 -> 15
+  if (i != _brightness && !_brightnessSessionBusy)
+  {
+    matrix7.setBrightness(i); // 0 -> 15
+    matrix.setIntensity(i);   // 0 -> 15
+    _brightness = i;
+  }
 }
+
+void MenuMgr::setSessionBrightness(byte i)
+{
+  if (i != _brightness && _brightnessSessionBusy)
+  {
+    matrix7.setBrightness(i); // 0 -> 15
+    matrix.setIntensity(i);   // 0 -> 15
+    _brightness = i;
+  }
+}
+
+void MenuMgr::brightnessSession(bool start)
+{
+  _brightnessSessionBusy = start;
+}
+
 
 void MenuMgr::initMenu(byte totalTrackCount)
 {
@@ -324,6 +346,9 @@ void MenuMgr::initMenu(byte totalTrackCount)
   btnDayBright.setAction(showDayBrightness);
   btnNightBright.setAction(shownNightBrightness);
   btnDayNight.setAction(showDayNight);
+  fldDayBright.setVisible(false);
+  fldDayNight.setVisible(false);
+  fldNightBright.setVisible(false);
 
   song.max = totalTrackCount;
   sldSong.setLinkedParameter(&fldVolume);
@@ -339,19 +364,38 @@ void MenuMgr::initMenu(byte totalTrackCount)
   keyb.setCallback_keyReleased(keyChanged);
 }
 
-void MenuMgr::showParameterMenu()
+/**
+ * Control visibility of the UI
+ * The UI consists of the 32x16 LED-array, the 7segment display and the LEDs in the push buttons.
+ * 
+ * \param[in]   visible     set to true to make UI visible, else false
+ */
+void MenuMgr::showParameterMenu(bool visible)
 {
-  if (mgrBtnAlarm.render() | mgrBtnBrightness.render() | clockface.render())
+  if (visible)
   {
+    if (mgrBtnAlarm.render(!_visble) | mgrBtnBrightness.render(!_visble) | clockface.render(!_visble) | !_visble)
+    {
+      matrix.write();
+    }
+    if (fldHours.render(!_visble) | fldMinutes.render(!_visble) | rec.render() | !_visble)
+    {
+      matrix7.writeDisplay();
+    }
+    mgrBtnWeekday.render(!_visble);
+    alarmTimeButton.render(!_visble);
+    showLedState();
+  }
+  else
+  {
+    matrix.fillScreen(0);
     matrix.write();
-  }
-  if (fldHours.render() | fldMinutes.render() | rec.render())
-  {
+    matrix7.clear();
     matrix7.writeDisplay();
+    byte pinModes = mcp.readPinMode(1);
+    mcp.writePinMode(1, pinModes | 0x1F); //set all LED pins as input
   }
-  mgrBtnWeekday.render();
-  alarmTimeButton.render();
-  showLedState();
+  _visble = visible;
 }
 
 void MenuMgr::showSplash()
@@ -412,8 +456,3 @@ void MenuMgr::showLedState()
     }
   }
 }
-
-  void MenuMgr::setDisplayOn(bool on)
-  {
-    
-  }

@@ -19,11 +19,11 @@ EepromConfig config;
 static EepromConfig readConfig;
 extern ActionMgr actionMgr;
 extern MenuMgr menuMgr;
-bool isAmbientDark;
+
 void setup()
 {
   Serial.begin(115200);
-  
+
   if (EEPROM_readAnything(0, readConfig))
   {
     Serial.println("Using config from EEPROM.");
@@ -46,12 +46,8 @@ void loop()
 {
   actionMgr.pollActions();
   menuMgr.pollMenu();
-  if(actionMgr.isDark() != isAmbientDark)
-  {
-    isAmbientDark = actionMgr.isDark();
-    menuMgr.setBrightness(isAmbientDark ? config.commConfig.nightBright : config.commConfig.dayBright);
-  }
-  menuMgr.showParameterMenu();
+  menuMgr.setBrightness(actionMgr.isDark() ? config.commConfig.nightBright : config.commConfig.dayBright);
+  menuMgr.showParameterMenu(true);
 }
 
 void getAlarmConfig(byte nr)
@@ -73,7 +69,7 @@ void getAlarmConfig(byte nr)
 
 void saveConfig()
 {
-  if(memcmp(&config, &readConfig, sizeof(config)))
+  if (memcmp(&config, &readConfig, sizeof(config)))
   {
     //only write to EEPROM if current config is different from the one read from the EEPROM
     EEPROM_writeAnything(0, config);

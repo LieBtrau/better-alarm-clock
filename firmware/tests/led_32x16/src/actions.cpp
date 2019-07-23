@@ -101,5 +101,5 @@ void setLedArrayBrightness(byte i)
 {
   Serial.print("Display : ");
   Serial.println(i, DEC);
-  menuMgr.setBrightness(i);
+  menuMgr.setSessionBrightness(i);
 }
