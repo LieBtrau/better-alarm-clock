@@ -22,9 +22,7 @@
  *    along with Chronos.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "stm32rtcwrapper.h"
 #include "alarmcalendar.h"
-#include "source/robustDcf.h"
 
 AlarmCalendar ac1(2);
 HardwareSerial *ser1 = &Serial;

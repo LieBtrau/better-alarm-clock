@@ -1,8 +1,16 @@
+/**
+ * AlarmCalendar
+ * 
+ * It's a class that defines objest that can hold one alarm.  This alarm is determined by : 
+ *  - a time of day when the alarm will go off : e.g. 0715h.
+ *  - a list of days of the week on which the alarm will be enabled
+ *  - the duration of the alarm
+ */
 #pragma once
-#include <Time.h>
-#include <Chronos.h>
+#include "Time.h"
+#include "Chronos.h"
 
-static const byte MAX_NR_OF_EVENTS = 7; // +1 = extra event for syncing clock
+static const byte MAX_NR_OF_EVENTS = 7; // each day of the week can have one event
 DefineCalendarType(Calendar, MAX_NR_OF_EVENTS);
 
 typedef struct
