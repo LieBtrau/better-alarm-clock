@@ -17,3 +17,6 @@ const byte pinPlayBusy = PA4;
 //Serial2
 const byte pin_TX2 = PA2;
 const byte pin_RX2 = PA3;
+
+//DCF
+const byte pin_DCF = PA8;

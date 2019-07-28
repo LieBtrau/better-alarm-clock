@@ -4,7 +4,6 @@
 #include "menuNav.h"
 #include "actions.h"
 #include "parameters.h"
-//#include "SongPlayer.h"
 #include "EEPROMAnything.h"
 
 typedef struct
@@ -19,21 +18,24 @@ EepromConfig config;
 static EepromConfig readConfig;
 extern ActionMgr actionMgr;
 extern MenuMgr menuMgr;
+HardwareSerial *ser1 = &Serial;
 
 void setup()
 {
-  Serial.begin(115200);
+  while (!*ser1)
+    ;
+  ser1->begin(115200);
 
   if (EEPROM_readAnything(0, readConfig))
   {
-    Serial.println("Using config from EEPROM.");
+    ser1->println("Using config from EEPROM.");
     memcpy(&config, &readConfig, sizeof(config));
   }
   menuMgr.assignCommonConfig(&config.commConfig);
   actionMgr.assignCommonConfig(&config.commConfig);
   if (!actionMgr.initPeripherals())
   {
-    Serial.println("Can't init peripherals");
+    ser1->println("Can't init peripherals");
     while (true)
       ;
   }

@@ -1,10 +1,16 @@
 #include "actions.h"
+#include "dcfUtcClock.h"
 #include "menuNav.h"
 
 ActionMgr actionMgr;
 extern ClockFace clockface;
 extern MenuMgr menuMgr;
 static SongPlayer sPlayer(&Serial2, pinPlayBusy);
+DcfUtcClock dcfclock(pin_DCF, true);
+// Central European Time (Frankfurt, Paris)
+TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 120}; // Central European Summer Time
+TimeChangeRule CET = {"CET ", Last, Sun, Oct, 3, 60};   // Central European Standard Time
+Timezone CE(CEST, CET);
 
 void ActionMgr::assignCommonConfig(CommonConfig *pConfig)
 {
@@ -31,20 +37,16 @@ bool ActionMgr::isDark()
 
 void ActionMgr::pollActions()
 {
-  static byte hours = 0;
-  static byte mins = 0;
   static uint32_t ulTime = millis();
+
   sPlayer.poll();
-  if (millis() > ulTime + 500)
+  if (dcfclock.update() && (millis() > ulTime + 500))
   {
     ulTime = millis();
-    clockface.setTime(hours, mins);
-    if (++mins > 59)
-    {
-      mins = 0;
-      if (++hours > 59)
-        hours = 0;
-    }
+    time_t utc = now();
+    TimeChangeRule *tcr;
+    time_t t = CE.toLocal(utc, &tcr);
+    clockface.setTime(hour(t), minute(t));
   }
 }
 
@@ -60,6 +62,7 @@ bool ActionMgr::initPeripherals()
     while (true)
       ;
   }
+  dcfclock.init();
   return true;
 }
 

@@ -22,7 +22,7 @@ void DcfUtcClock::init()
     setSyncProvider(getRtcTime);                        // set time source for time.h
 }
 
-
+//\brief returns true when MCU-time is valid
 bool DcfUtcClock::update()
 {
     bool mcuTimeValid = (timeStatus() == timeSet);
