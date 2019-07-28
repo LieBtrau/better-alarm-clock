@@ -8,6 +8,11 @@ HardwareSerial* ser1=&Serial;
 
 tm1637clock dispClock(PB12, PB13);
 DcfUtcClock dcfclock(PA8, true);
+// Central European Time (Frankfurt, Paris)
+TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 120};     // Central European Summer Time
+TimeChangeRule CET = {"CET ", Last, Sun, Oct, 3, 60};       // Central European Standard Time
+Timezone CE(CEST, CET);
+
 
 void setup()
 {
@@ -22,10 +27,12 @@ void loop()
 {
     if(dcfclock.update())
     {
-        Chronos::DateTime curDateTime = Chronos::DateTime::now();
-        if(dispClock.getMinutes()!=curDateTime.minute())
+        time_t utc = now();
+        TimeChangeRule *tcr;        // pointer to the time change rule, use to get the TZ abbrev
+        time_t t = CE.toLocal(utc, &tcr);
+        if(dispClock.getMinutes()!=minute(t))
         {
-            dispClock.showTime(curDateTime.hour(), curDateTime.minute());
+            dispClock.showTime(hour(t),  minute(t));
         }
     }
 }
