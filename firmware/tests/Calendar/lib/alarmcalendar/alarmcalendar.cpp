@@ -27,15 +27,15 @@ void AlarmCalendar::setAlarmCallBack(alarmCallBack function)
     _alarmCall = function;
 }
 
-bool AlarmCalendar::getStartOfNextEvent(Chronos::DateTime *returnDT)
+bool AlarmCalendar::getStartOfNextEvent(const Chronos::DateTime* timenow, Chronos::DateTime *returnDT)
 {
-    return _MyCalendar.nextDateTimeOfInterest(Chronos::DateTime::now(), *returnDT);
+    return _MyCalendar.nextDateTimeOfInterest(*timenow, *returnDT);
 }
 
-bool AlarmCalendar::isAlarmOnGoing()
+bool AlarmCalendar::isAlarmOnGoing(const Chronos::DateTime* timenow)
 {
     Chronos::Event::Occurrence occurrenceList[MAX_NR_OF_EVENTS];
-    return _MyCalendar.listOngoing(MAX_NR_OF_EVENTS, occurrenceList, Chronos::DateTime::now()) > 0;
+    return _MyCalendar.listOngoing(MAX_NR_OF_EVENTS, occurrenceList, *timenow) > 0;
 }
 
 void AlarmCalendar::disableWeekday(Chronos::Weekday::Day aDay)
@@ -59,9 +59,9 @@ bool AlarmCalendar::setTime(Chronos::Hours hours, Chronos::Minutes minutes)
     return updateCalendar();
 }
 
-bool AlarmCalendar::loop()
+bool AlarmCalendar::loop(const Chronos::DateTime* timenow)
 {
-    bool alarmIsOn = isAlarmOnGoing();
+    bool alarmIsOn = isAlarmOnGoing(timenow);
     if (_alarmCall)
     {
         if (alarmIsOn && !_alarmWasOn)
@@ -74,7 +74,7 @@ bool AlarmCalendar::loop()
         }
         _alarmWasOn = alarmIsOn;
      }
-    return isAlarmOnGoing();
+    return isAlarmOnGoing(timenow);
 }
 
 bool AlarmCalendar::updateCalendar()

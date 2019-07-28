@@ -32,10 +32,10 @@ public:
   void disableWeekday(Chronos::Weekday::Day aDay);
   void enableWeekday(Chronos::Weekday::Day aDay);
   bool setTime(Chronos::Hours hours, Chronos::Minutes minutes);
-  bool getStartOfNextEvent(Chronos::DateTime *returnDT);
-  bool isAlarmOnGoing();
+  bool getStartOfNextEvent(const Chronos::DateTime* timenow, Chronos::DateTime *returnDT);
+  bool isAlarmOnGoing(const Chronos::DateTime *timenow);
   void setAlarmCallBack(alarmCallBack function);
-  bool loop();
+  bool loop(const Chronos::DateTime* timenow);
 
 private:
   bool updateCalendar();
