@@ -50,12 +50,13 @@ void setup()
 
     // printTo is a convenience method useful for debugging
     // in real life, you'd use accessors and format it however you like.
-    Chronos::DateTime::now().printTo(*ser1); 
+    Chronos::DateTime timenow = Chronos::DateTime::now();
+    timenow.printTo(*ser1); 
     Chronos::DateTime nextAlarmTime;
     ac1.setTime(7, 0);
     ac1.enableWeekday(Chronos::Weekday::Monday);
     ac1.setAlarmCallBack(alarmCallback);
-    if (ac1.getStartOfNextEvent(&nextAlarmTime))
+    if (ac1.getStartOfNextEvent(&nextAlarmTime, &timenow))
     {
         nextAlarmTime.printTo(*ser1);
     }
@@ -63,5 +64,6 @@ void setup()
 
 void loop()
 {
-    ac1.loop();
+    Chronos::DateTime timenow = Chronos::DateTime::now();
+    ac1.loop(&timenow);
 }

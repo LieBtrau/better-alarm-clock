@@ -11,7 +11,7 @@ static Stm32RtcWrapper stmRtc;
 
 DcfUtcClock::DcfUtcClock(uint32_t dcfPin, bool activeHigh): syncCalendar(5), rd(dcfPin, activeHigh)
 {
-    syncCalendar.setDailyAlarm(2, 0);
+    syncCalendar.setDailyAlarm(0, 0);   //sync at UTC midnight
     syncCalendar.setAlarmCallBack(dcfUpdatesRtc);
 }
 
@@ -32,7 +32,8 @@ bool DcfUtcClock::update()
     }
     else
     {
-        syncCalendar.loop();
+        Chronos::DateTime timenow = Chronos::DateTime::now();
+        syncCalendar.loop(&timenow);
     }
     if(syncOngoing)
     {
