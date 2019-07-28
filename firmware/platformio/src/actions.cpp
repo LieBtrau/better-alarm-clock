@@ -40,13 +40,21 @@ void ActionMgr::pollActions()
   static uint32_t ulTime = millis();
 
   sPlayer.poll();
-  if (dcfclock.update() && (millis() > ulTime + 500))
+  if (millis() > ulTime + 500)
   {
-    ulTime = millis();
-    time_t utc = now();
-    TimeChangeRule *tcr;
-    time_t t = CE.toLocal(utc, &tcr);
-    clockface.setTime(hour(t), minute(t));
+    if (dcfclock.update())
+    {
+      ulTime = millis();
+      time_t utc = now();
+      TimeChangeRule *tcr;
+      time_t t = CE.toLocal(utc, &tcr);
+      clockface.setTime(hour(t), minute(t));
+    }
+    else
+    {
+      //should show some animation here, indicating clock is syncing time
+      clockface.setTime(0,0);
+    }
   }
 }
 
