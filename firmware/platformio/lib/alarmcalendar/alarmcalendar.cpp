@@ -18,21 +18,25 @@ void AlarmCalendar::setConfig(ALARM_CONFIG *pconfig)
 void AlarmCalendar::setDailyAlarm(Chronos::Hours hours, Chronos::Minutes minutes)
 {
     //Enable bit 1 (Sunday) up to 7 (Saturday);
-    _config.weekdays |= 0xFE;
+    for (byte i = 0; i < 7; i++)
+    {
+        _config.weekdays[i] = true;
+    }
     setTime(hours, minutes);
 }
 
+//\brief alarmCallBack will be called with parameter true at the start of the event and with parameter false at the end of the event.
 void AlarmCalendar::setAlarmCallBack(alarmCallBack function)
 {
     _alarmCall = function;
 }
 
-bool AlarmCalendar::getStartOfNextEvent(const Chronos::DateTime* timenow, Chronos::DateTime *returnDT)
+bool AlarmCalendar::getStartOfNextEvent(const Chronos::DateTime *timenow, Chronos::DateTime *returnDT)
 {
     return _MyCalendar.nextDateTimeOfInterest(*timenow, *returnDT);
 }
 
-bool AlarmCalendar::isAlarmOnGoing(const Chronos::DateTime* timenow)
+bool AlarmCalendar::isAlarmOnGoing(const Chronos::DateTime *timenow)
 {
     Chronos::Event::Occurrence occurrenceList[MAX_NR_OF_EVENTS];
     return _MyCalendar.listOngoing(MAX_NR_OF_EVENTS, occurrenceList, *timenow) > 0;
@@ -41,14 +45,14 @@ bool AlarmCalendar::isAlarmOnGoing(const Chronos::DateTime* timenow)
 void AlarmCalendar::disableWeekday(Chronos::Weekday::Day aDay)
 {
     //Chronos::Weekday::Day uses bits 1 to 7
-    bitClear(_config.weekdays, aDay);
+    _config.weekdays[dayToIndex(aDay)] = false;
     updateCalendar();
 }
 
 void AlarmCalendar::enableWeekday(Chronos::Weekday::Day aDay)
 {
     //Chronos::Weekday::Day uses bits 1 to 7
-    bitSet(_config.weekdays, aDay);
+    _config.weekdays[dayToIndex(aDay)] = true;
     updateCalendar();
 }
 
@@ -59,7 +63,7 @@ bool AlarmCalendar::setTime(Chronos::Hours hours, Chronos::Minutes minutes)
     return updateCalendar();
 }
 
-bool AlarmCalendar::loop(const Chronos::DateTime* timenow)
+bool AlarmCalendar::loop(const Chronos::DateTime *timenow)
 {
     bool alarmIsOn = isAlarmOnGoing(timenow);
     if (_alarmCall)
@@ -73,22 +77,66 @@ bool AlarmCalendar::loop(const Chronos::DateTime* timenow)
             _alarmCall(false);
         }
         _alarmWasOn = alarmIsOn;
-     }
+    }
     return isAlarmOnGoing(timenow);
 }
 
 bool AlarmCalendar::updateCalendar()
 {
     _MyCalendar.clear();
-    for (byte day = Chronos::Weekday::Sunday; day <= Chronos::Weekday::Saturday; day++)
+    for (byte index = 0; index < 7; index++)
     {
-        if (bitRead(_config.weekdays, day))
+        if (_config.weekdays[index])
         {
-            if (!_MyCalendar.add(Chronos::Event(day, Chronos::Mark::Weekly(day, _config.hour, _config.mins, 00), Chronos::Span::Minutes(_config.duration))))
+            if (!_MyCalendar.add(Chronos::Event(indexToDay(index), Chronos::Mark::Weekly(indexToDay(index), _config.hour, _config.mins, 00), Chronos::Span::Minutes(_config.duration))))
             {
                 return false;
             }
         }
     }
     return true;
+}
+
+Chronos::Weekday::Day AlarmCalendar::indexToDay(byte index)
+{
+    switch (index)
+    {
+    default:
+    case 0:
+        return Chronos::Weekday::Monday;
+    case 1:
+        return Chronos::Weekday::Tuesday;
+    case 2:
+        return Chronos::Weekday::Wednesday;
+    case 3:
+        return Chronos::Weekday::Thursday;
+    case 4:
+        return Chronos::Weekday::Friday;
+    case 5:
+        return Chronos::Weekday::Saturday;
+    case 6:
+        return Chronos::Weekday::Sunday;
+    }
+}
+
+byte AlarmCalendar::dayToIndex(Chronos::Weekday::Day day)
+{
+    switch (day)
+    {
+    default:
+    case Chronos::Weekday::Monday:
+        return 0;
+    case Chronos::Weekday::Tuesday:
+        return 1;
+    case Chronos::Weekday::Wednesday:
+        return 2;
+    case Chronos::Weekday::Thursday:
+        return 3;
+    case Chronos::Weekday::Friday:
+        return 4;
+    case Chronos::Weekday::Saturday:
+        return 5;
+    case Chronos::Weekday::Sunday:
+        return 6;
+    }
 }

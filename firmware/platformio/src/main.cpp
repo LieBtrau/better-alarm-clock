@@ -33,6 +33,8 @@ void setup()
   }
   menuMgr.assignCommonConfig(&config.commConfig);
   actionMgr.assignCommonConfig(&config.commConfig);
+  actionMgr.updateAlarmSettings(&config.alarmConfig1, 0);
+  actionMgr.updateAlarmSettings(&config.alarmConfig2, 1);
   if (!actionMgr.initPeripherals())
   {
     ser1->println("Can't init peripherals");
@@ -71,6 +73,8 @@ void getAlarmConfig(byte nr)
 
 void saveConfig()
 {
+  actionMgr.updateAlarmSettings(&config.alarmConfig1, 0);
+  actionMgr.updateAlarmSettings(&config.alarmConfig2, 1);
   if (memcmp(&config, &readConfig, sizeof(config)))
   {
     //only write to EEPROM if current config is different from the one read from the EEPROM

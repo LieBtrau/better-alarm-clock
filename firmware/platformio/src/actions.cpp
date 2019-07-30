@@ -12,6 +12,17 @@ TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 120}; // Central European Summ
 TimeChangeRule CET = {"CET ", Last, Sun, Oct, 3, 60};   // Central European Standard Time
 Timezone CE(CEST, CET);
 
+ActionMgr::ActionMgr(): alarms({AlarmCalendar(15), AlarmCalendar(15)})
+{
+}
+
+//  \brief update alarm calendar
+//  \param[in]  alarmNr   starts at index 0
+void ActionMgr::updateAlarmSettings(AlarmConfig *config, byte alarmNr)
+{
+  alarms[alarmNr].setConfig(&config->time);
+}
+
 void ActionMgr::assignCommonConfig(CommonConfig *pConfig)
 {
   pCommon = pConfig;

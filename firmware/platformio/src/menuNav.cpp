@@ -287,15 +287,15 @@ void MenuMgr::assignAlarmConfig(AlarmConfig *config)
   lightness.cur = &config->lightness;
   volume.cur = &config->volume;
   song.cur = &config->song;
-  hours.cur = &config->hours;
-  minutes.cur = &config->minutes;
-  tglMonday.setSource(&config->weekdays[0]);
-  tglTuesday.setSource(&config->weekdays[1]);
-  tglWednesday.setSource(&config->weekdays[2]);
-  tglThursday.setSource(&config->weekdays[3]);
-  tglFriday.setSource(&config->weekdays[4]);
-  tglSaturday.setSource(&config->weekdays[5]);
-  tglSunday.setSource(&config->weekdays[6]);
+  hours.cur = &config->time.hour;
+  minutes.cur = &config->time.mins;
+  tglMonday.setSource(&config->time.weekdays[AlarmCalendar::dayToIndex(Chronos::Weekday::Monday)]);
+  tglTuesday.setSource(&config->time.weekdays[AlarmCalendar::dayToIndex(Chronos::Weekday::Tuesday)]);
+  tglWednesday.setSource(&config->time.weekdays[AlarmCalendar::dayToIndex(Chronos::Weekday::Wednesday)]);
+  tglThursday.setSource(&config->time.weekdays[AlarmCalendar::dayToIndex(Chronos::Weekday::Thursday)]);
+  tglFriday.setSource(&config->time.weekdays[AlarmCalendar::dayToIndex(Chronos::Weekday::Friday)]);
+  tglSaturday.setSource(&config->time.weekdays[AlarmCalendar::dayToIndex(Chronos::Weekday::Saturday)]);
+  tglSunday.setSource(&config->time.weekdays[AlarmCalendar::dayToIndex(Chronos::Weekday::Sunday)]);
 }
 
 void MenuMgr::setBrightness(byte i)

@@ -1,5 +1,6 @@
 #pragma once
 #include "Arduino.h"
+#include "alarmcalendar.h"
 
 struct CommonConfig
 {
@@ -13,7 +14,5 @@ struct AlarmConfig
     byte lightness = 50;
     byte volume = 10;
     byte song = 3;
-    byte hours = 12;
-    byte minutes = 15;
-    bool weekdays[7] = {false, false, false, false, false, false, true};
+    ALARM_CONFIG time;
 };

@@ -17,7 +17,7 @@ typedef struct
 {
   Chronos::Hours hour;
   Chronos::Minutes mins;
-  byte weekdays;
+  bool weekdays[7];
   byte duration;
 } ALARM_CONFIG;
 
@@ -32,10 +32,12 @@ public:
   void disableWeekday(Chronos::Weekday::Day aDay);
   void enableWeekday(Chronos::Weekday::Day aDay);
   bool setTime(Chronos::Hours hours, Chronos::Minutes minutes);
-  bool getStartOfNextEvent(const Chronos::DateTime* timenow, Chronos::DateTime *returnDT);
+  bool getStartOfNextEvent(const Chronos::DateTime *timenow, Chronos::DateTime *returnDT);
   bool isAlarmOnGoing(const Chronos::DateTime *timenow);
   void setAlarmCallBack(alarmCallBack function);
-  bool loop(const Chronos::DateTime* timenow);
+  bool loop(const Chronos::DateTime *timenow);
+  static byte dayToIndex(Chronos::Weekday::Day day);
+  static Chronos::Weekday::Day indexToDay(byte index);
 
 private:
   bool updateCalendar();
