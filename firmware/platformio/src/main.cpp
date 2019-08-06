@@ -13,7 +13,7 @@ typedef struct
   AlarmConfig alarmConfig2;
 } EepromConfig;
 
-void getAlarmConfig(byte nr);
+void assignAlarmConfig(byte nr);
 EepromConfig config;
 static EepromConfig readConfig;
 extern ActionMgr actionMgr;
@@ -25,7 +25,6 @@ void setup()
   while (!*ser1)
     ;
   ser1->begin(115200);
-
   if (EEPROM_readAnything(0, readConfig))
   {
     ser1->println("Using config from EEPROM.");
@@ -54,17 +53,17 @@ void loop()
   menuMgr.showParameterMenu(true);
 }
 
-void getAlarmConfig(byte nr)
+void assignAlarmConfig(byte nr)
 {
   switch (nr)
   {
   case 1:
     menuMgr.assignAlarmConfig(&config.alarmConfig1);
-    actionMgr.assignAlarmConfig(&config.alarmConfig1);
+    actionMgr.assignAlarmConfig(0, &config.alarmConfig1);
     break;
   case 2:
     menuMgr.assignAlarmConfig(&config.alarmConfig2);
-    actionMgr.assignAlarmConfig(&config.alarmConfig2);
+    actionMgr.assignAlarmConfig(1, &config.alarmConfig2);
     break;
   default:
     return;
@@ -75,9 +74,5 @@ void saveConfig()
 {
   actionMgr.updateAlarmSettings(&config.alarmConfig1, 0);
   actionMgr.updateAlarmSettings(&config.alarmConfig2, 1);
-  if (memcmp(&config, &readConfig, sizeof(config)))
-  {
-    //only write to EEPROM if current config is different from the one read from the EEPROM
-    EEPROM_writeAnything(0, config);
-  }
+  // EEPROM_writeAnything(0, config);
 }

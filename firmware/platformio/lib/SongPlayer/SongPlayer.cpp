@@ -11,14 +11,14 @@ bool SongPlayer::init()
 {
     pinMode(_busyPin, INPUT);
     mp3.begin();
-
+    mp3.setRepeatPlay(true);
     mp3.reset();
     return getTotalTrackCount() != 0;
 }
 
 uint16_t SongPlayer::getTotalTrackCount()
 {
-    return mp3.getTotalTrackCount()>>1; //for some reason 24 is returned while there are only 12 tracks on the sd-card.);;
+    return mp3.getTotalTrackCount() >> 1; //for some reason 24 is returned while there are only 12 tracks on the sd-card.);;
 }
 
 void SongPlayer::setVolumePtr(byte *volume)
@@ -31,27 +31,14 @@ void SongPlayer::setSongPtr(byte *song)
     this->song = song;
 }
 
-void SongPlayer::changeVolume()
-{
-    if (volume == nullptr || song == nullptr)
-    {
-        return;
-    }
-    mp3.setVolume(*volume);
-    if (!isPlaying())
-    {
-        mp3.loopGlobalTrack(*song);
-    }
-}
-
 void SongPlayer::play()
 {
     if (volume == nullptr || song == nullptr)
     {
         return;
     }
-    mp3.setVolume(*volume);
-    mp3.loopGlobalTrack(*song);
+    delayStart = millis(); // start delay
+    delayRunning = true;   // not finished yet
 }
 
 void SongPlayer::stop()
@@ -67,4 +54,10 @@ bool SongPlayer::isPlaying()
 void SongPlayer::poll()
 {
     mp3.loop();
+    if (delayRunning && ((millis() - delayStart) >= 200))
+    {
+        delayRunning = false; // // prevent this code being run more than once
+        mp3.setVolume(*volume);
+        mp3.loopGlobalTrack(*song);
+    }
 }

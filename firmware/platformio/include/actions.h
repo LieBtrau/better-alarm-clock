@@ -7,19 +7,28 @@
 
 class ActionMgr
 {
+    struct AlarmSettings
+    {
+        AlarmCalendar calendar;
+        AlarmConfig *config;
+    };
+
 public:
     ActionMgr();
     void assignCommonConfig(CommonConfig *pConfig);
-    void assignAlarmConfig(AlarmConfig *config);
+    void assignAlarmConfig(byte id, AlarmConfig *config);
     bool isDark();
     bool initPeripherals();
     void pollActions();
+    byte* getSong(byte alarmIndex);
+    byte* getVolume(byte alarmIndex);
     uint16_t getTotalTrackCount();
     void updateAlarmSettings(AlarmConfig *config, byte alarmNr);
+
 private:
     Adafruit_APDS9960 apds;
     CommonConfig *pCommon;
-    AlarmCalendar alarms[2];
+    AlarmSettings alarms[2];
 };
 
 void playSong(byte i);

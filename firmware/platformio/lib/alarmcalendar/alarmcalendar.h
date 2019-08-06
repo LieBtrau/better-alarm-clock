@@ -18,16 +18,15 @@ typedef struct
   Chronos::Hours hour;
   Chronos::Minutes mins;
   bool weekdays[7];
-  byte duration;
 } ALARM_CONFIG;
 
 class AlarmCalendar
 {
 public:
-  typedef void (*alarmCallBack)(bool bIsAlarmStartNotEnd);
-  AlarmCalendar(byte durationMinutes);
+  typedef void (*alarmCallBack)(byte id, bool bIsAlarmStartNotEnd);
+  AlarmCalendar(byte id, byte durationMinutes);
   void getConfig(ALARM_CONFIG *config);
-  void setConfig(ALARM_CONFIG *config);
+  bool setConfig(ALARM_CONFIG *config);
   void setDailyAlarm(Chronos::Hours hours, Chronos::Minutes minutes);
   void disableWeekday(Chronos::Weekday::Day aDay);
   void enableWeekday(Chronos::Weekday::Day aDay);
@@ -38,11 +37,13 @@ public:
   bool loop(const Chronos::DateTime *timenow);
   static byte dayToIndex(Chronos::Weekday::Day day);
   static Chronos::Weekday::Day indexToDay(byte index);
-
+  void listEvents(Chronos::DateTime nowTime);
 private:
   bool updateCalendar();
   Calendar _MyCalendar;
   ALARM_CONFIG _config;
   alarmCallBack _alarmCall = nullptr;
   bool _alarmWasOn = false;
+  byte _id;
+  byte _duration;
 };

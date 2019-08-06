@@ -2,14 +2,14 @@
 #include "time.h"
 #include "stm32rtcwrapper.h"
 
-static void dcfUpdatesRtc(bool start);
+static void dcfUpdatesRtc(byte id, bool start);
 static volatile bool syncOngoing=false;
 time_t getRtcTime();
 
 static Stm32RtcWrapper stmRtc;
 
 
-DcfUtcClock::DcfUtcClock(uint32_t dcfPin, bool activeHigh): syncCalendar(5), rd(dcfPin, activeHigh)
+DcfUtcClock::DcfUtcClock(uint32_t dcfPin, bool activeHigh): syncCalendar(0,5), rd(dcfPin, activeHigh)
 {
     syncCalendar.setDailyAlarm(0, 0);   //sync at UTC midnight
     syncCalendar.setAlarmCallBack(dcfUpdatesRtc);
@@ -62,7 +62,7 @@ time_t getRtcTime()
     return stmRtc.get();
 }
 
-void dcfUpdatesRtc(bool start)
+void dcfUpdatesRtc(byte id, bool start)
 {
     syncOngoing=start;
 }

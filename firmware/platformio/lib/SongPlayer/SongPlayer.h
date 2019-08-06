@@ -18,49 +18,49 @@ public:
   {
     Serial.println();
     Serial.print("Play finished for #");
-    Serial.println(globalTrack);   
+    Serial.println(globalTrack);
   }
 
   static void OnCardOnline(uint16_t code)
   {
     Serial.println();
     Serial.print("Card online ");
-    Serial.println(code);     
+    Serial.println(code);
   }
 
   static void OnUsbOnline(uint16_t code)
   {
     Serial.println();
     Serial.print("USB Disk online ");
-    Serial.println(code);     
+    Serial.println(code);
   }
 
   static void OnCardInserted(uint16_t code)
   {
     Serial.println();
     Serial.print("Card inserted ");
-    Serial.println(code); 
+    Serial.println(code);
   }
 
   static void OnUsbInserted(uint16_t code)
   {
     Serial.println();
     Serial.print("USB Disk inserted ");
-    Serial.println(code); 
+    Serial.println(code);
   }
 
   static void OnCardRemoved(uint16_t code)
   {
     Serial.println();
     Serial.print("Card removed ");
-    Serial.println(code);  
+    Serial.println(code);
   }
 
   static void OnUsbRemoved(uint16_t code)
   {
     Serial.println();
     Serial.print("USB Disk removed ");
-    Serial.println(code);  
+    Serial.println(code);
   }
 };
 
@@ -70,20 +70,21 @@ public:
 class SongPlayer
 {
 public:
-    SongPlayer(HardwareSerial *serial, uint32_t busyPin);
-    bool init();
-    void setVolumePtr(byte *volume);
-    void setSongPtr(byte *song);
-    void play();
-    void changeVolume();
-    void stop();
-    void poll();
-    uint16_t getTotalTrackCount();
+  SongPlayer(HardwareSerial *serial, uint32_t busyPin);
+  bool init();
+  void setVolumePtr(byte *volume);
+  void setSongPtr(byte *song);
+  void play();
+  void stop();
+  void poll();
+  uint16_t getTotalTrackCount();
 
 private:
-    bool isPlaying();
-    void printDetail(uint8_t type, int value);
-    uint32_t _busyPin;
-    byte *song = nullptr;
-    byte *volume = nullptr;
+  bool isPlaying();
+  void printDetail(uint8_t type, int value);
+  uint32_t _busyPin;
+  byte *song = nullptr;
+  byte *volume = nullptr;
+  unsigned long delayStart = 0; // the time the delay started
+  bool delayRunning = false;    // true if still waiting for delay to finish
 };

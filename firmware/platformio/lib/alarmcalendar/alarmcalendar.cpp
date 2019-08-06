@@ -1,8 +1,7 @@
 #include "alarmcalendar.h"
 
-AlarmCalendar::AlarmCalendar(byte durationMinutes)
+AlarmCalendar::AlarmCalendar(byte id, byte durationMinutes): _id(id), _duration(durationMinutes)
 {
-    _config.duration = durationMinutes;
 }
 
 void AlarmCalendar::getConfig(ALARM_CONFIG *pconfig)
@@ -10,9 +9,10 @@ void AlarmCalendar::getConfig(ALARM_CONFIG *pconfig)
     memcpy(pconfig, &_config, sizeof(_config));
 }
 
-void AlarmCalendar::setConfig(ALARM_CONFIG *pconfig)
+bool AlarmCalendar::setConfig(ALARM_CONFIG *pconfig)
 {
     memcpy(&_config, pconfig, sizeof(_config));
+    return updateCalendar();
 }
 
 void AlarmCalendar::setDailyAlarm(Chronos::Hours hours, Chronos::Minutes minutes)
@@ -70,11 +70,11 @@ bool AlarmCalendar::loop(const Chronos::DateTime *timenow)
     {
         if (alarmIsOn && !_alarmWasOn)
         {
-            _alarmCall(true);
+            _alarmCall(_id, true);
         }
         if (!alarmIsOn && _alarmWasOn)
         {
-            _alarmCall(false);
+            _alarmCall(_id, false);
         }
         _alarmWasOn = alarmIsOn;
     }
@@ -88,13 +88,59 @@ bool AlarmCalendar::updateCalendar()
     {
         if (_config.weekdays[index])
         {
-            if (!_MyCalendar.add(Chronos::Event(indexToDay(index), Chronos::Mark::Weekly(indexToDay(index), _config.hour, _config.mins, 00), Chronos::Span::Minutes(_config.duration))))
+            if (!_MyCalendar.add(Chronos::Event(indexToDay(index), Chronos::Mark::Weekly(indexToDay(index), _config.hour, _config.mins, 00), Chronos::Span::Minutes(_duration))))
             {
                 return false;
             }
         }
     }
     return true;
+}
+
+void AlarmCalendar::listEvents(Chronos::DateTime nowTime)
+{
+    const byte OCCURRENCES_LIST_SIZE=30;
+    Chronos::Event::Occurrence occurrenceList[OCCURRENCES_LIST_SIZE];
+    Serial.println("Coming up:");
+
+    int numUpcoming = _MyCalendar.listNext(OCCURRENCES_LIST_SIZE, occurrenceList,
+                                          nowTime);
+    if (numUpcoming)
+    {
+        for (int i = 0; i < numUpcoming; i++)
+        {
+
+            Chronos::Span::Absolute startsIn = (occurrenceList[i].start - nowTime);
+            if (startsIn < Chronos::Span::Days(3))
+            {
+
+                // coming soon, print a detailed listing...
+                Serial.print("Event ");
+                Serial.print((int)occurrenceList[i].id);
+                Serial.print('\t');
+                occurrenceList[i].start.printTo(Serial);
+                Serial.print(" - ");
+                occurrenceList[i].finish.printTo(Serial);
+
+                Serial.print("Starts in ");
+                startsIn.printTo(Serial);
+            }
+            else
+            {
+                // further into the future, just print summary
+                Serial.print("Event ");
+                Serial.print((int)occurrenceList[i].id);
+                Serial.print('\t');
+                occurrenceList[i].start.printTo(Serial);
+                Serial.println();
+            }
+        }
+    }
+    else
+    {
+        // nothing returned by listNext()
+        Serial.println("Calendar is wiiiide open... Anyone got plans?");
+    }
 }
 
 Chronos::Weekday::Day AlarmCalendar::indexToDay(byte index)

@@ -22,7 +22,7 @@ bool clockMode = true;
 
 MenuMgr menuMgr;
 FieldParameter lightness = {0, nullptr, 100, 5, showLightness, stopLightness};
-FieldParameter volume = {0, nullptr, 30, 1, setVolume, stopSong};
+FieldParameter volume = {0, nullptr, 30, 1, playSong, stopSong};
 SelectParameter song = {nullptr, 1, 10, playSong, stopSong};
 FieldParameter hours = {0, nullptr, 23, 1, nullptr, nullptr};
 FieldParameter minutes = {0, nullptr, 55, 5, nullptr, nullptr};
@@ -38,7 +38,7 @@ void hideClock(void);
 void showDayBrightness(bool action);
 void shownNightBrightness(bool action);
 void showDayNight(bool action);
-extern void getAlarmConfig(byte nr);
+extern void assignAlarmConfig(byte nr);
 extern void saveConfig();
 
 // 32x16 LED Matrix elements
@@ -193,14 +193,14 @@ void setHours(bool action)
 
 void showAlarm2(bool action)
 {
-  getAlarmConfig(2);
+  assignAlarmConfig(2);
   menuMgr.showAlarm(2);
   menuButton.setAction(showClock);
 }
 
 void showAlarm1(bool action)
 {
-  getAlarmConfig(1);
+  assignAlarmConfig(1);
   menuMgr.showAlarm(1);
   menuButton.setAction(showAlarm2);
 }
