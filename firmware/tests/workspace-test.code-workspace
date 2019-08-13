@@ -25,6 +25,10 @@
 		{
 			"name": "apds-9960",
 			"path": "apds-9960"
+		},
+		{
+			"name": "external_eeprom",
+			"path": "external_eeprom"
 		}
 	],
 	"settings": {
@@ -34,7 +38,8 @@
 		},
 		"files.associations": {
 			"limits": "cpp",
-			"type_traits": "cpp"
+			"type_traits": "cpp",
+			"string_view": "cpp"
 		}
 	}
 }
