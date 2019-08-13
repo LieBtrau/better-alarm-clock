@@ -2,7 +2,7 @@
 #include "Wire.h"
 #pragma once
 
-//#define DEBUG
+#define DEBUG
 
 class AT24C
 {
@@ -53,13 +53,12 @@ bool AT24C::read(int ee, T &t)
     {
         crcIn = _crc_ccitt_update(crcIn, *ptr++);
     }
-    byte crcLow, crcHigh;
+    word crcRead=0;
     ee += sizeof(T);
-    if ((!i2c_byteRead(ee++, crcHigh)) || (!i2c_byteRead(ee, crcLow)))
+    if (!i2c_readBytes(ee, (byte*)&crcRead, 2))
     {
         return false;
     }
-    word crcRead = (crcHigh << 8) | crcLow;
 #ifdef DEBUG
     Serial.print("Read CRC: ");
     Serial.println(crcRead, HEX);
@@ -83,5 +82,8 @@ bool AT24C::write(int ee, const T &t)
         return false;
     }
     ee += sizeof(T);
-    return (i2c_byteWrite(ee++, crc >> 8) && i2c_byteWrite(ee, crc & 0xFF));
+#ifdef DEBUG    
+    Serial.print("write CRC: ");Serial.println(crc, HEX);
+#endif
+    return i2c_pageWrite(ee, (byte*)&crc, 2);
 }

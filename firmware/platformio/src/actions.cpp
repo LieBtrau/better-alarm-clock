@@ -64,7 +64,6 @@ void printDateTime(time_t t, const char *tz)
 void ActionMgr::pollActions()
 {
   static uint32_t ulTime = millis();
-  static bool alarmsPrinted = false;
 
   sPlayer.poll();
   if (millis() > ulTime + 500)
@@ -82,12 +81,6 @@ void ActionMgr::pollActions()
       //localTime.printTo(Serial);                        //debug
       alarms[0].calendar.loop(&localTime);
       alarms[1].calendar.loop(&localTime);
-      if (!alarmsPrinted)
-      {
-        alarmsPrinted = true;
-        alarms[0].calendar.listEvents(localTime);
-        alarms[1].calendar.listEvents(localTime);
-      }
     }
     else
     {

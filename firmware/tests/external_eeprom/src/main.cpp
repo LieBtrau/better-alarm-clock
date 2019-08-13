@@ -27,14 +27,14 @@ void setup()
     ;
   Serial.begin(115200);
   Wire.begin();
-  if(!eeprom1.write(20, config))
+  if(!eeprom1.write(0, config))
   {
     Serial.println("write failed");
     return;
   }
   memset(&config, 0, sizeof(CFG));
   printConfig(&config);
-  if(eeprom1.read(20, config))
+  if(eeprom1.read(0, config))
   {
     Serial.println("read ok");
     printConfig(&config);

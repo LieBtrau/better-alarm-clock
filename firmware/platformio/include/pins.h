@@ -20,3 +20,6 @@ const byte pin_RX2 = PA3;
 
 //DCF
 const byte pin_DCF = PA8;
+
+//debug
+const byte pin_TRG = PB15;

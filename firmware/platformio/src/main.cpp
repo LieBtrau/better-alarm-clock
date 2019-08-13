@@ -1,10 +1,8 @@
-/* https://hackaday.com/2015/09/04/embed-with-elliot-practical-state-machines/
- */
 #include "Arduino.h"
 #include "menuNav.h"
 #include "actions.h"
 #include "parameters.h"
-#include "EEPROMAnything.h"
+#include "at24c.h"
 
 typedef struct
 {
@@ -19,16 +17,21 @@ static EepromConfig readConfig;
 extern ActionMgr actionMgr;
 extern MenuMgr menuMgr;
 HardwareSerial *ser1 = &Serial;
+AT24C eeprom1(AT24C::AT24C02, 0x50, &Wire);
+const byte CFG_MEM_ADDRESS = 0;
 
 void setup()
 {
   while (!*ser1)
     ;
   ser1->begin(115200);
-  if (EEPROM_readAnything(0, readConfig))
+  Wire.begin();
+  pinMode(pin_TRG, OUTPUT);
+  digitalWrite(pin_TRG, LOW);
+  if (eeprom1.read(CFG_MEM_ADDRESS, readConfig))
   {
     ser1->println("Using config from EEPROM.");
-    memcpy(&config, &readConfig, sizeof(config));
+    memcpy(&config, &readConfig, sizeof(EepromConfig));
   }
   menuMgr.assignCommonConfig(&config.commConfig);
   actionMgr.assignCommonConfig(&config.commConfig);
@@ -74,5 +77,14 @@ void saveConfig()
 {
   actionMgr.updateAlarmSettings(&config.alarmConfig1, 0);
   actionMgr.updateAlarmSettings(&config.alarmConfig2, 1);
-  // EEPROM_writeAnything(0, config);
+  if(memcmp(&config, &readConfig, sizeof(EepromConfig)))
+  {
+    Serial.println("writing config");
+    digitalWrite(pin_TRG, HIGH);
+    if (!eeprom1.write(CFG_MEM_ADDRESS, config))
+    {
+      Serial.println("Can't write eeprom.");
+    }
+    digitalWrite(pin_TRG, LOW);
+  }
 }
