@@ -11,7 +11,7 @@ DcfUtcClock dcfclock(pin_DCF, true);
 TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 120}; // Central European Summer Time
 TimeChangeRule CET = {"CET ", Last, Sun, Oct, 3, 60};   // Central European Standard Time
 Timezone CE(CEST, CET);
-void alarmAction(bool start, byte id=0);
+void alarmAction(bool start, byte id = 0);
 
 ActionMgr::ActionMgr() : alarms({{AlarmCalendar(0, 15), nullptr}, {AlarmCalendar(1, 15), nullptr}})
 {
@@ -19,7 +19,7 @@ ActionMgr::ActionMgr() : alarms({{AlarmCalendar(0, 15), nullptr}, {AlarmCalendar
   alarms[1].calendar.setAlarmCallBack(alarmAction);
 }
 
-//  \brief update alarm calendar
+//  \brief update alarm calendar with settings from the eeprom
 //  \param[in]  alarmIndex   starts at index 0
 void ActionMgr::updateAlarmSettings(AlarmConfig *config, ALARMNRS alarmIndex)
 {
@@ -77,9 +77,14 @@ void ActionMgr::pollActions(bool buttonPressed)
       time_t local = CE.toLocal(utc, &tcr);
       clockface.setTime(hour(local), minute(local));
       Chronos::DateTime localTime(local);
-      if((alarms[0].calendar.loop(&localTime) || alarms[1].calendar.loop(&localTime)) && buttonPressed)
+      if ((alarms[0].calendar.loop(&localTime) || alarms[1].calendar.loop(&localTime)) && buttonPressed)
       {
         alarmAction(false);
+      }
+      ALARMNRS nr;
+      if(getAlarmIn24h(nr))
+      {
+        menuMgr.setFirstAlarm(alarms[nr].config);
       }
     }
     else
@@ -111,13 +116,37 @@ uint16_t ActionMgr::getTotalTrackCount()
   return sPlayer.getTotalTrackCount();
 }
 
-byte* ActionMgr::getSong(ALARMNRS alarmIndex)
+byte *ActionMgr::getSong(ALARMNRS alarmIndex)
 {
   return &alarms[alarmIndex].config->song;
 }
-byte* ActionMgr::getVolume(ALARMNRS alarmIndex)
+byte *ActionMgr::getVolume(ALARMNRS alarmIndex)
 {
   return &alarms[alarmIndex].config->volume;
+}
+
+bool ActionMgr::getAlarmIn24h(ALARMNRS& alarmIndex)
+{
+  alarmIndex = MAX_ALARMS;
+  time_t utc = now();
+  TimeChangeRule *tcr;
+  time_t local = CE.toLocal(utc, &tcr);
+  Chronos::DateTime localTime(local);
+  Chronos::DateTime earliestAlarm(local);
+  earliestAlarm += Chronos::Span::Days(2);
+  for (int i = 0; i < 2; i++)
+  {
+    Chronos::DateTime alarmTime;
+    if (alarms[i].calendar.getStartOfNextEvent(&localTime, &alarmTime))
+    {
+      if(alarmTime < earliestAlarm)
+      {
+        alarmIndex = (ALARMNRS)i;
+        earliestAlarm = alarmTime;
+      }
+    }
+  }
+  return earliestAlarm < localTime + Chronos::Span::Days(1);
 }
 
 //---------------------------------------------------------------------------------------------------------------------------

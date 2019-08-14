@@ -24,6 +24,7 @@ public:
     byte* getVolume(ALARMNRS alarmIndex);
     uint16_t getTotalTrackCount();
     void updateAlarmSettings(AlarmConfig *config, ALARMNRS alarmNr);
+    bool getAlarmIn24h(ALARMNRS& alarmIndex);
 
 private:
     Adafruit_APDS9960 apds;

@@ -28,7 +28,6 @@ void setup()
   Wire.begin();
   if (eeprom1.read(CFG_MEM_ADDRESS, readConfig))
   {
-    ser1->println("Using config from EEPROM.");
     memcpy(&config, &readConfig, sizeof(EepromConfig));
   }
   menuMgr.assignCommonConfig(&config.commConfig);
@@ -36,7 +35,6 @@ void setup()
   updateAlarmSettings();
   if (!actionMgr.initPeripherals())
   {
-    ser1->println("Can't init peripherals");
     while (true)
       ;
   }
@@ -67,11 +65,11 @@ void saveConfig()
   updateAlarmSettings();
   if (memcmp(&config, &readConfig, sizeof(EepromConfig)))
   {
-    Serial.println("writing config");
     if (!eeprom1.write(CFG_MEM_ADDRESS, config))
     {
-      Serial.println("Can't write eeprom.");
+      return;
     }
+    memcpy(&readConfig, &config, sizeof(EepromConfig));
   }
 }
 

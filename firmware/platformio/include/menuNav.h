@@ -7,6 +7,7 @@ class MenuMgr
 public:
     void assignCommonConfig(CommonConfig *pConfig);
     void assignAlarmConfig(AlarmConfig *config);
+    void setFirstAlarm(AlarmConfig* config);
     void setBrightness(byte i);
     void setSessionBrightness(byte i);
     void brightnessSession(bool start);
@@ -18,7 +19,7 @@ public:
 
 private:
     void showLedState();
-    bool _visble = false;
+    bool _visible = false;
     byte _brightness;
     bool _brightnessSessionBusy = false;
 };

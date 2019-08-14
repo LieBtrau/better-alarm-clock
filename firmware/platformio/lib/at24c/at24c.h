@@ -2,7 +2,7 @@
 #include "Wire.h"
 #pragma once
 
-#define DEBUG
+//#define DEBUG
 
 class AT24C
 {

@@ -36,7 +36,7 @@ void drawClock(ClockTime ct);
 void hideClock(void);
 
 void showDayBrightness(bool action);
-void shownNightBrightness(bool action);
+void showNightBrightness(bool action);
 void showDayNight(bool action);
 extern void assignAlarmConfig(ALARMNRS nr);
 extern void saveConfig();
@@ -248,7 +248,7 @@ void showDayBrightness(bool action)
   }
 }
 
-void shownNightBrightness(bool action)
+void showNightBrightness(bool action)
 {
   if (clockMode)
   {
@@ -323,7 +323,6 @@ void MenuMgr::brightnessSession(bool start)
   _brightnessSessionBusy = start;
 }
 
-
 void MenuMgr::initMenu(byte totalTrackCount)
 {
   mgrBtnAlarm.addButton(&btnLightness);
@@ -344,7 +343,7 @@ void MenuMgr::initMenu(byte totalTrackCount)
   mgrBtnBrightness.addButton(&btnDayBright);
   mgrBtnBrightness.attachRotaryEncoder(&rec);
   btnDayBright.setAction(showDayBrightness);
-  btnNightBright.setAction(shownNightBrightness);
+  btnNightBright.setAction(showNightBrightness);
   btnDayNight.setAction(showDayNight);
   fldDayBright.setVisible(false);
   fldDayNight.setVisible(false);
@@ -374,16 +373,16 @@ void MenuMgr::showParameterMenu(bool visible)
 {
   if (visible)
   {
-    if (mgrBtnAlarm.render(!_visble) | mgrBtnBrightness.render(!_visble) | clockface.render(!_visble) | !_visble)
+    if (mgrBtnAlarm.render(!_visible) | mgrBtnBrightness.render(!_visible) | clockface.render(!_visible) | !_visible)
     {
       matrix.write();
     }
-    if (fldHours.render(!_visble) | fldMinutes.render(!_visble) | rec.render() | !_visble)
+    if (fldHours.render(!_visible) | fldMinutes.render(!_visible) | rec.render() | !_visible)
     {
       matrix7.writeDisplay();
     }
-    mgrBtnWeekday.render(!_visble);
-    alarmTimeButton.render(!_visble);
+    mgrBtnWeekday.render(!_visible);
+    alarmTimeButton.render(!_visible);
     showLedState();
   }
   else
@@ -395,7 +394,7 @@ void MenuMgr::showParameterMenu(bool visible)
     byte pinModes = mcp.readPinMode(1);
     mcp.writePinMode(1, pinModes | 0x1F); //set all LED pins as input
   }
-  _visble = visible;
+  _visible = visible;
 }
 
 void MenuMgr::showSplash()
@@ -456,4 +455,19 @@ void MenuMgr::showLedState()
       mcp.writePinMode(1, pinModes);
     }
   }
+}
+
+void MenuMgr::setFirstAlarm(AlarmConfig *config)
+{
+  if(!clockMode)
+  {
+    return;
+  }
+  if (config != nullptr)
+  {
+    hours.cur = &config->time.hour;
+    minutes.cur = &config->time.mins;
+  }
+  fldHours.setVisible(config != nullptr);
+  fldMinutes.setVisible(config != nullptr);
 }
