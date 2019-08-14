@@ -16,14 +16,14 @@ class ActionMgr
 public:
     ActionMgr();
     void assignCommonConfig(CommonConfig *pConfig);
-    void assignAlarmConfig(byte id, AlarmConfig *config);
+    void assignAlarmConfig(ALARMNRS id, AlarmConfig *config);
     bool isDark();
     bool initPeripherals();
-    void pollActions();
-    byte* getSong(byte alarmIndex);
-    byte* getVolume(byte alarmIndex);
+    void pollActions(bool buttonPressed);
+    byte* getSong(ALARMNRS alarmIndex);
+    byte* getVolume(ALARMNRS alarmIndex);
     uint16_t getTotalTrackCount();
-    void updateAlarmSettings(AlarmConfig *config, byte alarmNr);
+    void updateAlarmSettings(AlarmConfig *config, ALARMNRS alarmNr);
 
 private:
     Adafruit_APDS9960 apds;

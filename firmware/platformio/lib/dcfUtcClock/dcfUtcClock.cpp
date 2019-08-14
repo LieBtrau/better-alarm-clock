@@ -2,7 +2,7 @@
 #include "time.h"
 #include "stm32rtcwrapper.h"
 
-static void dcfUpdatesRtc(byte id, bool start);
+static void dcfUpdatesRtc(bool start, byte id);
 static volatile bool syncOngoing=false;
 time_t getRtcTime();
 
@@ -62,7 +62,7 @@ time_t getRtcTime()
     return stmRtc.get();
 }
 
-void dcfUpdatesRtc(byte id, bool start)
+void dcfUpdatesRtc(bool start, byte id)
 {
     syncOngoing=start;
 }

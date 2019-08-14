@@ -38,7 +38,7 @@ void hideClock(void);
 void showDayBrightness(bool action);
 void shownNightBrightness(bool action);
 void showDayNight(bool action);
-extern void assignAlarmConfig(byte nr);
+extern void assignAlarmConfig(ALARMNRS nr);
 extern void saveConfig();
 
 // 32x16 LED Matrix elements
@@ -193,15 +193,15 @@ void setHours(bool action)
 
 void showAlarm2(bool action)
 {
-  assignAlarmConfig(2);
-  menuMgr.showAlarm(2);
+  assignAlarmConfig(ALARM2);
+  menuMgr.showAlarm(ALARM2);
   menuButton.setAction(showClock);
 }
 
 void showAlarm1(bool action)
 {
-  assignAlarmConfig(1);
-  menuMgr.showAlarm(1);
+  assignAlarmConfig(ALARM1);
+  menuMgr.showAlarm(ALARM1);
   menuButton.setAction(showAlarm2);
 }
 
@@ -411,10 +411,11 @@ void MenuMgr::showSplash()
   matrix.fillScreen(0);
 }
 
-void MenuMgr::pollMenu()
+// \return true if a button has been pressed or released
+bool MenuMgr::pollMenu()
 {
-  keyb.updateKeys(writeGpio, readGpio);
   rec.poll();
+  return keyb.updateKeys(writeGpio, readGpio);
 }
 
 void MenuMgr::showAlarm(byte alarmNr)
@@ -424,12 +425,12 @@ void MenuMgr::showAlarm(byte alarmNr)
   matrix.setFont(&TomThumb);
   matrix.setCursor(4, 10);
   matrix.print("ALARM");
-  matrix.print(alarmNr);
+  matrix.print(alarmNr + 1);
   matrix.write(); // Send bitmap to display
   delay(1000);
   matrix.fillScreen(0);
   matrix.setCursor(15, 10);
-  matrix.print(alarmNr);
+  matrix.print(alarmNr + 1);
   mgrBtnAlarm.enable();
   mgrBtnWeekday.enable();
   fldHours.setVisible(true);

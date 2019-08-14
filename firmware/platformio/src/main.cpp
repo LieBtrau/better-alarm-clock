@@ -7,11 +7,11 @@
 typedef struct
 {
   CommonConfig commConfig;
-  AlarmConfig alarmConfig1;
-  AlarmConfig alarmConfig2;
+  AlarmConfig alarmConfig[MAX_ALARMS];
 } EepromConfig;
 
-void assignAlarmConfig(byte nr);
+void assignAlarmConfig(ALARMNRS nr);
+void updateAlarmSettings();
 EepromConfig config;
 static EepromConfig readConfig;
 extern ActionMgr actionMgr;
@@ -26,8 +26,6 @@ void setup()
     ;
   ser1->begin(115200);
   Wire.begin();
-  pinMode(pin_TRG, OUTPUT);
-  digitalWrite(pin_TRG, LOW);
   if (eeprom1.read(CFG_MEM_ADDRESS, readConfig))
   {
     ser1->println("Using config from EEPROM.");
@@ -35,8 +33,7 @@ void setup()
   }
   menuMgr.assignCommonConfig(&config.commConfig);
   actionMgr.assignCommonConfig(&config.commConfig);
-  actionMgr.updateAlarmSettings(&config.alarmConfig1, 0);
-  actionMgr.updateAlarmSettings(&config.alarmConfig2, 1);
+  updateAlarmSettings();
   if (!actionMgr.initPeripherals())
   {
     ser1->println("Can't init peripherals");
@@ -50,41 +47,36 @@ void setup()
 
 void loop()
 {
-  actionMgr.pollActions();
-  menuMgr.pollMenu();
+  byte keyPressed = menuMgr.pollMenu();
+  actionMgr.pollActions(keyPressed);
   menuMgr.setBrightness(actionMgr.isDark() ? config.commConfig.nightBright : config.commConfig.dayBright);
   menuMgr.showParameterMenu(true);
 }
 
-void assignAlarmConfig(byte nr)
+void assignAlarmConfig(ALARMNRS nr)
 {
-  switch (nr)
+  if (nr < MAX_ALARMS)
   {
-  case 1:
-    menuMgr.assignAlarmConfig(&config.alarmConfig1);
-    actionMgr.assignAlarmConfig(0, &config.alarmConfig1);
-    break;
-  case 2:
-    menuMgr.assignAlarmConfig(&config.alarmConfig2);
-    actionMgr.assignAlarmConfig(1, &config.alarmConfig2);
-    break;
-  default:
-    return;
+    menuMgr.assignAlarmConfig(&config.alarmConfig[nr]);
+    actionMgr.assignAlarmConfig(nr, &config.alarmConfig[nr]);
   }
 }
 
 void saveConfig()
 {
-  actionMgr.updateAlarmSettings(&config.alarmConfig1, 0);
-  actionMgr.updateAlarmSettings(&config.alarmConfig2, 1);
-  if(memcmp(&config, &readConfig, sizeof(EepromConfig)))
+  updateAlarmSettings();
+  if (memcmp(&config, &readConfig, sizeof(EepromConfig)))
   {
     Serial.println("writing config");
-    digitalWrite(pin_TRG, HIGH);
     if (!eeprom1.write(CFG_MEM_ADDRESS, config))
     {
       Serial.println("Can't write eeprom.");
     }
-    digitalWrite(pin_TRG, LOW);
   }
+}
+
+void updateAlarmSettings()
+{
+  actionMgr.updateAlarmSettings(&config.alarmConfig[0], ALARM1);
+  actionMgr.updateAlarmSettings(&config.alarmConfig[1], ALARM2);
 }

@@ -11,7 +11,7 @@ DcfUtcClock dcfclock(pin_DCF, true);
 TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 120}; // Central European Summer Time
 TimeChangeRule CET = {"CET ", Last, Sun, Oct, 3, 60};   // Central European Standard Time
 Timezone CE(CEST, CET);
-void alarmAction(byte id, bool start);
+void alarmAction(bool start, byte id=0);
 
 ActionMgr::ActionMgr() : alarms({{AlarmCalendar(0, 15), nullptr}, {AlarmCalendar(1, 15), nullptr}})
 {
@@ -21,7 +21,7 @@ ActionMgr::ActionMgr() : alarms({{AlarmCalendar(0, 15), nullptr}, {AlarmCalendar
 
 //  \brief update alarm calendar
 //  \param[in]  alarmIndex   starts at index 0
-void ActionMgr::updateAlarmSettings(AlarmConfig *config, byte alarmIndex)
+void ActionMgr::updateAlarmSettings(AlarmConfig *config, ALARMNRS alarmIndex)
 {
   alarms[alarmIndex].config = config;
   alarms[alarmIndex].calendar.setConfig(&config->time);
@@ -32,7 +32,7 @@ void ActionMgr::assignCommonConfig(CommonConfig *pConfig)
   pCommon = pConfig;
 }
 
-void ActionMgr::assignAlarmConfig(byte id, AlarmConfig *config)
+void ActionMgr::assignAlarmConfig(ALARMNRS id, AlarmConfig *config)
 {
   sPlayer.setSongPtr(&config->song);
   sPlayer.setVolumePtr(&config->volume);
@@ -61,7 +61,7 @@ void printDateTime(time_t t, const char *tz)
   Serial.println(buf);
 }
 
-void ActionMgr::pollActions()
+void ActionMgr::pollActions(bool buttonPressed)
 {
   static uint32_t ulTime = millis();
 
@@ -75,12 +75,12 @@ void ActionMgr::pollActions()
       time_t utc = now();
       TimeChangeRule *tcr;
       time_t local = CE.toLocal(utc, &tcr);
-      //printDateTime(local, tcr->abbrev);                //debug
       clockface.setTime(hour(local), minute(local));
       Chronos::DateTime localTime(local);
-      //localTime.printTo(Serial);                        //debug
-      alarms[0].calendar.loop(&localTime);
-      alarms[1].calendar.loop(&localTime);
+      if((alarms[0].calendar.loop(&localTime) || alarms[1].calendar.loop(&localTime)) && buttonPressed)
+      {
+        alarmAction(false);
+      }
     }
     else
     {
@@ -111,11 +111,11 @@ uint16_t ActionMgr::getTotalTrackCount()
   return sPlayer.getTotalTrackCount();
 }
 
-byte* ActionMgr::getSong(byte alarmIndex)
+byte* ActionMgr::getSong(ALARMNRS alarmIndex)
 {
   return &alarms[alarmIndex].config->song;
 }
-byte* ActionMgr::getVolume(byte alarmIndex)
+byte* ActionMgr::getVolume(ALARMNRS alarmIndex)
 {
   return &alarms[alarmIndex].config->volume;
 }
@@ -124,14 +124,18 @@ byte* ActionMgr::getVolume(byte alarmIndex)
 //  Encapsulating functions, to be used as function pointers in events
 //---------------------------------------------------------------------------------------------------------------------------
 
-void alarmAction(byte id, bool start)
+void alarmAction(bool start, byte id)
 {
   Serial.println(start ? "alarm start\n" : "alarm end\n");
   if (start)
   {
-    sPlayer.setSongPtr(actionMgr.getSong(id));
-    sPlayer.setVolumePtr(actionMgr.getVolume(id));
+    sPlayer.setSongPtr(actionMgr.getSong((ALARMNRS)id));
+    sPlayer.setVolumePtr(actionMgr.getVolume((ALARMNRS)id));
     sPlayer.play();
+  }
+  else
+  {
+    stopSong();
   }
 }
 

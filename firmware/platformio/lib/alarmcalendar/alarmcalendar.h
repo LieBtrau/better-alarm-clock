@@ -5,7 +5,12 @@
  *  - a time of day when the alarm will go off : e.g. 0715h.
  *  - a list of days of the week on which the alarm will be enabled
  *  - the duration of the alarm
+ * 
+ * This calendar can work with local time or with UTC-time.  In the use case of an alarm clock, local time will be used because it's more practical.
+ * You may want to get up at 7AM local time no matter whether it is daylight savings time or not.  
+ * The calendar is programmed with a fixed hour & minute.  Using local time, this will always be correct.  Using UTC, the alarm would have to be adjusted two times a year for daylight savings time. 
  */
+
 #pragma once
 #include "Time.h"
 #include "Chronos.h"
@@ -23,7 +28,7 @@ typedef struct
 class AlarmCalendar
 {
 public:
-  typedef void (*alarmCallBack)(byte id, bool bIsAlarmStartNotEnd);
+  typedef void (*alarmCallBack)(bool bIsAlarmStartNotEnd, byte id);
   AlarmCalendar(byte id, byte durationMinutes);
   void getConfig(ALARM_CONFIG *config);
   bool setConfig(ALARM_CONFIG *config);

@@ -13,7 +13,7 @@ public:
     void initMenu(byte totalTrackCount);
     void showParameterMenu(bool visible);
     void showSplash();
-    void pollMenu();
+    bool pollMenu();
     void showAlarm(byte alarmNr);
 
 private:

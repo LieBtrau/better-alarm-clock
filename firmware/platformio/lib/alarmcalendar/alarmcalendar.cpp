@@ -63,6 +63,7 @@ bool AlarmCalendar::setTime(Chronos::Hours hours, Chronos::Minutes minutes)
     return updateCalendar();
 }
 
+// \returns true when an alarm is ongoing
 bool AlarmCalendar::loop(const Chronos::DateTime *timenow)
 {
     bool alarmIsOn = isAlarmOnGoing(timenow);
@@ -70,11 +71,11 @@ bool AlarmCalendar::loop(const Chronos::DateTime *timenow)
     {
         if (alarmIsOn && !_alarmWasOn)
         {
-            _alarmCall(_id, true);
+            _alarmCall(true, _id);
         }
         if (!alarmIsOn && _alarmWasOn)
         {
-            _alarmCall(_id, false);
+            _alarmCall(false, _id);
         }
         _alarmWasOn = alarmIsOn;
     }

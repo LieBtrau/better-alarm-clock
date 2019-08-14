@@ -16,3 +16,10 @@ struct AlarmConfig
     byte song = 3;
     ALARM_CONFIG time;
 };
+
+typedef enum
+{
+    ALARM1,
+    ALARM2,
+    MAX_ALARMS
+}ALARMNRS;
