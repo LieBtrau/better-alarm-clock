@@ -25,6 +25,7 @@ public:
     uint16_t getTotalTrackCount();
     void updateAlarmSettings(AlarmConfig *config, ALARMNRS alarmNr);
     bool getAlarmIn24h(ALARMNRS& alarmIndex);
+    void autoBrightnessControl();
 
 private:
     Adafruit_APDS9960 apds;

@@ -47,7 +47,6 @@ void loop()
 {
   byte keyPressed = menuMgr.pollMenu();
   actionMgr.pollActions(keyPressed);
-  menuMgr.setBrightness(actionMgr.isDark() ? config.commConfig.nightBright : config.commConfig.dayBright);
   menuMgr.showParameterMenu(true);
 }
 

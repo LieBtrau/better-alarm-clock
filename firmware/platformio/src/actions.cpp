@@ -68,6 +68,7 @@ void ActionMgr::pollActions(bool buttonPressed)
   sPlayer.poll();
   if (millis() > ulTime + 500)
   {
+    autoBrightnessControl();
     if (dcfclock.update())
     {
       //MCU time is synced to DCF
@@ -82,7 +83,7 @@ void ActionMgr::pollActions(bool buttonPressed)
         alarmAction(false);
       }
       ALARMNRS nr;
-      if(getAlarmIn24h(nr))
+      if (getAlarmIn24h(nr))
       {
         menuMgr.setFirstAlarm(alarms[nr].config);
       }
@@ -125,7 +126,7 @@ byte *ActionMgr::getVolume(ALARMNRS alarmIndex)
   return &alarms[alarmIndex].config->volume;
 }
 
-bool ActionMgr::getAlarmIn24h(ALARMNRS& alarmIndex)
+bool ActionMgr::getAlarmIn24h(ALARMNRS &alarmIndex)
 {
   alarmIndex = MAX_ALARMS;
   time_t utc = now();
@@ -139,7 +140,7 @@ bool ActionMgr::getAlarmIn24h(ALARMNRS& alarmIndex)
     Chronos::DateTime alarmTime;
     if (alarms[i].calendar.getStartOfNextEvent(&localTime, &alarmTime))
     {
-      if(alarmTime < earliestAlarm)
+      if (alarmTime < earliestAlarm)
       {
         alarmIndex = (ALARMNRS)i;
         earliestAlarm = alarmTime;
@@ -147,6 +148,31 @@ bool ActionMgr::getAlarmIn24h(ALARMNRS& alarmIndex)
     }
   }
   return earliestAlarm < localTime + Chronos::Span::Days(1);
+}
+
+void ActionMgr::autoBrightnessControl()
+{
+  //wait for color data to be ready
+  while (!apds.colorDataReady())
+  {
+    delay(5);
+  }
+  uint16_t r, g, b, c;
+  apds.getColorData(&r, &g, &b, &c);
+  const int lightLevels[] = {1, 2, 3, 4, 7, 12, 19, 31, 50, 82, 134, 219, 358, 584, 953, 1556};
+  int smallestDifference = INT32_MAX;
+  int indexSmallest = 0;
+  for (int i = 0; i < 16; i++)
+  {
+    int absdiff = abs(c - lightLevels[i]);
+    if (absdiff < smallestDifference)
+    {
+      smallestDifference = absdiff;
+      indexSmallest = i;
+    }
+  }
+  Serial.println(indexSmallest);
+  menuMgr.setBrightness(indexSmallest);
 }
 
 //---------------------------------------------------------------------------------------------------------------------------
