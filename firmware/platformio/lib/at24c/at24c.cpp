@@ -41,9 +41,9 @@ bool AT24C::i2c_byteRead(word address, byte &data)
     {
         return false;
     }
-    if (Wire.available())
+    if (_i2cBus->available())
     {
-        data = Wire.read();
+        data = _i2cBus->read();
         return true;
     }
     return false;
