@@ -2,6 +2,7 @@
 #include "Max72xxPanel.h"         //32x16 LED matrix panel
 #include "Chaplex.h"              //Charlieplexed LEDs
 #include "Adafruit_LEDBackpack.h" //7segment display
+#include "millisDelay.h"
 
 struct Coordinate
 {
@@ -39,6 +40,7 @@ struct SelectParameter
 class MenuOut
 {
 public:
+    MenuOut();
     bool render(bool forceRender = false);
     bool flash();
     void setVisible(bool isVisible);
@@ -52,7 +54,7 @@ private:
     const unsigned long FLASH_INTERVAL = 500;
     bool visible = true;
     bool flashVisible = true;
-    unsigned long ulTimer = millis();
+    millisDelay flashTimer;
 };
 
 typedef void (*voidFuncPtrClockTime)(ClockTime ct);

@@ -1,5 +1,11 @@
 #include "Menu.h"
 
+
+MenuOut::MenuOut()
+{
+    flashTimer.start(FLASH_INTERVAL);
+}
+
 /* forceRender can be used to force a show() when the underlying parameter hasn't changed.  This behavior is useful in the case of flashing.
  * returns true if content has changed since last call, which would imply a redraw is needed.
  */
@@ -34,11 +40,11 @@ void MenuOut::setVisible(bool isVisible)
 
 bool MenuOut::flash()
 {
-    if (millis() < ulTimer + FLASH_INTERVAL)
+    if(!flashTimer.justFinished())
     {
         return false;
     }
-    ulTimer = millis();
+    flashTimer.repeat();
     if (flashVisible)
     {
         hide();

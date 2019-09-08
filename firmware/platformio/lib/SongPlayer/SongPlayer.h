@@ -2,6 +2,7 @@
 
 #include "DFMiniMp3.h"
 #include "Arduino.h"
+#include "millisDelay.h"
 
 class Mp3Notify
 {
@@ -85,6 +86,5 @@ private:
   uint32_t _busyPin;
   byte *song = nullptr;
   byte *volume = nullptr;
-  unsigned long delayStart = 0; // the time the delay started
-  bool delayRunning = false;    // true if still waiting for delay to finish
+  millisDelay _singleShotTimer;
 };

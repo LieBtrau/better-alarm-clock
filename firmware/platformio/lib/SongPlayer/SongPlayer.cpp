@@ -37,8 +37,7 @@ void SongPlayer::play()
     {
         return;
     }
-    delayStart = millis(); // start delay
-    delayRunning = true;   // not finished yet
+    _singleShotTimer.start(200);
 }
 
 void SongPlayer::stop()
@@ -54,9 +53,8 @@ bool SongPlayer::isPlaying()
 void SongPlayer::poll()
 {
     mp3.loop();
-    if (delayRunning && ((millis() - delayStart) >= 200))
+    if (_singleShotTimer.justFinished())
     {
-        delayRunning = false; // // prevent this code being run more than once
         mp3.setVolume(*volume);
         mp3.loopGlobalTrack(*song);
     }
