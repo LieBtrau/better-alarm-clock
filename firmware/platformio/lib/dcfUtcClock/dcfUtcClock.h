@@ -8,8 +8,10 @@ public:
     DcfUtcClock(uint32_t dcfPin, bool activeHigh);
     void init();
     bool update();
+    bool isLastSyncSuccessful();
 private:
     bool dcfReady(Chronos::EpochTime& epoch);
+    bool _lastSyncSuccessful = false;
     AlarmCalendar syncCalendar;
-    RobustDcf rd;
+    RobustDcf _rd;
 };

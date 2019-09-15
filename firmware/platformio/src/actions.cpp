@@ -17,6 +17,9 @@ ActionMgr::ActionMgr() : alarms({{AlarmCalendar(0, 15), nullptr}, {AlarmCalendar
 {
   alarms[0].calendar.setAlarmCallBack(alarmAction);
   alarms[1].calendar.setAlarmCallBack(alarmAction);
+  _clockRefreshTimer.start(500);
+  _brightnessRampTimer.start(2000);
+  _ambientLightSenseTimer.start(1000);
 }
 
 //  \brief update alarm calendar with settings from the eeprom
@@ -38,61 +41,33 @@ void ActionMgr::assignAlarmConfig(ALARMNRS id, AlarmConfig *config)
   sPlayer.setVolumePtr(&config->volume);
 }
 
-bool ActionMgr::isDark()
-{
-  //wait for color data to be ready
-  while (!apds.colorDataReady())
-  {
-    delay(5);
-  }
-  uint16_t r, g, b, c;
-  apds.getColorData(&r, &g, &b, &c);
-  return c < (1 << pCommon->dayNight);
-}
-
-// format and print a time_t value, with a time zone appended.
-void printDateTime(time_t t, const char *tz)
-{
-  char buf[32];
-  char m[4]; // temporary storage for month string (DateStrings.cpp uses shared buffer)
-  strcpy(m, monthShortStr(month(t)));
-  sprintf(buf, "%.2d:%.2d:%.2d %s %.2d %s %d %s",
-          hour(t), minute(t), second(t), dayShortStr(weekday(t)), day(t), m, year(t), tz);
-  Serial.println(buf);
-}
-
 void ActionMgr::pollActions(bool buttonPressed)
 {
-  static uint32_t ulTime = millis();
-
   sPlayer.poll();
-  if (millis() > ulTime + 500)
+  updateDesiredDisplayBrightness();
+  displayOnOffControl(buttonPressed);
+  if (dcfclock.update())
   {
-    autoBrightnessControl();
-    if (dcfclock.update())
+    //MCU time is synced to DCF
+    time_t utc = now();
+    TimeChangeRule *tcr;
+    time_t local = CE.toLocal(utc, &tcr);
+    Chronos::DateTime localTime(local);
+    if ((alarms[0].calendar.loop(&localTime) || alarms[1].calendar.loop(&localTime)) && buttonPressed)
     {
-      //MCU time is synced to DCF
-      ulTime = millis();
-      time_t utc = now();
-      TimeChangeRule *tcr;
-      time_t local = CE.toLocal(utc, &tcr);
-      clockface.setTime(hour(local), minute(local));
-      Chronos::DateTime localTime(local);
-      if ((alarms[0].calendar.loop(&localTime) || alarms[1].calendar.loop(&localTime)) && buttonPressed)
-      {
-        alarmAction(false);
-      }
+      alarmAction(false);
+    }
+    if (_clockRefreshTimer.justFinished())
+    {
+      _clockRefreshTimer.repeat();
+      clockface.setTime(hour(local), minute(local), dcfclock.isLastSyncSuccessful());
       ALARMNRS nr;
-      if (getAlarmIn24h(nr))
-      {
-        menuMgr.setFirstAlarm(alarms[nr].config);
-      }
+      menuMgr.showFirstAlarm(getFirstAlarmIn(Chronos::Span::Days(1), nr) ? alarms[nr].config : nullptr);
     }
-    else
-    {
-      //should show some animation here, indicating clock is syncing time
-      clockface.setTime(0, 0);
-    }
+  }
+  else
+  {
+    menuMgr.showSyncAnimation();
   }
 }
 
@@ -102,7 +77,7 @@ bool ActionMgr::initPeripherals()
   {
     return false;
   }
-  apds.enableColor(true);
+  apds.enableColor();
   if (!sPlayer.init())
   {
     while (true)
@@ -126,7 +101,10 @@ byte *ActionMgr::getVolume(ALARMNRS alarmIndex)
   return &alarms[alarmIndex].config->volume;
 }
 
-bool ActionMgr::getAlarmIn24h(ALARMNRS &alarmIndex)
+/**
+ * \remark : Running this command when a calendar event is ongoing, will return that calendar event.
+ */
+bool ActionMgr::getFirstAlarmIn(Chronos::Span::Delta delta, ALARMNRS &alarmIndex)
 {
   alarmIndex = MAX_ALARMS;
   time_t utc = now();
@@ -134,8 +112,8 @@ bool ActionMgr::getAlarmIn24h(ALARMNRS &alarmIndex)
   time_t local = CE.toLocal(utc, &tcr);
   Chronos::DateTime localTime(local);
   Chronos::DateTime earliestAlarm(local);
-  earliestAlarm += Chronos::Span::Days(2);
-  for (int i = 0; i < 2; i++)
+  earliestAlarm += delta;
+  for (int i = 0; i < MAX_ALARMS; i++)
   {
     Chronos::DateTime alarmTime;
     if (alarms[i].calendar.getStartOfNextEvent(&localTime, &alarmTime))
@@ -147,32 +125,95 @@ bool ActionMgr::getAlarmIn24h(ALARMNRS &alarmIndex)
       }
     }
   }
-  return earliestAlarm < localTime + Chronos::Span::Days(1);
+  return alarmIndex != MAX_ALARMS;
 }
 
-void ActionMgr::autoBrightnessControl()
+/**
+ * \brief If display is on minimum brightness for a minute, then turn the display off.
+ */
+void ActionMgr::displayOnOffControl(bool buttonPressed)
 {
-  //wait for color data to be ready
-  while (!apds.colorDataReady())
+  if (movementDetected() || buttonPressed || _desiredDisplayBrightness > 0)
   {
-    delay(5);
+    _displayOffTimer.start(60000);
+    menuMgr.showParameterMenu(true);
   }
-  uint16_t r, g, b, c;
-  apds.getColorData(&r, &g, &b, &c);
-  const int lightLevels[] = {1, 2, 3, 4, 7, 12, 19, 31, 50, 82, 134, 219, 358, 584, 953, 1556};
-  int smallestDifference = INT32_MAX;
-  int indexSmallest = 0;
-  for (int i = 0; i < 16; i++)
+  if (_displayOffTimer.isRunning())
   {
-    int absdiff = abs(c - lightLevels[i]);
-    if (absdiff < smallestDifference)
+    if (!menuMgr.isVisible())
     {
-      smallestDifference = absdiff;
-      indexSmallest = i;
+      menuMgr.showParameterMenu(true);
+    }
+    displayBrightnessControl(_desiredDisplayBrightness);
+  }
+  if (_displayOffTimer.justFinished())
+  {
+    menuMgr.showParameterMenu(false);
+  }
+}
+
+/**
+ * \brief Set brightness level according to ambient light level
+ * \note  Setting occurs fully automatically.  Should a user want to add adjustments, then this function could be changed so that it adds an offset to the selected element in the table.
+ *        e.g.  If autobrightness selects index 5, but the user wants a little bit brighter, then the resulting brightness = index + useroffset
+ *        Default value for useroffset = 0, but it could be -15 up to +15.
+ */
+void ActionMgr::displayBrightnessControl(byte desiredBrightness)
+{
+  if (_displayBrightness == 0xFF)
+  {
+    //not properly initialized yet
+    _displayBrightness = desiredBrightness;
+  }
+  if (_brightnessRampTimer.justFinished())
+  {
+    _brightnessRampTimer.repeat();
+    if (_displayBrightness < desiredBrightness)
+    {
+      _displayBrightness++;
+    }
+    if (_displayBrightness > desiredBrightness)
+    {
+      _displayBrightness--;
     }
   }
-  Serial.println(indexSmallest);
-  menuMgr.setBrightness(indexSmallest);
+  menuMgr.setBrightness(_displayBrightness);
+}
+
+/**
+ * Returns display brightness according to ambient light level
+ */
+void ActionMgr::updateDesiredDisplayBrightness()
+{
+  if (_ambientLightSenseTimer.justFinished())
+  {
+    _ambientLightSenseTimer.repeat();
+    //wait for color data to be ready
+    while (!apds.colorDataReady())
+    {
+      delay(5);
+    }
+    uint16_t r, g, b, c;
+    apds.getColorData(&r, &g, &b, &c);
+    const int lightLevels[] = {1, 2, 3, 4, 7, 12, 19, 31, 50, 82, 134, 219, 358, 584, 953, 1556};
+    int smallestDifference = INT32_MAX;
+    int indexSmallest = 0;
+    for (int i = 0; i < 16; i++)
+    {
+      int absdiff = abs(c - lightLevels[i]);
+      if (absdiff < smallestDifference)
+      {
+        smallestDifference = absdiff;
+        indexSmallest = i;
+      }
+    }
+    _desiredDisplayBrightness = indexSmallest;
+  }
+}
+
+bool ActionMgr::movementDetected()
+{
+  return false;
 }
 
 //---------------------------------------------------------------------------------------------------------------------------
@@ -220,4 +261,15 @@ void setLedArrayBrightness(byte i)
   Serial.print("Display : ");
   Serial.println(i, DEC);
   menuMgr.setSessionBrightness(i);
+}
+
+// format and print a time_t value, with a time zone appended.
+void printDateTime(time_t t, const char *tz)
+{
+  char buf[32];
+  char m[4]; // temporary storage for month string (DateStrings.cpp uses shared buffer)
+  strcpy(m, monthShortStr(month(t)));
+  sprintf(buf, "%.2d:%.2d:%.2d %s %.2d %s %d %s",
+          hour(t), minute(t), second(t), dayShortStr(weekday(t)), day(t), m, year(t), tz);
+  Serial.println(buf);
 }

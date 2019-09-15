@@ -59,7 +59,7 @@ bool MenuOut::flash()
 
 ClockFace::ClockFace(voidFuncPtrClockTime showFunction, voidFuncPtrVoid hideFunction) : _drawFunction(showFunction), _hideFunction(hideFunction) {}
 
-void ClockFace::setTime(byte hours, byte minutes)
+void ClockFace::setTime(byte hours, byte minutes, bool synced)
 {
     if (hours != _hours || minutes != _mins)
     {
@@ -67,12 +67,13 @@ void ClockFace::setTime(byte hours, byte minutes)
     }
     _hours = hours;
     _mins = minutes;
+    _synced = synced;
 }
 
 void ClockFace::show()
 {
     hide();
-    _drawFunction({_hours, _mins});
+    _drawFunction({_hours, _mins, _synced});
 }
 
 void ClockFace::hide()

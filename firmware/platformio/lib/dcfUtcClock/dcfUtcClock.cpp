@@ -3,23 +3,22 @@
 #include "stm32rtcwrapper.h"
 
 static void dcfUpdatesRtc(bool start, byte id);
-static volatile bool syncOngoing=false;
+static volatile bool syncOngoing = false;
 time_t getRtcTime();
 
 static Stm32RtcWrapper stmRtc;
 
-
-DcfUtcClock::DcfUtcClock(uint32_t dcfPin, bool activeHigh): syncCalendar(0,5), rd(dcfPin, activeHigh)
+DcfUtcClock::DcfUtcClock(uint32_t dcfPin, bool activeHigh) : syncCalendar(0, 5), _rd(dcfPin, activeHigh)
 {
-    syncCalendar.setDailyAlarm(0, 0);   //sync at UTC midnight
+    syncCalendar.setDailyAlarm(0, 0); //sync at UTC midnight
     syncCalendar.setAlarmCallBack(dcfUpdatesRtc);
 }
 
 void DcfUtcClock::init()
 {
-    rd.init();
+    _rd.init();
     stmRtc.begin();
-    setSyncProvider(getRtcTime);                        // set time source for time.h
+    setSyncProvider(getRtcTime); // set time source for time.h
 }
 
 //\brief returns true when MCU-time is valid
@@ -28,33 +27,39 @@ bool DcfUtcClock::update()
     bool mcuTimeValid = (timeStatus() == timeSet);
     if (!mcuTimeValid)
     {
-        syncOngoing=true;
+        syncOngoing = true;
     }
     else
     {
         Chronos::DateTime timenow = Chronos::DateTime::now();
         syncCalendar.loop(&timenow);
     }
-    if(syncOngoing)
+    if (syncOngoing)
     {
         Chronos::EpochTime epoch;
         syncOngoing = !dcfReady(epoch);
+        _lastSyncSuccessful = !syncOngoing;
     }
     return mcuTimeValid;
 }
 
 // returns true when a valid DCF timestamp has been received
-bool DcfUtcClock::dcfReady(Chronos::EpochTime& epoch)
+bool DcfUtcClock::dcfReady(Chronos::EpochTime &epoch)
 {
-    if(!rd.update(epoch))
+    if (!_rd.update(epoch))
     {
         return false;
     }
-    if(stmRtc.setEpoch(epoch))                      //update RTC with DCF-data
+    if (stmRtc.setEpoch(epoch)) //update RTC with DCF-data
     {
-        setTime(epoch);                             //Update MCU-time by RTC: Force set time, otherwise it will only be set after 300s
+        setTime(epoch); //Update MCU-time by RTC: Force set time, otherwise it will only be set after 300s
     }
     return true;
+}
+
+bool DcfUtcClock::isLastSyncSuccessful()
+{
+    return _lastSyncSuccessful;
 }
 
 time_t getRtcTime()
@@ -64,7 +69,5 @@ time_t getRtcTime()
 
 void dcfUpdatesRtc(bool start, byte id)
 {
-    syncOngoing=start;
+    syncOngoing = start;
 }
-
-

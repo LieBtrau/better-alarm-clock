@@ -212,8 +212,15 @@ void drawClock(ClockTime ct)
   matrix.drawBitmap(5, 1, bigFont[(ct.hours % 10) + 11 * font], 8, 12, 1);
   matrix.drawBitmap(16, 1, bigFont[(ct.mins / 10 != 0 ? ct.mins / 10 : 10) + 11 * font], 8, 12, 1);
   matrix.drawBitmap(24, 1, bigFont[(ct.mins % 10) + 11 * font], 8, 12, 1);
-  matrix.fillRect(15, 4, 2, 2, 1);
-  matrix.fillRect(15, 10, 2, 2, 1);
+  if (ct.synced)
+  {
+    matrix.fillRect(15, 4, 2, 2, 1);
+    matrix.fillRect(15, 10, 2, 2, 1);
+  }
+  else
+  {
+    matrix.fillRect(15, 7, 2, 2, 1);
+  }
 }
 
 void showClock(bool action)
@@ -273,6 +280,11 @@ void showDayNight(bool action)
   {
     saveConfig();
   }
+}
+
+bool MenuMgr::isVisible()
+{
+  return _visible;
 }
 
 void MenuMgr::assignCommonConfig(CommonConfig *config)
@@ -358,9 +370,12 @@ void MenuMgr::initMenu(byte totalTrackCount)
   matrix.init();
   matrix.fillScreen(0);
   matrix7.begin(0x70);
+  matrix7.clear();
   rec.init();
   keyb.init(writePinModes, writePullups);
   keyb.setCallback_keyReleased(keyChanged);
+  _charliePlexingTimer.start(5);
+  _syncingTimer.start(500);
 }
 
 /**
@@ -441,10 +456,9 @@ void MenuMgr::showAlarm(byte alarmNr)
 
 void MenuMgr::showLedState()
 {
-  static unsigned long ultimer = 0;
-  if (millis() > ultimer + 5)
+  if (_charliePlexingTimer.justFinished())
   {
-    ultimer = millis();
+    _charliePlexingTimer.repeat();
     byte pinModes = mcp.readPinMode(1);
     byte gpioStates = mcp.readGPIO(1);
     if (myCharlie.showLedState(pinModes, gpioStates))
@@ -457,9 +471,9 @@ void MenuMgr::showLedState()
   }
 }
 
-void MenuMgr::setFirstAlarm(AlarmConfig *config)
+void MenuMgr::showFirstAlarm(AlarmConfig *config)
 {
-  if(!clockMode)
+  if (!clockMode)
   {
     return;
   }
@@ -471,3 +485,13 @@ void MenuMgr::setFirstAlarm(AlarmConfig *config)
   fldHours.setVisible(config != nullptr);
   fldMinutes.setVisible(config != nullptr);
 }
+
+void MenuMgr::showSyncAnimation()
+{
+  //should show some animation here, indicating clock is syncing time
+  if (_syncingTimer.justFinished())
+  {
+    _syncingTimer.repeat();
+    Serial.print(".");
+  }
+ }

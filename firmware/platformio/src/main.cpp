@@ -41,13 +41,18 @@ void setup()
   menuMgr.initMenu(actionMgr.getTotalTrackCount());
   menuMgr.showSplash();
   showClock(true);
+  menuMgr.showParameterMenu(true);
 }
 
 void loop()
 {
   byte keyPressed = menuMgr.pollMenu();
+  delay(1); //sometimes MCP23017 stops responding after some time, adding this delay "fixes" it.
   actionMgr.pollActions(keyPressed);
-  menuMgr.showParameterMenu(true);
+  if(menuMgr.isVisible())
+  {
+    menuMgr.showParameterMenu(true);
+  }
 }
 
 void assignAlarmConfig(ALARMNRS nr)

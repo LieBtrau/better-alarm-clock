@@ -14,6 +14,7 @@ struct ClockTime
 {
     byte hours = 0;
     byte mins = 0;
+    bool synced = false;
 };
 
 typedef void (*voidFuncPtrByte)(byte b);
@@ -62,7 +63,7 @@ class ClockFace : public MenuOut
 {
 public:
     ClockFace(voidFuncPtrClockTime showFunction, voidFuncPtrVoid hideFunction);
-    void setTime(byte hours, byte minutes);
+    void setTime(byte hours, byte minutes, bool synced);
 
 protected:
     virtual void show();
@@ -71,6 +72,7 @@ protected:
 private:
     byte _hours;
     byte _mins;
+    bool _synced;
     voidFuncPtrClockTime _drawFunction = nullptr;
     voidFuncPtrVoid _hideFunction = nullptr;
 };
