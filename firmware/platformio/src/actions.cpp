@@ -18,8 +18,9 @@ ActionMgr::ActionMgr() : alarms({{AlarmCalendar(0, 15), nullptr}, {AlarmCalendar
   alarms[0].calendar.setAlarmCallBack(alarmAction);
   alarms[1].calendar.setAlarmCallBack(alarmAction);
   _clockRefreshTimer.start(500);
-  _brightnessRampTimer.start(2000);
-  _ambientLightSenseTimer.start(1000);
+  _ambientLightSenseTimer.start(500);
+  _brightnessFilter.fill(5);
+  pinMode(pin_PIR, INPUT);
 }
 
 //  \brief update alarm calendar with settings from the eeprom
@@ -44,7 +45,6 @@ void ActionMgr::assignAlarmConfig(ALARMNRS id, AlarmConfig *config)
 void ActionMgr::pollActions(bool buttonPressed)
 {
   sPlayer.poll();
-  updateDesiredDisplayBrightness();
   displayOnOffControl(buttonPressed);
   if (dcfclock.update())
   {
@@ -73,11 +73,6 @@ void ActionMgr::pollActions(bool buttonPressed)
 
 bool ActionMgr::initPeripherals()
 {
-  if (!apds.begin())
-  {
-    return false;
-  }
-  apds.enableColor();
   if (!sPlayer.init())
   {
     while (true)
@@ -133,9 +128,19 @@ bool ActionMgr::getFirstAlarmIn(Chronos::Span::Delta delta, ALARMNRS &alarmIndex
  */
 void ActionMgr::displayOnOffControl(bool buttonPressed)
 {
-  if (movementDetected() || buttonPressed || _desiredDisplayBrightness > 0)
+  int brightness = 0;
+  if (displayBrightnessControl(brightness))
   {
-    _displayOffTimer.start(60000);
+    menuMgr.setBrightness(brightness);
+    if (brightness > 0)
+    {
+      _displayOffTimer.start(DISPLAY_DARK_TIMEOUT);
+      menuMgr.showParameterMenu(true);
+    }
+  }
+  if (movementDetected() || buttonPressed)
+  {
+    _displayOffTimer.start(DISPLAY_DARK_TIMEOUT);
     menuMgr.showParameterMenu(true);
   }
   if (_displayOffTimer.isRunning())
@@ -144,7 +149,6 @@ void ActionMgr::displayOnOffControl(bool buttonPressed)
     {
       menuMgr.showParameterMenu(true);
     }
-    displayBrightnessControl(_desiredDisplayBrightness);
   }
   if (_displayOffTimer.justFinished())
   {
@@ -158,62 +162,36 @@ void ActionMgr::displayOnOffControl(bool buttonPressed)
  *        e.g.  If autobrightness selects index 5, but the user wants a little bit brighter, then the resulting brightness = index + useroffset
  *        Default value for useroffset = 0, but it could be -15 up to +15.
  */
-void ActionMgr::displayBrightnessControl(byte desiredBrightness)
-{
-  if (_displayBrightness == 0xFF)
-  {
-    //not properly initialized yet
-    _displayBrightness = desiredBrightness;
-  }
-  if (_brightnessRampTimer.justFinished())
-  {
-    _brightnessRampTimer.repeat();
-    if (_displayBrightness < desiredBrightness)
-    {
-      _displayBrightness++;
-    }
-    if (_displayBrightness > desiredBrightness)
-    {
-      _displayBrightness--;
-    }
-  }
-  menuMgr.setBrightness(_displayBrightness);
-}
-
-/**
- * Returns display brightness according to ambient light level
- */
-void ActionMgr::updateDesiredDisplayBrightness()
+bool ActionMgr::displayBrightnessControl(int &brightness)
 {
   if (_ambientLightSenseTimer.justFinished())
   {
     _ambientLightSenseTimer.repeat();
-    //wait for color data to be ready
-    while (!apds.colorDataReady())
-    {
-      delay(5);
-    }
-    uint16_t r, g, b, c;
-    apds.getColorData(&r, &g, &b, &c);
-    const int lightLevels[] = {1, 2, 3, 4, 7, 12, 19, 31, 50, 82, 134, 219, 358, 584, 953, 1556};
+    uint16_t adcval= analogRead(pin_LightSensor);
+    _brightnessFilter.add(adcval);
+    uint16_t filterout = _brightnessFilter.get();
+    const int lightLevels[] = {3, 4, 5, 6, 8, 12, 17, 26, 40, 61, 95, 148, 232, 365, 573, 900};
     int smallestDifference = INT32_MAX;
-    int indexSmallest = 0;
     for (int i = 0; i < 16; i++)
     {
-      int absdiff = abs(c - lightLevels[i]);
+      int absdiff = abs(filterout - lightLevels[i]);
       if (absdiff < smallestDifference)
       {
         smallestDifference = absdiff;
-        indexSmallest = i;
+        brightness = i;
       }
     }
-    _desiredDisplayBrightness = indexSmallest;
+    Serial.print(adcval); Serial.print("\t");
+    Serial.print(filterout); Serial.print("\t");
+    Serial.println(brightness); Serial.print("\t");
+    return true;
   }
+  return false;
 }
 
 bool ActionMgr::movementDetected()
 {
-  return false;
+  return digitalRead(pin_PIR);
 }
 
 //---------------------------------------------------------------------------------------------------------------------------

@@ -1,10 +1,10 @@
 #pragma once
 #include "parameters.h"
 #include "SongPlayer.h"
-#include "Adafruit_APDS9960.h"
 #include "pins.h"
 #include "alarmcalendar.h"
 #include "millisDelay.h"
+#include "MovingAverage.h"
 
 class ActionMgr
 {
@@ -25,20 +25,19 @@ public:
     uint16_t getTotalTrackCount();
     void updateAlarmSettings(AlarmConfig *config, ALARMNRS alarmNr);
 private:
+    const int DISPLAY_DARK_TIMEOUT = 15000;
     bool getFirstAlarmIn(Chronos::Span::Delta delta, ALARMNRS& alarmIndex);
     void displayOnOffControl(bool buttonPressed);
     bool movementDetected();
-    void displayBrightnessControl(byte desiredBrightness);
-    void updateDesiredDisplayBrightness();
-    Adafruit_APDS9960 apds;
+    bool displayBrightnessControl(int& brightness);
     CommonConfig *pCommon;
     AlarmSettings alarms[2];
     byte _displayBrightness=0xFF;
     byte _desiredDisplayBrightness=5;
     millisDelay _clockRefreshTimer;
-    millisDelay _brightnessRampTimer;
     millisDelay _displayOffTimer;
     millisDelay _ambientLightSenseTimer;
+    MovingAverage<uint16_t, 16> _brightnessFilter;
 };
 
 void playSong(byte i);

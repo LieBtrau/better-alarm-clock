@@ -29,6 +29,10 @@
 		{
 			"name": "external_eeprom",
 			"path": "external_eeprom"
+		},
+		{
+			"name": "veml7700_test",
+			"path": "veml7700_test"
 		}
 	],
 	"settings": {
@@ -39,7 +43,14 @@
 		"files.associations": {
 			"limits": "cpp",
 			"type_traits": "cpp",
-			"string_view": "cpp"
+			"string_view": "cpp",
+			"array": "cpp",
+			"string": "cpp",
+			"functional": "cpp",
+			"deque": "cpp",
+			"unordered_map": "cpp",
+			"vector": "cpp",
+			"initializer_list": "cpp"
 		}
 	}
 }
