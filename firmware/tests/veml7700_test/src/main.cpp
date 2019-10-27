@@ -18,11 +18,10 @@
 #ifdef ARDUINO_ARCH_AVR
 uint8_t sdaPin = A4;
 uint8_t sclPin = A5;
-#warning hello using softwire
 #else
 // Adjust to suit your non-AVR architecture
-uint8_t sdaPin = 0;
-uint8_t sclPin = 1;
+uint8_t sdaPin = PA15;
+uint8_t sclPin = PB3;
 #endif
 SoftWire i2c(sdaPin, sclPin);
 #else
@@ -34,7 +33,7 @@ DFRobot_VEML7700 als;
 
 void setup()
 {
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.print("started");
 #ifdef SOFTWIRE
   i2c.setDelay_us(5);
@@ -59,12 +58,6 @@ void loop()
   Serial.print("Lux:");
   Serial.print(lux);
   */
-  uint16_t alsval;
-  uint16_t whiteVal;
-  als.getALS(alsval);
-  als.getWhite(whiteVal);
-  Serial.print(alsval);
-  Serial.print("\t");
-  Serial.println(whiteVal);
+ Serial.println(als.readAlsValue());
   delay(2000);
 }
