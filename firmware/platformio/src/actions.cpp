@@ -13,13 +13,12 @@ TimeChangeRule CET = {"CET ", Last, Sun, Oct, 3, 60};   // Central European Stan
 Timezone CE(CEST, CET);
 void alarmAction(bool start, byte id = 0);
 
-ActionMgr::ActionMgr() : alarms({{AlarmCalendar(0, 15), nullptr}, {AlarmCalendar(1, 15), nullptr}})
+ActionMgr::ActionMgr() : alarms({{AlarmCalendar(0, 15), nullptr}, {AlarmCalendar(1, 15), nullptr}}), i2c(sdaPin, sclPin)
 {
   alarms[0].calendar.setAlarmCallBack(alarmAction);
   alarms[1].calendar.setAlarmCallBack(alarmAction);
   _clockRefreshTimer.start(500);
   _ambientLightSenseTimer.start(500);
-  _brightnessFilter.fill(5);
   pinMode(pin_PIR, INPUT);
 }
 
@@ -73,7 +72,11 @@ void ActionMgr::pollActions(bool buttonPressed)
 
 bool ActionMgr::initPeripherals()
 {
-  if (!sPlayer.init())
+  i2c.setDelay_us(5);
+  i2c.begin();
+  i2c.setTxBuffer(malloc(50), 50);
+  i2c.setRxBuffer(malloc(10), 10);
+  if (!sPlayer.init() || !als.begin(&i2c))
   {
     while (true)
       ;
@@ -167,23 +170,22 @@ bool ActionMgr::displayBrightnessControl(int &brightness)
   if (_ambientLightSenseTimer.justFinished())
   {
     _ambientLightSenseTimer.repeat();
-    uint16_t adcval= analogRead(pin_LightSensor);
-    _brightnessFilter.add(adcval);
-    uint16_t filterout = _brightnessFilter.get();
-    const int lightLevels[] = {3, 4, 5, 6, 8, 12, 17, 26, 40, 61, 95, 148, 232, 365, 573, 900};
-    int smallestDifference = INT32_MAX;
+    float luxlevel = 0;//als.readAlsValue(); -> interferes with DCF
+    if (luxlevel == 0)
+    {
+      return false;
+    }
+    const float lightLevels[] = {0.07, 0.13, 0.25, 0.49, 0.97, 1.89, 3.7, 7.24, 14.17, 27.73, 54.26, 106.16, 207.71, 406.4, 795.16, 1555.82};
+    float smallestDifference = INT32_MAX;
     for (int i = 0; i < 16; i++)
     {
-      int absdiff = abs(filterout - lightLevels[i]);
+      int absdiff = abs(luxlevel - lightLevels[i]);
       if (absdiff < smallestDifference)
       {
         smallestDifference = absdiff;
         brightness = i;
       }
     }
-    Serial.print(adcval); Serial.print("\t");
-    Serial.print(filterout); Serial.print("\t");
-    Serial.println(brightness); Serial.print("\t");
     return true;
   }
   return false;

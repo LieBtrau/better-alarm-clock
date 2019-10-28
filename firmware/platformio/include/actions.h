@@ -4,7 +4,8 @@
 #include "pins.h"
 #include "alarmcalendar.h"
 #include "millisDelay.h"
-#include "MovingAverage.h"
+#include "SoftWire.h"
+#include "DFRobot_VEML7700.h"
 
 class ActionMgr
 {
@@ -37,7 +38,8 @@ private:
     millisDelay _clockRefreshTimer;
     millisDelay _displayOffTimer;
     millisDelay _ambientLightSenseTimer;
-    MovingAverage<uint16_t, 16> _brightnessFilter;
+    SoftWire i2c;
+    DFRobot_VEML7700 als;
 };
 
 void playSong(byte i);
