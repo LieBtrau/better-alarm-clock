@@ -1,6 +1,6 @@
 #include "alarmcalendar.h"
 
-AlarmCalendar::AlarmCalendar(byte id, byte durationMinutes): _id(id), _duration(durationMinutes)
+AlarmCalendar::AlarmCalendar(byte durationMinutes): _duration(durationMinutes)
 {
 }
 
@@ -25,15 +25,9 @@ void AlarmCalendar::setDailyAlarm(Chronos::Hours hours, Chronos::Minutes minutes
     setTime(hours, minutes);
 }
 
-//\brief alarmCallBack will be called with parameter true at the start of the event and with parameter false at the end of the event.
-void AlarmCalendar::setAlarmCallBack(alarmCallBack function)
+bool AlarmCalendar::getStartOfNextEvent(const Chronos::DateTime *fromDT, Chronos::DateTime *returnDT)
 {
-    _alarmCall = function;
-}
-
-bool AlarmCalendar::getStartOfNextEvent(const Chronos::DateTime *timenow, Chronos::DateTime *returnDT)
-{
-    return _MyCalendar.nextDateTimeOfInterest(*timenow, *returnDT);
+    return _MyCalendar.nextDateTimeOfInterest(*fromDT, *returnDT);
 }
 
 bool AlarmCalendar::isAlarmOnGoing(const Chronos::DateTime *timenow)
@@ -61,25 +55,6 @@ bool AlarmCalendar::setTime(Chronos::Hours hours, Chronos::Minutes minutes)
     _config.hour = hours;
     _config.mins = minutes;
     return updateCalendar();
-}
-
-// \returns true when an alarm is ongoing
-bool AlarmCalendar::loop(const Chronos::DateTime *timenow)
-{
-    bool alarmIsOn = isAlarmOnGoing(timenow);
-    if (_alarmCall)
-    {
-        if (alarmIsOn && !_alarmWasOn)
-        {
-            _alarmCall(true, _id);
-        }
-        if (!alarmIsOn && _alarmWasOn)
-        {
-            _alarmCall(false, _id);
-        }
-        _alarmWasOn = alarmIsOn;
-    }
-    return isAlarmOnGoing(timenow);
 }
 
 bool AlarmCalendar::updateCalendar()

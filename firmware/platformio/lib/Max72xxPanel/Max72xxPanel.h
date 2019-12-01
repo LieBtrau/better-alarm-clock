@@ -76,7 +76,7 @@ public:
    * After you're done filling the bitmap buffer with your picture,
    * send it to the display(s).
    */
-  void write();
+  void write(bool forceRefresh=false);
 
 private:
   byte SPI_CS; /* SPI chip selection */
@@ -92,4 +92,5 @@ private:
   byte *bitmap;
   byte bitmapSize;
   bool useSoftSpi = true;
+  bool refreshNeeded = true;
 };

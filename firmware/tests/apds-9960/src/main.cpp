@@ -52,7 +52,7 @@ void loop() {
   // Serial.print(b);
   
   // Serial.print(" clear: ");
-  Serial.print(analogRead(PB0)); Serial.print(" ");Serial.println(c);
+  Serial.print(" ");Serial.println(apds.calculateLux(r, g, b));
   //Serial.println();
-  delay(500);
+  delay(2000);
 }

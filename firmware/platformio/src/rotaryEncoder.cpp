@@ -1,19 +1,20 @@
 #include "rotaryEncoder.h"
-#include "pins.h"
 
-extern Adafruit_MCP23017 mcp;
-RotaryEncoderConsumer rec(&mcp, pinIRQ);
+static RotaryEncoderConsumer* reconsm;
 
-RotaryEncoderConsumer::RotaryEncoderConsumer(Adafruit_MCP23017 *mcp, uint32_t irqPin) : rotenc(mcp, irqPin) {}
+RotaryEncoderConsumer::RotaryEncoderConsumer(RotaryEncoder_MCP23017* renc) : rotenc(renc)
+{
+  reconsm = this;
+}
 
 void increaseRotEnc()
 {
-  rec.increase();
+  reconsm->increase();
 }
 
 void decreaseRotEnc()
 {
-  rec.decrease();
+  reconsm->decrease();
 }
 
 void RotaryEncoderConsumer::setConsumer(ParameterUpdate *p, bool flash)
@@ -61,7 +62,7 @@ void RotaryEncoderConsumer::decrease()
 
 void RotaryEncoderConsumer::poll()
 {
-  rotenc.poll();
+  rotenc->poll();
 }
 
 bool RotaryEncoderConsumer::render()
@@ -77,7 +78,6 @@ bool RotaryEncoderConsumer::render()
 
 void RotaryEncoderConsumer::init()
 {
-  rotenc.init();
-  rotenc.setClockwiseCallback(increaseRotEnc);
-  rotenc.setCounterClockwiseCallback(decreaseRotEnc);
+  rotenc->setClockwiseCallback(increaseRotEnc);
+  rotenc->setCounterClockwiseCallback(decreaseRotEnc);
 }

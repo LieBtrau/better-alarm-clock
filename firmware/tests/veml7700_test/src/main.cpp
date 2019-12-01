@@ -12,7 +12,7 @@
   * version  V1.0
   * date  2016-12-8
   */
-#define SOFTWIRE 1
+//#define SOFTWIRE 1
 #ifdef SOFTWIRE
 #include "SoftWire.h"
 #ifdef ARDUINO_ARCH_AVR
@@ -20,6 +20,7 @@ uint8_t sdaPin = A4;
 uint8_t sclPin = A5;
 #else
 // Adjust to suit your non-AVR architecture
+#warning Make sure you set the software I2C pins correctly
 uint8_t sdaPin = PA15;
 uint8_t sclPin = PB3;
 #endif
@@ -34,7 +35,7 @@ DFRobot_VEML7700 als;
 void setup()
 {
   Serial.begin(115200);
-  Serial.print("started");
+  Serial.print("started VEML7700");
 #ifdef SOFTWIRE
   i2c.setDelay_us(5);
   i2c.begin();
@@ -45,8 +46,8 @@ void setup()
   if (!als.begin(&Wire))
 #endif
   {
-    while (true)
-      ;
+    // while (true)
+    //   ;
   }
 }
 

@@ -2,16 +2,14 @@
 #include "time.h"
 #include "stm32rtcwrapper.h"
 
-static void dcfUpdatesRtc(bool start, byte id);
 static volatile bool syncOngoing = false;
 time_t getRtcTime();
 
 static Stm32RtcWrapper stmRtc;
 
-DcfUtcClock::DcfUtcClock(uint32_t dcfPin, bool activeHigh) : syncCalendar(0, 5), _rd(dcfPin, activeHigh)
+DcfUtcClock::DcfUtcClock(uint32_t dcfPin, bool activeHigh) : syncCalendar(5), _rd(dcfPin, activeHigh)
 {
     syncCalendar.setDailyAlarm(0, 0); //sync at UTC midnight
-    syncCalendar.setAlarmCallBack(dcfUpdatesRtc);
 }
 
 void DcfUtcClock::init()
@@ -21,7 +19,8 @@ void DcfUtcClock::init()
     setSyncProvider(getRtcTime); // set time source for time.h
 }
 
-//\brief returns true when MCU-time is valid
+/**  \brief returns true when MCU-time is valid
+ */ 
 bool DcfUtcClock::update()
 {
     bool mcuTimeValid = (timeStatus() == timeSet);
@@ -32,7 +31,7 @@ bool DcfUtcClock::update()
     else
     {
         Chronos::DateTime timenow = Chronos::DateTime::now();
-        syncCalendar.loop(&timenow);
+        syncOngoing = syncCalendar.isAlarmOnGoing(&timenow);
     }
     if (syncOngoing)
     {
@@ -65,9 +64,4 @@ bool DcfUtcClock::isLastSyncSuccessful()
 time_t getRtcTime()
 {
     return stmRtc.get();
-}
-
-void dcfUpdatesRtc(bool start, byte id)
-{
-    syncOngoing = start;
 }

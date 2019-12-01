@@ -1,5 +1,5 @@
 #include "Menu.h"
-
+#include "fontBig.h"
 
 MenuOut::MenuOut()
 {
@@ -40,7 +40,7 @@ void MenuOut::setVisible(bool isVisible)
 
 bool MenuOut::flash()
 {
-    if(!flashTimer.justFinished())
+    if (!flashTimer.justFinished())
     {
         return false;
     }
@@ -57,28 +57,39 @@ bool MenuOut::flash()
     return true;
 }
 
-ClockFace::ClockFace(voidFuncPtrClockTime showFunction, voidFuncPtrVoid hideFunction) : _drawFunction(showFunction), _hideFunction(hideFunction) {}
+ClockFace::ClockFace(Max72xxPanel *panel) : _panel(panel) {}
 
-void ClockFace::setTime(byte hours, byte minutes, bool synced)
+void ClockFace::setTime(ClockTime time)
 {
-    if (hours != _hours || minutes != _mins)
+    if (_time.hours != time.hours || _time.mins != time.mins)
     {
         updateNeeded = true;
     }
-    _hours = hours;
-    _mins = minutes;
-    _synced = synced;
+    _time=time;
 }
 
 void ClockFace::show()
 {
     hide();
-    _drawFunction({_hours, _mins, _synced});
+    byte font = 4; //0 to 4
+    _panel->drawBitmap(-3, 1, bigFont[(_time.hours / 10 != 0 ? _time.hours / 10 : 10) + 11 * font], 8, 12, 1);
+    _panel->drawBitmap(5, 1, bigFont[(_time.hours % 10) + 11 * font], 8, 12, 1);
+    _panel->drawBitmap(16, 1, bigFont[(_time.mins / 10 != 0 ? _time.mins / 10 : 10) + 11 * font], 8, 12, 1);
+    _panel->drawBitmap(24, 1, bigFont[(_time.mins % 10) + 11 * font], 8, 12, 1);
+    if (_time.synced)
+    {
+        _panel->fillRect(15, 4, 2, 2, 1);
+        _panel->fillRect(15, 10, 2, 2, 1);
+    }
+    else
+    {
+        _panel->fillRect(15, 7, 2, 2, 1);
+    }
 }
 
 void ClockFace::hide()
 {
-    _hideFunction();
+    _panel->fillScreen(0);
 }
 
 void ParameterUpdate::setLinkedParameter(ParameterUpdate *linkedP)

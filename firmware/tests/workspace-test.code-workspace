@@ -33,6 +33,10 @@
 		{
 			"name": "veml7700_test",
 			"path": "veml7700_test"
+		},
+		{
+			"name": "sx1509_test",
+			"path": "sx1509_test"
 		}
 	],
 	"settings": {

@@ -15,6 +15,7 @@ struct ClockTime
     byte hours = 0;
     byte mins = 0;
     bool synced = false;
+    bool valid = false;
 };
 
 typedef void (*voidFuncPtrByte)(byte b);
@@ -58,23 +59,19 @@ private:
     millisDelay flashTimer;
 };
 
-typedef void (*voidFuncPtrClockTime)(ClockTime ct);
 class ClockFace : public MenuOut
 {
 public:
-    ClockFace(voidFuncPtrClockTime showFunction, voidFuncPtrVoid hideFunction);
-    void setTime(byte hours, byte minutes, bool synced);
+    ClockFace(Max72xxPanel *panel);
+    void setTime(ClockTime time);
 
 protected:
     virtual void show();
     virtual void hide();
 
 private:
-    byte _hours;
-    byte _mins;
-    bool _synced;
-    voidFuncPtrClockTime _drawFunction = nullptr;
-    voidFuncPtrVoid _hideFunction = nullptr;
+    ClockTime _time;
+    Max72xxPanel *_panel;
 };
 
 class ParameterUpdate : public MenuOut
@@ -164,7 +161,8 @@ public:
     void toggle();
     void hide();
     bool isLedOn();
-    void setSource(bool* value);
+    void setSource(bool *value);
+
 protected:
     virtual void show();
 
@@ -205,7 +203,7 @@ public:
     void disable();
     bool isEnabled();
     bool render(bool forceRender = false);
-    
+
 protected:
     BUTTONS _key;
     LedToggle *_led;

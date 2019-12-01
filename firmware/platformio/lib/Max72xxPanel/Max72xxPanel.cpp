@@ -105,8 +105,8 @@ void Max72xxPanel::drawPixel(int16_t x, int16_t y, uint16_t color)
 {
 	byte dispY = y >> 3; // divide by # rows per display
 	byte dispX = x >> 3; // divide by # rows per display | each display has 8 rows, so display X-offset is a multiple of 8.
-	byte* ptr = &bitmap[WIDTH * dispY + (dispX<<3) + (y & 0b111)];
-	byte val = 1 << ((7-x) & 0b111);
+	byte *ptr = &bitmap[WIDTH * dispY + (dispX << 3) + (y & 0b111)];
+	byte val = 1 << ((7 - x) & 0b111);
 
 	if (color)
 	{
@@ -116,16 +116,21 @@ void Max72xxPanel::drawPixel(int16_t x, int16_t y, uint16_t color)
 	{
 		*ptr &= ~val;
 	}
+	refreshNeeded = true;
 }
 
-void Max72xxPanel::write()
+void Max72xxPanel::write(bool forceRefresh)
 {
 	// Send the bitmap buffer to the displays.
-
+	if(!forceRefresh && !refreshNeeded)
+	{
+		return;
+	}
 	for (byte row = OP_DIGIT7; row >= OP_DIGIT0; row--)
 	{
 		spiTransfer(row, 0);
 	}
+	refreshNeeded = false;
 }
 
 void Max72xxPanel::spiTransfer(byte opcode, byte data)

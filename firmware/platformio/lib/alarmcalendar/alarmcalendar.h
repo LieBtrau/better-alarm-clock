@@ -28,8 +28,7 @@ typedef struct
 class AlarmCalendar
 {
 public:
-  typedef void (*alarmCallBack)(bool bIsAlarmStartNotEnd, byte id);
-  AlarmCalendar(byte id, byte durationMinutes);
+  AlarmCalendar(byte durationMinutes);
   void getConfig(ALARM_CONFIG *config);
   bool setConfig(ALARM_CONFIG *config);
   void setDailyAlarm(Chronos::Hours hours, Chronos::Minutes minutes);
@@ -38,8 +37,6 @@ public:
   bool setTime(Chronos::Hours hours, Chronos::Minutes minutes);
   bool getStartOfNextEvent(const Chronos::DateTime *timenow, Chronos::DateTime *returnDT);
   bool isAlarmOnGoing(const Chronos::DateTime *timenow);
-  void setAlarmCallBack(alarmCallBack function);
-  bool loop(const Chronos::DateTime *timenow);
   static byte dayToIndex(Chronos::Weekday::Day day);
   static Chronos::Weekday::Day indexToDay(byte index);
   void listEvents(Chronos::DateTime nowTime);
@@ -47,8 +44,5 @@ private:
   bool updateCalendar();
   Calendar _MyCalendar;
   ALARM_CONFIG _config;
-  alarmCallBack _alarmCall = nullptr;
-  bool _alarmWasOn = false;
-  byte _id;
   byte _duration;
 };

@@ -5,7 +5,7 @@
 class RotaryEncoderConsumer
 {
 public:
-  RotaryEncoderConsumer(Adafruit_MCP23017 *mcp, uint32_t irqPin);
+  RotaryEncoderConsumer(RotaryEncoder_MCP23017 *renc);
   void init();
   void setConsumer(ParameterUpdate *p, bool flash);
   ParameterUpdate *getConsumer();
@@ -13,10 +13,10 @@ public:
   void decrease();
   void poll();
   bool render();
-private:
-  RotaryEncoder_MCP23017 rotenc;
-  ParameterUpdate *_p = nullptr;
-  bool flashing=false;
-  bool deviceUpdateNeeded=false;
-};
 
+private:
+  RotaryEncoder_MCP23017 *rotenc = nullptr;
+  ParameterUpdate *_p = nullptr;
+  bool flashing = false;
+  bool deviceUpdateNeeded = false;
+};
