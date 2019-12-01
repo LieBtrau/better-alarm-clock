@@ -3,37 +3,17 @@
 #include "rotaryEncoder.h"
 #include "Fonts/TomThumb.h"
 
-static bool matrixFields[] = {false, false, false};
-static bool bAlarmSelected = false;
-static bool bMenuSelected = false;
 static Adafruit_MCP23017 *mcp = nullptr;
 static AlarmManager *currentAlarm = nullptr;
-static byte lastKey = 0;
 
-MenuMgr::MenuMgr(Max72xxPanel *ledArray, DisplayBrightness *disp, Adafruit_MCP23017 *pmcp, RotaryEncoderConsumer *prec, AlarmManager *palarms) : alarms(palarms),
-                                                                                                                                                 matrix(ledArray),
-                                                                                                                                                 dispbright(disp),
-                                                                                                                                                 fldLightness(matrix, {0, 0}, {11, 2}, &lightness),
-                                                                                                                                                 fldVolume(matrix, {0, 7}, {11, 9}, &volume),
-                                                                                                                                                 sldSong(matrix, {0, 13}, {11, 15}, &song),
-                                                                                                                                                 clockface(matrix),
-                                                                                                                                                 tglLightness(&myCharlie, &ledMatrix[LIGHTNESS], matrixFields),
-                                                                                                                                                 tglVolume(&myCharlie, &ledMatrix[VOLUME], matrixFields + 1),
-                                                                                                                                                 tglSongChoice(&myCharlie, &ledMatrix[SONGCHOICE], matrixFields + 2),
-                                                                                                                                                 btnLightness(LIGHTNESS, &tglLightness, &fldLightness),
-                                                                                                                                                 btnVolume(VOLUME, &tglVolume, &fldVolume),
-                                                                                                                                                 btnSong(SONGCHOICE, &tglSongChoice, &sldSong),
-                                                                                                                                                 tglMonday(&myCharlie, &ledMatrix[MONDAY], nullptr),
-                                                                                                                                                 tglTuesday(&myCharlie, &ledMatrix[TUESDAY], nullptr),
-                                                                                                                                                 tglWednesday(&myCharlie, &ledMatrix[WEDNESDAY], nullptr),
-                                                                                                                                                 tglThursday(&myCharlie, &ledMatrix[THURSDAY], nullptr),
-                                                                                                                                                 tglFriday(&myCharlie, &ledMatrix[FRIDAY], nullptr),
-                                                                                                                                                 tglSaturday(&myCharlie, &ledMatrix[SATURDAY], nullptr),
-                                                                                                                                                 tglSunday(&myCharlie, &ledMatrix[SUNDAY], nullptr),
-                                                                                                                                                 tglAlarm(&myCharlie, &ledMatrix[ALARMTIME], &bAlarmSelected),
-                                                                                                                                                 tglMenu(&myCharlie, &ledMatrix[MENU], &bMenuSelected),
-                                                                                                                                                 fldHours(&matrix7, SevenSegmentField::LEFTPOS, &hours),
-                                                                                                                                                 fldMinutes(&matrix7, SevenSegmentField::RIGHTPOS, &minutes)
+MenuMgr::MenuMgr(Max72xxPanel *ledArray, DisplayBrightness *disp, Adafruit_MCP23017 *pmcp,
+                 RotaryEncoderConsumer *prec, AlarmManager *palarms) : alarms(palarms),
+                                                                       matrix(ledArray),
+                                                                       dispbright(disp),
+                                                                       fldLightness(matrix, {0, 0}, {11, 2}, &lightness),
+                                                                       fldVolume(matrix, {0, 7}, {11, 9}, &volume),
+                                                                       sldSong(matrix, {0, 13}, {11, 15}, &song),
+                                                                       clockface(matrix)
 {
   mgrBtnAlarm.addButton(&btnLightness);
   mgrBtnAlarm.addButton(&btnVolume);
@@ -48,6 +28,8 @@ MenuMgr::MenuMgr(Max72xxPanel *ledArray, DisplayBrightness *disp, Adafruit_MCP23
   mgrBtnWeekday.addButton(&btnSaturday);
   mgrBtnWeekday.addButton(&btnSunday);
 
+  //linking the parameters prevents stopping the current action when jumping between parameters during setup.
+  //In this case, when a song has been chosen, it will be playing.  Upon selecting the volume parameter, the song must continue and not start all over again.
   sldSong.setLinkedParameter(&fldVolume);
   fldVolume.setLinkedParameter(&sldSong);
 
@@ -61,17 +43,17 @@ MenuMgr::MenuMgr(Max72xxPanel *ledArray, DisplayBrightness *disp, Adafruit_MCP23
  */
 bool MenuMgr::loop()
 {
-  bool keyChanged = keyb.updateKeys(writeGpio, readGpio);
+  keyb.updateKeys(writeGpio, readGpio);
+  byte lastKey;
+  bool keyReleased = keyb.getLastKeyReleased(&lastKey);
   byte brightness;
-  bool displayOn = dispbright->isDisplayOn(keyChanged);
+  bool displayOn = dispbright->isDisplayOn(keyReleased);
   if (displayOn)
   {
     if (fldHours.render(!displayWasOn) | fldMinutes.render(!displayWasOn) | rec->render() | !displayWasOn)
     {
       matrix7.writeDisplay();
     }
-    mgrBtnWeekday.render(!displayWasOn);
-    alarmTimeButton.render(!displayWasOn);
     if (dispbright->getDisplayBrightness(brightness) && brightness != _brightness)
     {
       matrix7.setBrightness(brightness); // 0 -> 15
@@ -82,7 +64,6 @@ bool MenuMgr::loop()
     switch (state)
     {
     case SHOW_SPLASH:
-      matrix->fillScreen(0);
       // matrix.setFont(&Picopixel);
       // matrix.setCursor(4, 10);
       matrix->setFont(&TomThumb);
@@ -95,15 +76,14 @@ bool MenuMgr::loop()
     case SHOW_CLOCK:
       showLedState();
       //show current time
-      if (keyChanged && lastKey == MENU)
+      if (keyReleased && lastKey == MENU)
       {
         assignAlarmConfig(&alarms[ALARM1]);
         clockface.setVisible(false);
         fldHours.setVisible(true);
         fldMinutes.setVisible(true);
-        fldLightness.setVisible(true);
-        fldVolume.setVisible(true);
-        sldSong.setVisible(true);
+        mgrBtnAlarm.enable();
+        mgrBtnWeekday.enable();
         showAlarm(1);
         state = SETUP_ALARM1;
       }
@@ -140,31 +120,48 @@ bool MenuMgr::loop()
       break;
     case SETUP_ALARM1:
       showLedState();
+      mgrBtnAlarm.render(!displayWasOn);
+      mgrBtnWeekday.render(!displayWasOn);
+      alarmTimeButton.render(!displayWasOn);
       rec->poll();
-      if (keyChanged)
+      if (keyReleased)
       {
         mgrBtnWeekday.keyPressed(lastKey);
+        mgrBtnAlarm.keyPressed(lastKey);
         rotaryEncoderAttachment(lastKey);
         if (lastKey == MENU)
         {
           assignAlarmConfig(&alarms[ALARM2]);
           showAlarm(2);
+          mgrBtnAlarm.render(true);
+          mgrBtnWeekday.render(true);
+          alarmTimeButton.render(true);
+          fldHours.render(true);
+          fldMinutes.render(true);
           state = SETUP_ALARM2;
         }
       }
       break;
     case SETUP_ALARM2:
       showLedState();
+      mgrBtnAlarm.render(!displayWasOn);
+      mgrBtnWeekday.render(!displayWasOn);
+      alarmTimeButton.render(!displayWasOn);
       rec->poll();
-      if (keyChanged)
+      if (keyReleased)
       {
         mgrBtnWeekday.keyPressed(lastKey);
+        mgrBtnAlarm.keyPressed(lastKey);
         rotaryEncoderAttachment(lastKey);
         if (lastKey == MENU)
         {
-          clockface.setVisible(true);
-          fldHours.setVisible(false);
-          fldMinutes.setVisible(false);
+          if (curTime.valid)
+          {
+            clockface.setVisible(true);
+          }
+          mgrBtnAlarm.disable();
+          mgrBtnWeekday.disable();
+          matrix->fillScreen(0);
           if (saveConfig != nullptr)
           {
             saveConfig();
@@ -191,7 +188,7 @@ bool MenuMgr::loop()
     }
   }
   displayWasOn = displayOn;
-  return keyChanged;
+  return keyReleased;
 }
 
 void MenuMgr::rotaryEncoderAttachment(byte key)
@@ -239,7 +236,6 @@ void MenuMgr::init(byte totalTrackCount)
   matrix7.begin(0x70);
   matrix7.clear();
   keyb.init(writePinModes, writePullups);
-  keyb.setCallback_keyReleased(keyPressedReleased);
   _charliePlexingTimer.start(5);
   _syncingTimer.start(500);
 }
@@ -296,6 +292,9 @@ void MenuMgr::showAlarm(byte alarmNr)
   matrix->print(alarmNr);
   matrix->write(); // Send bitmap to display
   delay(500);
+  matrix->fillScreen(0);
+  matrix->setCursor(14, 10);
+  matrix->print(alarmNr);
 }
 
 void MenuMgr::setSaveConfigEvent(voidFuncPtrVoid evHandler)
@@ -341,9 +340,4 @@ void writeGpio(byte data)
 byte readGpio()
 {
   return mcp->readGPIO(0);
-}
-
-void keyPressedReleased(byte key)
-{
-  lastKey = key;
 }

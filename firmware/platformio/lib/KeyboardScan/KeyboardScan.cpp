@@ -31,13 +31,18 @@ bool KeyboardScan::updateKeys(voidFuncPtrByte writeGpio, byteFuncPtrVoid readGpi
     {
         if (bitRead(diffkey, i))
         {
-            if(bitRead(keyState, i) && _keyReleased!=nullptr)
+            if (bitRead(keyState, i))
             {
-                _keyReleased(i);
+                lastReleasedKey = i;
+                isReleasedKeyValid = true;
+                if (_keyReleased != nullptr)
+                {
+                    _keyReleased(i);
+                }
             }
             else
             {
-                if(_keyPressed!=nullptr)
+                if (_keyPressed != nullptr)
                 {
                     _keyPressed(i);
                 }
@@ -57,8 +62,18 @@ void KeyboardScan::setCallback_keyReleased(voidFuncPtrByte keyReleased)
     _keyReleased = keyReleased;
 }
 
-
 bool KeyboardScan::isKeyDown(byte keyNr)
 {
     return bitSet(keyState, keyNr);
+}
+
+bool KeyboardScan::getLastKeyReleased(byte *key)
+{
+    if (!isReleasedKeyValid)
+    {
+        return false;
+    }
+    *key = lastReleasedKey;
+    isReleasedKeyValid = false;
+    return true;
 }

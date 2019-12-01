@@ -24,13 +24,14 @@ public:
         SETUP_ALARM1,
         SETUP_ALARM2
     } STATE;
-    MenuMgr(Max72xxPanel *ledArray, DisplayBrightness *disp, Adafruit_MCP23017 *mcp, RotaryEncoderConsumer *prec, AlarmManager* palarms);
+    MenuMgr(Max72xxPanel *ledArray, DisplayBrightness *disp, Adafruit_MCP23017 *mcp, RotaryEncoderConsumer *prec, AlarmManager *palarms);
     void init(byte totalTrackCount);
     bool loop();
     void setSoonestAlarm(AlarmConfig *soonestAlarm);
     void setClockSynced(ClockTime time);
     void keyChanged(byte key);
     void setSaveConfigEvent(voidFuncPtrVoid evHandler);
+
 private:
     STATE state = SHOW_SPLASH;
     void showLedState();
@@ -38,7 +39,7 @@ private:
     void showSyncAnimation();
     void rotaryEncoderAttachment(byte key);
     void assignAlarmConfig(AlarmManager *curAlarm);
-    AlarmManager* alarms;
+    AlarmManager *alarms;
     AlarmConfig *nextAlarm = nullptr;
     voidFuncPtrVoid saveConfig = nullptr;
     bool settingAlarmHours = true;
@@ -57,7 +58,6 @@ private:
     FieldParameter hours = {0, nullptr, 23, 1, nullptr, nullptr};
     FieldParameter minutes = {0, nullptr, 55, 5, nullptr, nullptr};
 
-    //todo : initialize below members here using {} as above
 
     LedMatrixField fldLightness;
     LedMatrixField fldVolume;
@@ -65,21 +65,22 @@ private:
     ClockFace clockface;
     Chaplex myCharlie;
     //Objects for controlling alarm settings : sun light emulation intensity, song choice, song volume
-    LedToggle tglLightness;
-    LedToggle tglVolume;
-    LedToggle tglSongChoice;
-    ParameterPushButton btnLightness;
-    ParameterPushButton btnVolume;
-    ParameterPushButton btnSong;
+    bool matrixFields[3] = {false, false, false};
+    LedToggle tglLightness = {&myCharlie, &ledMatrix[LIGHTNESS], matrixFields};
+    LedToggle tglVolume = {&myCharlie, &ledMatrix[VOLUME], matrixFields + 1};
+    LedToggle tglSongChoice = {&myCharlie, &ledMatrix[SONGCHOICE], matrixFields + 2};
+    ParameterPushButton btnLightness = {LIGHTNESS, &tglLightness, &fldLightness};
+    ParameterPushButton btnVolume = {VOLUME, &tglVolume, &fldVolume};
+    ParameterPushButton btnSong = {SONGCHOICE, &tglSongChoice, &sldSong};
     ParameterButtonManager mgrBtnAlarm;
     //Extra alarm settings: enabling and disabling days of week.
-    LedToggle tglMonday;
-    LedToggle tglTuesday;
-    LedToggle tglWednesday;
-    LedToggle tglThursday;
-    LedToggle tglFriday;
-    LedToggle tglSaturday;
-    LedToggle tglSunday;
+    LedToggle tglMonday = {&myCharlie, &ledMatrix[MONDAY], nullptr};
+    LedToggle tglTuesday = {&myCharlie, &ledMatrix[TUESDAY], nullptr};
+    LedToggle tglWednesday = {&myCharlie, &ledMatrix[WEDNESDAY], nullptr};
+    LedToggle tglThursday = {&myCharlie, &ledMatrix[THURSDAY], nullptr};
+    LedToggle tglFriday = {&myCharlie, &ledMatrix[FRIDAY], nullptr};
+    LedToggle tglSaturday = {&myCharlie, &ledMatrix[SATURDAY], nullptr};
+    LedToggle tglSunday = {&myCharlie, &ledMatrix[SUNDAY], nullptr};
     TogglePushButton btnMonday = {MONDAY, &tglMonday};
     TogglePushButton btnTuesday = {TUESDAY, &tglTuesday};
     TogglePushButton btnWednesday = {WEDNESDAY, &tglWednesday};
@@ -88,11 +89,13 @@ private:
     TogglePushButton btnSaturday = {SATURDAY, &tglSaturday};
     TogglePushButton btnSunday = {SUNDAY, &tglSunday};
     ToggleButtonManager mgrBtnWeekday;
-    LedToggle tglAlarm;
-    LedToggle tglMenu;
+    bool bAlarmSelected = false;
+    LedToggle tglAlarm = {&myCharlie, &ledMatrix[ALARMTIME], &bAlarmSelected};
+    bool bMenuSelected = false;
+    LedToggle tglMenu = {&myCharlie, &ledMatrix[MENU], &bMenuSelected};
     Adafruit_7segment matrix7;
-    SevenSegmentField fldHours;
-    SevenSegmentField fldMinutes;
+    SevenSegmentField fldHours = {&matrix7, SevenSegmentField::LEFTPOS, &hours};
+    SevenSegmentField fldMinutes = {&matrix7, SevenSegmentField::RIGHTPOS, &minutes};
     ActionPushButton alarmTimeButton = {ALARMTIME, &tglAlarm};
     ActionPushButton menuButton = {MENU, &tglMenu};
     KeyboardScan keyb;
@@ -118,6 +121,6 @@ private:
 
 void writePinModes(byte data);
 void writePullups(byte data);
-void keyPressedReleased(byte key);
+void keyReleased(byte key);
 void writeGpio(byte data);
 byte readGpio();

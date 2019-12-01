@@ -187,9 +187,6 @@ enum BUTTONS
     FRIDAY = 12,
     SATURDAY = 13,
     SUNDAY = 14,
-    NIGHTDISPLAYBRIGHTNESS = 5,
-    DAYNIGHTLEVEL = 4,
-    DAYDISPLAYBRIGHTNESS = 7
 };
 
 typedef void (*voidFuncPtrBool)(bool);

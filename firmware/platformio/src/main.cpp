@@ -65,7 +65,7 @@ void loop()
 {
   time_t localEpoch;
 
-  bool keyPressed = menuMgr.loop();
+  bool keyReleased = menuMgr.loop();
   if (timetask.loop())
   {
     //Time is synced
@@ -74,7 +74,7 @@ void loop()
     if (alarmstask.loop(localEpoch))
     {
       //alarm is ongoing
-      if (keyPressed)
+      if (keyReleased)
       {
         alarmstask.turnAlarmOff(localEpoch);
       }
