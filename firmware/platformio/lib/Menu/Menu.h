@@ -54,7 +54,7 @@ protected:
 
 private:
     const unsigned long FLASH_INTERVAL = 500;
-    bool visible = true;
+    bool visible = false;
     bool flashVisible = true;
     millisDelay flashTimer;
 };

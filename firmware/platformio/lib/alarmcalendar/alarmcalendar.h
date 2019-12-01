@@ -20,9 +20,9 @@ DefineCalendarType(Calendar, MAX_NR_OF_EVENTS);
 
 typedef struct
 {
-  Chronos::Hours hour;
-  Chronos::Minutes mins;
-  bool weekdays[7];
+  Chronos::Hours hour = 0;
+  Chronos::Minutes mins = 0;
+  bool weekdays[7] = {false, false, false, false, false, false, false};
 } ALARM_CONFIG;
 
 class AlarmCalendar
@@ -40,6 +40,7 @@ public:
   static byte dayToIndex(Chronos::Weekday::Day day);
   static Chronos::Weekday::Day indexToDay(byte index);
   void listEvents(Chronos::DateTime nowTime);
+
 private:
   bool updateCalendar();
   Calendar _MyCalendar;

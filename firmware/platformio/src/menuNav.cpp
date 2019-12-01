@@ -8,7 +8,7 @@ static bool bAlarmSelected = false;
 static bool bMenuSelected = false;
 static Adafruit_MCP23017 *mcp = nullptr;
 static AlarmManager *currentAlarm = nullptr;
-static MenuMgr *menuMgr;
+static byte lastKey = 0;
 
 MenuMgr::MenuMgr(Max72xxPanel *ledArray, DisplayBrightness *disp, Adafruit_MCP23017 *pmcp, RotaryEncoderConsumer *prec, AlarmManager *palarms) : alarms(palarms),
                                                                                                                                                  matrix(ledArray),
@@ -54,7 +54,6 @@ MenuMgr::MenuMgr(Max72xxPanel *ledArray, DisplayBrightness *disp, Adafruit_MCP23
   _clockRefreshTimer.start(500);
   mcp = pmcp;
   rec = prec;
-  menuMgr = this;
 }
 
 /**
@@ -79,6 +78,7 @@ bool MenuMgr::loop()
       matrix->setIntensity(brightness);  // 0 -> 15
     }
     _brightness = brightness;
+    matrix->write(); // Send bitmap to display
     switch (state)
     {
     case SHOW_SPLASH:
@@ -88,44 +88,90 @@ bool MenuMgr::loop()
       matrix->setFont(&TomThumb);
       matrix->setCursor(4, 10);
       matrix->print("SPLASH");
-      matrix->write(); // Send bitmap to display
       delay(1000);
       matrix->fillScreen(0);
+      state = SHOW_CLOCK;
       break;
     case SHOW_CLOCK:
+      showLedState();
       //show current time
-      if (curTime.valid)
+      if (keyChanged && lastKey == MENU)
       {
-        if (_clockRefreshTimer.justFinished())
-        {
-          _clockRefreshTimer.repeat();
-          clockface.setTime(curTime);
-        }
-      }
-      else
-      {
-        showSyncAnimation();
-      }
-      //show next alarm
-      if (nextAlarm != nullptr)
-      {
-        hours.cur = &nextAlarm->time.hour;
-        minutes.cur = &nextAlarm->time.mins;
-      }
-      else
-      {
+        assignAlarmConfig(&alarms[ALARM1]);
+        clockface.setVisible(false);
         fldHours.setVisible(true);
         fldMinutes.setVisible(true);
+        fldLightness.setVisible(true);
+        fldVolume.setVisible(true);
+        sldSong.setVisible(true);
+        showAlarm(1);
+        state = SETUP_ALARM1;
       }
-      showLedState();
+      else
+      {
+        if (curTime.valid)
+        {
+          if (_clockRefreshTimer.justFinished())
+          {
+            _clockRefreshTimer.repeat();
+            clockface.setVisible(true);
+            clockface.setTime(curTime);
+            clockface.render();
+          }
+        }
+        else
+        {
+          showSyncAnimation();
+        }
+        //show next alarm
+        if (nextAlarm != nullptr)
+        {
+          hours.cur = &nextAlarm->time.hour;
+          minutes.cur = &nextAlarm->time.mins;
+          fldHours.setVisible(true);
+          fldMinutes.setVisible(true);
+        }
+        else
+        {
+          fldHours.setVisible(false);
+          fldMinutes.setVisible(false);
+        }
+      }
       break;
     case SETUP_ALARM1:
       showLedState();
       rec->poll();
+      if (keyChanged)
+      {
+        mgrBtnWeekday.keyPressed(lastKey);
+        rotaryEncoderAttachment(lastKey);
+        if (lastKey == MENU)
+        {
+          assignAlarmConfig(&alarms[ALARM2]);
+          showAlarm(2);
+          state = SETUP_ALARM2;
+        }
+      }
       break;
     case SETUP_ALARM2:
       showLedState();
       rec->poll();
+      if (keyChanged)
+      {
+        mgrBtnWeekday.keyPressed(lastKey);
+        rotaryEncoderAttachment(lastKey);
+        if (lastKey == MENU)
+        {
+          clockface.setVisible(true);
+          fldHours.setVisible(false);
+          fldMinutes.setVisible(false);
+          if (saveConfig != nullptr)
+          {
+            saveConfig();
+          }
+          state = SHOW_CLOCK;
+        }
+      }
       break;
     default:
       break;
@@ -146,54 +192,6 @@ bool MenuMgr::loop()
   }
   displayWasOn = displayOn;
   return keyChanged;
-}
-
-void MenuMgr::keyChanged(byte key)
-{
-  switch (state)
-  {
-  case SHOW_SPLASH:
-    return;
-  case SHOW_CLOCK:
-    //process incoming key
-    if (key == MENU)
-    {
-      assignAlarmConfig(&alarms[ALARM1]);
-      clockface.setVisible(false);
-      showAlarm(1);
-      fldHours.setVisible(true);
-      fldMinutes.setVisible(true);
-      state = SETUP_ALARM1;
-    }
-    break;
-  case SETUP_ALARM1:
-    mgrBtnWeekday.keyPressed(key);
-    rotaryEncoderAttachment(key);
-    if (key == MENU)
-    {
-      assignAlarmConfig(&alarms[ALARM2]);
-      showAlarm(2);
-      state = SETUP_ALARM2;
-    }
-    break;
-  case SETUP_ALARM2:
-    mgrBtnWeekday.keyPressed(key);
-    rotaryEncoderAttachment(key);
-    if (key == MENU)
-    {
-      clockface.setVisible(true);
-      fldHours.setVisible(false);
-      fldMinutes.setVisible(false);
-      if (saveConfig != nullptr)
-      {
-        saveConfig();
-      }
-      state = SHOW_CLOCK;
-    }
-    break;
-  default:
-    break;
-  }
 }
 
 void MenuMgr::rotaryEncoderAttachment(byte key)
@@ -275,11 +273,17 @@ void MenuMgr::setClockSynced(ClockTime time)
 
 void MenuMgr::showSyncAnimation()
 {
+  static byte i = 0, j = 0;
   //should show some animation here, indicating clock is syncing time
   if (_syncingTimer.justFinished())
   {
     _syncingTimer.repeat();
-    Serial.print(".");
+    matrix->writePixel(i, j, 1);
+    if (i == 31)
+    {
+      j = j == 15 ? 0 : j + 1;
+    }
+    i = i == 31 ? 0 : i + 1;
   }
 }
 
@@ -289,8 +293,9 @@ void MenuMgr::showAlarm(byte alarmNr)
   matrix->setFont(&TomThumb);
   matrix->setCursor(4, 10);
   matrix->print("ALARM");
-  matrix->print(alarmNr + 1);
+  matrix->print(alarmNr);
   matrix->write(); // Send bitmap to display
+  delay(500);
 }
 
 void MenuMgr::setSaveConfigEvent(voidFuncPtrVoid evHandler)
@@ -340,5 +345,5 @@ byte readGpio()
 
 void keyPressedReleased(byte key)
 {
-  menuMgr->keyChanged(key);
+  lastKey = key;
 }

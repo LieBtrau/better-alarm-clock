@@ -24,9 +24,10 @@ static AlarmManager alarms[2] =
     {
         AlarmManager(&sPlayer, 0, &config.alarmConfig[0]),
         AlarmManager(&sPlayer, 0, &config.alarmConfig[1])};
+
 static DcfUtcClock dcfclock(pin_DCF, true);
 static Task_Time timetask(&dcfclock);
-static Task_Alarms alarmstask((AlarmManager **)&alarms);
+static Task_Alarms alarmstask(alarms);
 static EepromConfig readConfig;
 // 32x16 LED Matrix elements
 static const int numberOfHorizontalDisplays = 4;
@@ -68,7 +69,7 @@ void loop()
   if (timetask.loop())
   {
     //Time is synced
-    menuMgr.setClockSynced({true, timetask.getLocalHour(), timetask.getLocalMinute(), timetask.lastSyncOk()});
+    menuMgr.setClockSynced({timetask.getLocalHour(), timetask.getLocalMinute(), timetask.lastSyncOk(), true});
     localEpoch = timetask.getLocalEpoch();
     if (alarmstask.loop(localEpoch))
     {
@@ -90,7 +91,7 @@ void loop()
   }
   else
   {
-    menuMgr.setClockSynced({false, 0, 0, false});
+    menuMgr.setClockSynced({0, 0, false, false});
   }
 
   delay(1); //sometimes MCP23017 stops responding after some time, adding this delay "fixes" it.

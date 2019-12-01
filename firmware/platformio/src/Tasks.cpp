@@ -53,7 +53,7 @@ bool Task_Time::lastSyncOk()
     return dcfclock->isLastSyncSuccessful();
 }
 
-Task_Alarms::Task_Alarms(AlarmManager **alarms) : _alarms(alarms)
+Task_Alarms::Task_Alarms(AlarmManager *alarms) : _alarms(alarms)
 {
 }
 
@@ -63,7 +63,7 @@ bool Task_Alarms::loop(time_t localEpochSecs)
     bool alarmOngoing = false;
     for (byte i = 0; i < MAX_ALARMS; i++)
     {
-        alarmOngoing |= _alarms[i]->loop(&localTime);
+        alarmOngoing |= _alarms[i].loop(&localTime);
     }
     return alarmOngoing;
 }
@@ -78,10 +78,10 @@ bool Task_Alarms::getSoonestAlarm(time_t localEpochSecs, AlarmConfig* soonestAla
     bool alarmFound = false;
     for (byte i = 0; i < MAX_ALARMS; i++)
     {
-        if (_alarms[i]->getAlarmBefore(localTime, remainingUntilNextAlarm, tempAlarm) && tempAlarm < earliestAlarm)
+        if (_alarms[i].getAlarmBefore(localTime, remainingUntilNextAlarm, tempAlarm) && tempAlarm < earliestAlarm)
         {
             earliestAlarm = tempAlarm;
-            soonestAlarm = _alarms[i]->getConfig();
+            soonestAlarm = _alarms[i].getConfig();
             alarmFound = true;
         }
     }
@@ -93,9 +93,9 @@ void Task_Alarms::turnAlarmOff(time_t localEpochSecs)
     Chronos::DateTime localTime(localEpochSecs);
     for (byte i = 0; i < MAX_ALARMS; i++)
     {
-        if(_alarms[i]->loop(&localTime))
+        if(_alarms[i].loop(&localTime))
         {
-            _alarms[i]->turnAlarmOff();
+            _alarms[i].turnAlarmOff();
         }
     }   
 }

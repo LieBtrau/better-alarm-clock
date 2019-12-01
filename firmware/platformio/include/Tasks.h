@@ -26,10 +26,10 @@ private:
 class Task_Alarms
 {
 public:
-    Task_Alarms(AlarmManager **alarms);
+    Task_Alarms(AlarmManager* alarms);
     bool loop(time_t localEpochSecs);
     bool getSoonestAlarm(time_t localEpochSecs, AlarmConfig* soonestAlarm);
     void turnAlarmOff(time_t localEpochSecs);
 private:
-    AlarmManager **_alarms;
+    AlarmManager *_alarms;
 };
