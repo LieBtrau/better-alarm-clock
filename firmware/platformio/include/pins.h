@@ -5,10 +5,6 @@
 const byte pinSCL = PB6;
 const byte pinSDA = PB7;
 
-//SoftWire I²C
-const byte sdaPin = PA15;
-const byte sclPin = PB3;
-
 //SPI
 const byte pinMOSI = PA7;
 const byte pinSCLK = PA5;

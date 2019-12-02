@@ -1,21 +1,18 @@
 #include "DisplayBrightness.h"
 
-DisplayBrightness::DisplayBrightness(byte sda_pin, byte scl_pin, byte pir_pin)
-    : i2c(sda_pin, scl_pin), _pir_pin(pir_pin)
+DisplayBrightness::DisplayBrightness(byte pir_pin) : _pir_pin(pir_pin)
 {
     _ambientLightSenseTimer.start(1000);
 }
 
 bool DisplayBrightness::init()
 {
-    i2c.setDelay_us(5);
-    i2c.begin();
-    i2c.setTxBuffer(malloc(50), 50);
-    i2c.setRxBuffer(malloc(10), 10);
-    if (!als.begin(&i2c))
+    if (!tsl.begin())
     {
         return false;
     }
+    tsl.setGain(TSL2591_GAIN_MED);                // 25x gain
+    tsl.setTiming(TSL2591_INTEGRATIONTIME_600MS); // longest integration time (dim light)
     pinMode(_pir_pin, INPUT);
     return true;
 }
@@ -52,7 +49,11 @@ bool DisplayBrightness::getDisplayBrightness(byte &brightness)
         return false;
     }
     _ambientLightSenseTimer.repeat();
-    float luxlevel = 0; //als.readAlsValue(); -> software I²C interferes with DCF
+    uint32_t lum = tsl.getFullLuminosity();
+    uint16_t ir, full;
+    ir = lum >> 16;
+    full = lum & 0xFFFF;
+    float luxlevel = tsl.calculateLux(full, ir);
     if (luxlevel == 0)
     {
         return false;

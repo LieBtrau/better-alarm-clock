@@ -17,7 +17,7 @@ typedef struct
 static Adafruit_MCP23017 mcp;
 static RotaryEncoder_MCP23017 rec(&mcp, pinIRQ);
 static RotaryEncoderConsumer recons(&rec);
-static DisplayBrightness dispbright(sdaPin, sclPin, pin_PIR);
+static DisplayBrightness dispbright(pin_PIR);
 static SongPlayer sPlayer(&Serial2, pinPlayBusy);
 static EepromConfig config;
 static AlarmManager alarms[2] =

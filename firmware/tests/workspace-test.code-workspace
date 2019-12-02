@@ -37,6 +37,10 @@
 		{
 			"name": "sx1509_test",
 			"path": "sx1509_test"
+		},
+		{
+			"name": "tsl2591_test",
+			"path": "tsl2591_test"
 		}
 	],
 	"settings": {

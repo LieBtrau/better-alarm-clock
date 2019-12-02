@@ -1,13 +1,13 @@
 #pragma once
 
 #include "millisDelay.h"
-#include "SoftWire.h"
-#include "DFRobot_VEML7700.h"
+#include <Adafruit_Sensor.h>
+#include "Adafruit_TSL2591.h"
 
 class DisplayBrightness
 {
     public:
-    DisplayBrightness(byte sda_pin, byte scl_pin, byte pir_pin);
+    DisplayBrightness(byte pir_pin);
     bool init();
     bool getDisplayBrightness(byte& brightness);
     bool isDisplayOn(bool buttonPressed);
@@ -19,8 +19,7 @@ private:
     millisDelay _clockRefreshTimer;
     millisDelay _displayOffTimer;
     millisDelay _ambientLightSenseTimer;
-    SoftWire i2c;
-    DFRobot_VEML7700 als;
+    Adafruit_TSL2591 tsl = Adafruit_TSL2591(2591);
     byte _pir_pin;
     int _lastBrightness=0;
 };
