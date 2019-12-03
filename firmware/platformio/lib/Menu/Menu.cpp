@@ -44,7 +44,7 @@ bool MenuOut::flash()
     {
         return false;
     }
-    flashTimer.repeat();
+    flashTimer.restart();
     if (flashVisible)
     {
         hide();

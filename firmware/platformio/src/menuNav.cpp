@@ -52,7 +52,6 @@ bool MenuMgr::loop()
   {
     if (rec->render() | fldHours.render(!displayWasOn) | fldMinutes.render(!displayWasOn)  | !displayWasOn)
     {
-      Serial.println(millis());
       matrix7.writeDisplay();
     }
     if (dispbright->getDisplayBrightness(brightness) && brightness != _brightness)
