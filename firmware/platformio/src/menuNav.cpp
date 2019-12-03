@@ -15,6 +15,8 @@ MenuMgr::MenuMgr(Max72xxPanel *ledArray, DisplayBrightness *disp, Adafruit_MCP23
                                                                        sldSong(matrix, {0, 13}, {11, 15}, &song),
                                                                        clockface(matrix)
 {
+  mcp = pmcp;
+  rec = prec;
   mgrBtnAlarm.addButton(&btnLightness);
   mgrBtnAlarm.addButton(&btnVolume);
   mgrBtnAlarm.addButton(&btnSong);
@@ -34,8 +36,6 @@ MenuMgr::MenuMgr(Max72xxPanel *ledArray, DisplayBrightness *disp, Adafruit_MCP23
   fldVolume.setLinkedParameter(&sldSong);
 
   _clockRefreshTimer.start(500);
-  mcp = pmcp;
-  rec = prec;
 }
 
 /**
@@ -126,8 +126,6 @@ bool MenuMgr::loop()
       rec->poll();
       if (keyReleased)
       {
-        mgrBtnWeekday.keyPressed(lastKey);
-        mgrBtnAlarm.keyPressed(lastKey);
         rotaryEncoderAttachment(lastKey);
         if (lastKey == MENU)
         {
@@ -150,8 +148,6 @@ bool MenuMgr::loop()
       rec->poll();
       if (keyReleased)
       {
-        mgrBtnWeekday.keyPressed(lastKey);
-        mgrBtnAlarm.keyPressed(lastKey);
         rotaryEncoderAttachment(lastKey);
         if (lastKey == MENU)
         {
@@ -194,7 +190,7 @@ bool MenuMgr::loop()
 void MenuMgr::rotaryEncoderAttachment(byte key)
 {
   bool encoderCoupled = false;
-  if (mgrBtnAlarm.keyPressed(key))
+  if (mgrBtnAlarm.keyPressed(key) || mgrBtnWeekday.keyPressed(key))
   {
     encoderCoupled = true;
   }

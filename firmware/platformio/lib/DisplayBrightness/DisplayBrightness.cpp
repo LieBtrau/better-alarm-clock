@@ -2,7 +2,7 @@
 
 DisplayBrightness::DisplayBrightness(byte pir_pin) : _pir_pin(pir_pin)
 {
-    _ambientLightSenseTimer.start(1000);
+    _ambientLightSenseTimer.start(10000);
 }
 
 bool DisplayBrightness::init()
