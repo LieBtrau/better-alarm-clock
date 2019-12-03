@@ -50,8 +50,9 @@ bool MenuMgr::loop()
   bool displayOn = dispbright->isDisplayOn(keyReleased);
   if (displayOn)
   {
-    if (fldHours.render(!displayWasOn) | fldMinutes.render(!displayWasOn) | rec->render() | !displayWasOn)
+    if (rec->render() | fldHours.render(!displayWasOn) | fldMinutes.render(!displayWasOn)  | !displayWasOn)
     {
+      Serial.println(millis());
       matrix7.writeDisplay();
     }
     if (dispbright->getDisplayBrightness(brightness) && brightness != _brightness)
