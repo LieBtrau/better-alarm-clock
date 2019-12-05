@@ -73,9 +73,7 @@ class SongPlayer
 public:
   SongPlayer(HardwareSerial *serial, uint32_t busyPin);
   bool init();
-  void setVolumePtr(byte *volume);
-  void setSongPtr(byte *song);
-  void play();
+  void playSong(byte song, byte volume);
   void stop();
   void poll();
   uint16_t getTotalTrackCount();
@@ -84,7 +82,9 @@ private:
   bool isPlaying();
   void printDetail(uint8_t type, int value);
   uint32_t _busyPin;
-  byte *song = nullptr;
-  byte *volume = nullptr;
+  byte mysong = 0;
+  byte myvolume = 0;
+  byte totalTracks = 0;
+  bool songChanged = false;
   millisDelay _singleShotTimer;
 };

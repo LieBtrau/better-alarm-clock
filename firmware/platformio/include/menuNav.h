@@ -9,6 +9,7 @@
 #include "millisDelay.h"
 
 void playSong(byte songnr);
+void setVolume(byte volume);
 void stopSong();
 void showLightness(byte i);
 void stopLightness();
@@ -53,7 +54,7 @@ private:
     ClockTime curTime;
     DisplayBrightness *dispbright;
     FieldParameter lightness = {0, nullptr, 100, 5, showLightness, stopLightness};
-    FieldParameter volume = {0, nullptr, 30, 1, playSong, stopSong};
+    FieldParameter volume = {0, nullptr, 30, 1, setVolume, stopSong};
     SelectParameter song = {nullptr, 1, 10, playSong, stopSong};
     FieldParameter hours = {0, nullptr, 23, 1, nullptr, nullptr};
     FieldParameter minutes = {0, nullptr, 55, 5, nullptr, nullptr};

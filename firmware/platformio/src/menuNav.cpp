@@ -303,6 +303,11 @@ void playSong(byte songnr)
   currentAlarm->playSong(songnr);
 }
 
+void setVolume(byte volume)
+{
+  currentAlarm->setVolume(volume);
+}
+
 void stopSong()
 {
   currentAlarm->stopSong();

@@ -13,30 +13,31 @@ bool SongPlayer::init()
     mp3.begin();
     mp3.setRepeatPlay(true);
     mp3.reset();
-    return getTotalTrackCount() != 0;
+    totalTracks = mp3.getTotalTrackCount() >> 1; //for some reason 24 is returned while there are only 12 tracks on the sd-card.);;
+    return totalTracks != 0;
 }
 
 uint16_t SongPlayer::getTotalTrackCount()
 {
-    return mp3.getTotalTrackCount() >> 1; //for some reason 24 is returned while there are only 12 tracks on the sd-card.);;
+    return totalTracks;
 }
 
-void SongPlayer::setVolumePtr(byte *volume)
+void SongPlayer::playSong(byte song, byte volume)
 {
-    this->volume = volume;
-}
-
-void SongPlayer::setSongPtr(byte *song)
-{
-    this->song = song;
-}
-
-void SongPlayer::play()
-{
-    if (volume == nullptr || song == nullptr)
+    if (volume > 30)
     {
         return;
     }
+    myvolume = volume;
+    if (song < 1 || song > totalTracks)
+    {
+        return;
+    }
+    if (song != mysong)
+    {
+        songChanged = true;
+    }
+    mysong = song;
     _singleShotTimer.start(200);
 }
 
@@ -55,7 +56,11 @@ void SongPlayer::poll()
     mp3.loop();
     if (_singleShotTimer.justFinished())
     {
-        mp3.setVolume(*volume);
-        mp3.loopGlobalTrack(*song);
+        mp3.setVolume(myvolume);
+        if (songChanged)
+        {
+            mp3.loopGlobalTrack(mysong);
+            songChanged = false;
+        }
     }
 }

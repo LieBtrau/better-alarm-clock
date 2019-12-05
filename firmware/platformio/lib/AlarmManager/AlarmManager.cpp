@@ -20,6 +20,10 @@ AlarmConfig *AlarmManager::getConfig()
 bool AlarmManager::loop(const Chronos::DateTime *timenow)
 {
     _music->poll();
+    if(!timenow->asEpoch())
+    {
+        return false;
+    }
     Chronos::DateTime alarmTime;
     switch (state)
     {
@@ -56,7 +60,7 @@ bool AlarmManager::loop(const Chronos::DateTime *timenow)
         return false;
     }
     case ALARM_TIME:
-        handleAlarmSound(true);
+        _music->playSong(_config->song, _config->volume);
         state = SOUND_PLAYING;
         return true;
     case SOUND_PLAYING:
@@ -76,24 +80,10 @@ void AlarmManager::turnAlarmOff()
     state = KILL_ALARM;
 }
 
-void AlarmManager::handleAlarmSound(bool start)
-{
-    if (start)
-    {
-        _music->setSongPtr(&_config->song);
-        _music->setVolumePtr(&_config->volume);
-        _music->play();
-    }
-    else
-    {
-        stopSong();
-    }
-}
-
 void AlarmManager::playSong(byte songnr)
 {
     _config->song = songnr;
-    handleAlarmSound(true);
+    _music->playSong(_config->song, _config->volume);
 }
 
 void AlarmManager::stopSong()
@@ -104,7 +94,7 @@ void AlarmManager::stopSong()
 void AlarmManager::setVolume(byte volume)
 {
     _config->volume = volume;
-    handleAlarmSound(true);
+    _music->playSong(_config->song, _config->volume);
 }
 
 void AlarmManager::showLightness(byte lightlevel)

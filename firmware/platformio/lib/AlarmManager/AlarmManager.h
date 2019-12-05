@@ -21,8 +21,6 @@ public:
     void stopSong();
     void showLightness(byte i);
     void stopLightness();
-    void handleAlarmSound(bool start);
-    void handleAlarmLight(byte lightness);
     bool loop(const Chronos::DateTime *timenow);
     void turnAlarmOff();
     bool getAlarmBefore(const Chronos::DateTime localTime, Chronos::Span::Days delta, Chronos::DateTime& alarmTime);
@@ -38,6 +36,7 @@ private:
         SOUND_PLAYING
     } state;
     const Chronos::Span::Minutes PRELIGHTTIME = Chronos::Span::Minutes(30);
+    void handleAlarmLight(byte lightness);
     SongPlayer *_music;
     uint32_t _pin_Light;
     AlarmConfig *_config;

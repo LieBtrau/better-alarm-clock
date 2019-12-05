@@ -2,6 +2,7 @@
 
 Task_Time::Task_Time(DcfUtcClock* dcf) : dcfclock(dcf) {}
 
+
 /**
  * \brief       Returns true when MCU-time is synced to DCF
  */

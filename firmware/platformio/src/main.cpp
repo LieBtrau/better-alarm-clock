@@ -91,6 +91,7 @@ void loop()
   }
   else
   {
+    alarmstask.loop(0); //run alarm task even though time is not set yet.  It's needed to setup up the music of the alarm.
     menuMgr.setClockSynced({0, 0, false, false});
   }
 
