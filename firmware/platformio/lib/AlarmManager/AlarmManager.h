@@ -15,7 +15,7 @@ struct AlarmConfig
 class AlarmManager
 {
 public:
-    AlarmManager(SongPlayer *music, uint32_t pin_Light, AlarmConfig *config);
+    AlarmManager(SongPlayer *music, uint32_t pin_Light);
     void playSong(byte songnr);
     void setVolume(byte i);
     void stopSong();
@@ -23,8 +23,10 @@ public:
     void stopLightness();
     bool loop(const Chronos::DateTime *timenow);
     void turnAlarmOff();
-    bool getAlarmBefore(const Chronos::DateTime localTime, Chronos::Span::Days delta, Chronos::DateTime& alarmTime);
-    AlarmConfig* getConfig();
+    bool getAlarmBefore(const Chronos::DateTime localTime, Chronos::Span::Days delta, Chronos::DateTime &alarmTime);
+    void setConfig(AlarmConfig *config);
+    AlarmConfig *getConfig();
+
 private:
     enum
     {
@@ -39,6 +41,6 @@ private:
     void handleAlarmLight(byte lightness);
     SongPlayer *_music;
     uint32_t _pin_Light;
-    AlarmConfig *_config;
+    AlarmConfig *_config = nullptr;
     AlarmCalendar calendar;
 };

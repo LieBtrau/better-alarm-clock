@@ -28,7 +28,7 @@ class Task_Alarms
 public:
     Task_Alarms(AlarmManager* alarms);
     bool loop(time_t localEpochSecs);
-    bool getSoonestAlarm(time_t localEpochSecs, AlarmConfig* soonestAlarm);
+    bool getSoonestAlarm(time_t localEpochSecs, byte& soonestAlarm);
     void turnAlarmOff(time_t localEpochSecs);
 private:
     AlarmManager *_alarms;

@@ -1,11 +1,9 @@
 #include "AlarmManager.h"
 
-AlarmManager::AlarmManager(SongPlayer *music, uint32_t pin_Light, AlarmConfig *config) : _music(music),
-                                                                                         _pin_Light(pin_Light),
-                                                                                         _config(config),
-                                                                                         calendar(15)
+AlarmManager::AlarmManager(SongPlayer *music, uint32_t pin_Light) : _music(music),
+                                                                    _pin_Light(pin_Light),
+                                                                    calendar(15)
 {
-    calendar.setConfig(&config->time);
     state = WAITING_FOR_PRELIGHTING;
 }
 
@@ -14,13 +12,19 @@ AlarmConfig *AlarmManager::getConfig()
     return _config;
 }
 
+void AlarmManager::setConfig(AlarmConfig *config)
+{
+    _config = config;
+    calendar.setConfig(&config->time);
+}
+
 /*
  * \return true when light or sound are on due to an alarm
  */
 bool AlarmManager::loop(const Chronos::DateTime *timenow)
 {
     _music->poll();
-    if(!timenow->asEpoch())
+    if (!timenow->asEpoch())
     {
         return false;
     }
@@ -114,7 +118,7 @@ void AlarmManager::handleAlarmLight(byte lightness)
 /**
  * \remark : Running this command when a calendar event is ongoing, will return that calendar event.
  */
-bool AlarmManager::getAlarmBefore(const Chronos::DateTime fromDT, Chronos::Span::Days delta,  Chronos::DateTime &returnedDT)
+bool AlarmManager::getAlarmBefore(const Chronos::DateTime fromDT, Chronos::Span::Days delta, Chronos::DateTime &returnedDT)
 {
     return calendar.getStartOfNextEvent(&fromDT, &returnedDT) && returnedDT < fromDT + delta;
 }

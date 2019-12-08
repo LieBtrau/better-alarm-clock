@@ -136,6 +136,7 @@ bool MenuMgr::loop()
           alarmTimeButton.render(true);
           fldHours.render(true);
           fldMinutes.render(true);
+          matrix7.writeDisplay();
           state = SETUP_ALARM2;
         }
       }

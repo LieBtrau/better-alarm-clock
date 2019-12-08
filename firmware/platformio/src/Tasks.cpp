@@ -58,6 +58,9 @@ Task_Alarms::Task_Alarms(AlarmManager *alarms) : _alarms(alarms)
 {
 }
 
+/**
+ * \return  True when alarm is ongoing
+ */
 bool Task_Alarms::loop(time_t localEpochSecs)
 {
     Chronos::DateTime localTime(localEpochSecs);
@@ -69,20 +72,20 @@ bool Task_Alarms::loop(time_t localEpochSecs)
     return alarmOngoing;
 }
 
-bool Task_Alarms::getSoonestAlarm(time_t localEpochSecs, AlarmConfig* soonestAlarm)
+bool Task_Alarms::getSoonestAlarm(time_t localEpochSecs, byte& soonestAlarmIndex)
 {
     Chronos::Span::Days remainingUntilNextAlarm = Chronos::Span::Days(1);
     Chronos::DateTime localTime(localEpochSecs);
     Chronos::DateTime earliestAlarm = localTime + remainingUntilNextAlarm;
     Chronos::DateTime tempAlarm;
-    soonestAlarm = nullptr;
+    soonestAlarmIndex = 0xFF;
     bool alarmFound = false;
     for (byte i = 0; i < MAX_ALARMS; i++)
     {
         if (_alarms[i].getAlarmBefore(localTime, remainingUntilNextAlarm, tempAlarm) && tempAlarm < earliestAlarm)
         {
             earliestAlarm = tempAlarm;
-            soonestAlarm = _alarms[i].getConfig();
+            soonestAlarmIndex = i;
             alarmFound = true;
         }
     }

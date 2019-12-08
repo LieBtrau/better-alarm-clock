@@ -22,8 +22,8 @@ static SongPlayer sPlayer(&Serial2, pinPlayBusy);
 static EepromConfig config;
 static AlarmManager alarms[2] =
     {
-        AlarmManager(&sPlayer, 0, &config.alarmConfig[0]),
-        AlarmManager(&sPlayer, 0, &config.alarmConfig[1])};
+        AlarmManager(&sPlayer, 0),
+        AlarmManager(&sPlayer, 0)};
 
 static DcfUtcClock dcfclock(pin_DCF, true);
 static Task_Time timetask(&dcfclock);
@@ -37,6 +37,7 @@ static MenuMgr menuMgr(&matrix, &dispbright, &mcp, &recons, alarms);
 static HardwareSerial *ser1 = &Serial;
 static AT24C eeprom1(AT24C::AT24C02, 0x50, &Wire);
 static const byte CFG_MEM_ADDRESS = 0;
+static millisDelay updateClockDelay;
 
 void setup()
 {
@@ -51,6 +52,7 @@ void setup()
   {
     memcpy(&config, &readConfig, sizeof(EepromConfig));
   }
+  updateClockDelay.start(500);
   dcfclock.init();
   if (!sPlayer.init() || !dispbright.init())
   {
@@ -59,6 +61,10 @@ void setup()
   }
   menuMgr.init(sPlayer.getTotalTrackCount());
   menuMgr.setSaveConfigEvent(saveConfig);
+  for (byte i = 0; i < MAX_ALARMS; i++)
+  {
+    alarms[i].setConfig(&config.alarmConfig[i]);
+  }
 }
 
 void loop()
@@ -69,24 +75,25 @@ void loop()
   if (timetask.loop())
   {
     //Time is synced
-    menuMgr.setClockSynced({timetask.getLocalHour(), timetask.getLocalMinute(), timetask.lastSyncOk(), true});
+    if (updateClockDelay.justFinished())
+    {
+      updateClockDelay.repeat();
+      menuMgr.setClockSynced({timetask.getLocalHour(), timetask.getLocalMinute(), timetask.lastSyncOk(), true});
+    }
     localEpoch = timetask.getLocalEpoch();
-    if (alarmstask.loop(localEpoch))
+    if (alarmstask.loop(localEpoch) && keyReleased)
     {
       //alarm is ongoing
-      if (keyReleased)
-      {
-        alarmstask.turnAlarmOff(localEpoch);
-      }
-      AlarmConfig *soonestAlarm = nullptr;
-      if (alarmstask.getSoonestAlarm(localEpoch, soonestAlarm))
-      {
-        menuMgr.setSoonestAlarm(soonestAlarm);
-      }
-      else
-      {
-        menuMgr.setSoonestAlarm(nullptr);
-      }
+      alarmstask.turnAlarmOff(localEpoch);
+    }
+    byte soonestAlarmIndex = 0xFF;
+    if (alarmstask.getSoonestAlarm(localEpoch, soonestAlarmIndex))
+    {
+      menuMgr.setSoonestAlarm(alarms[soonestAlarmIndex].getConfig());
+    }
+    else
+    {
+      menuMgr.setSoonestAlarm(nullptr);
     }
   }
   else
@@ -100,6 +107,10 @@ void loop()
 
 void saveConfig()
 {
+  for (byte i = 0; i < MAX_ALARMS; i++)
+  {
+    alarms[i].setConfig(&config.alarmConfig[i]);
+  }
   if (memcmp(&config, &readConfig, sizeof(EepromConfig)))
   {
     if (!eeprom1.write(CFG_MEM_ADDRESS, config))
