@@ -1,25 +1,13 @@
 #include "Tasks.h"
 
-Task_Time::Task_Time(DcfUtcClock* dcf) : dcfclock(dcf) {}
-
+Task_Time::Task_Time(DcfUtcClock *dcf) : dcfclock(dcf), CE(CEST, CET) {}
 
 /**
  * \brief       Returns true when MCU-time is synced to DCF
  */
 bool Task_Time::loop()
 {
-    if (!dcfclock->update())
-    {
-        return false;
-    }
-    time_t utc = now();
-    TimeChangeRule *tcr;
-    // Central European Time (Frankfurt, Paris)
-    TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 120}; // Central European Summer Time
-    TimeChangeRule CET = {"CET ", Last, Sun, Oct, 3, 60};   // Central European Standard Time
-    Timezone CE(CEST, CET);
-    localEpochSecs = CE.toLocal(utc, &tcr);
-    return true;
+    return dcfclock->update();
 }
 
 time_t Task_Time::getLocalEpoch()
@@ -28,6 +16,9 @@ time_t Task_Time::getLocalEpoch()
     {
         return 0;
     }
+    time_t utc = now();
+    TimeChangeRule *tcr;
+    localEpochSecs = CE.toLocal(utc, &tcr);
     return localEpochSecs;
 }
 
@@ -72,7 +63,7 @@ bool Task_Alarms::loop(time_t localEpochSecs)
     return alarmOngoing;
 }
 
-bool Task_Alarms::getSoonestAlarm(time_t localEpochSecs, byte& soonestAlarmIndex)
+bool Task_Alarms::getSoonestAlarm(time_t localEpochSecs, byte &soonestAlarmIndex)
 {
     Chronos::Span::Days remainingUntilNextAlarm = Chronos::Span::Days(1);
     Chronos::DateTime localTime(localEpochSecs);
@@ -97,9 +88,9 @@ void Task_Alarms::turnAlarmOff(time_t localEpochSecs)
     Chronos::DateTime localTime(localEpochSecs);
     for (byte i = 0; i < MAX_ALARMS; i++)
     {
-        if(_alarms[i].loop(&localTime))
+        if (_alarms[i].loop(&localTime))
         {
             _alarms[i].turnAlarmOff();
         }
-    }   
+    }
 }

@@ -13,14 +13,14 @@ void Stm32RtcWrapper::begin()
     rtc.begin();
 }
 
-Chronos::EpochTime Stm32RtcWrapper::get()
+bool Stm32RtcWrapper::get(Chronos::EpochTime& epoch)
 {
-    return _isTimeSynced ? rtc.getEpoch() : 0;
+    epoch = rtc.getEpoch();
+    return Chronos::DateTime(epoch) - lastSuccessfulSync < DEADRECKONING;
 }
 
-bool Stm32RtcWrapper::setEpoch(Chronos::EpochTime epoch)
+void Stm32RtcWrapper::setEpoch(Chronos::EpochTime epoch)
 {
     rtc.setEpoch(epoch);
-    _isTimeSynced = true;
-    return true;
+    lastSuccessfulSync = Chronos::DateTime(epoch);
 }

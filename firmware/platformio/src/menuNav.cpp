@@ -93,7 +93,7 @@ bool MenuMgr::loop()
         {
           if (_clockRefreshTimer.justFinished())
           {
-            _clockRefreshTimer.repeat();
+            _clockRefreshTimer.restart();
             clockface.setVisible(true);
             clockface.setTime(curTime);
             clockface.render();
@@ -241,7 +241,7 @@ void MenuMgr::showLedState()
 {
   if (_charliePlexingTimer.justFinished())
   {
-    _charliePlexingTimer.repeat();
+    _charliePlexingTimer.restart();
     byte pinModes = mcp->readPinMode(1);
     byte gpioStates = mcp->readGPIO(1);
     if (myCharlie.showLedState(pinModes, gpioStates))
@@ -270,7 +270,7 @@ void MenuMgr::showSyncAnimation()
   //should show some animation here, indicating clock is syncing time
   if (_syncingTimer.justFinished())
   {
-    _syncingTimer.repeat();
+    _syncingTimer.restart();
     matrix->writePixel(i, j, 1);
     if (i == 31)
     {

@@ -8,6 +8,7 @@
 #include "SongPlayer.h"
 #include "RotaryEncoder_MCP23017.h"
 void saveConfig();
+void printDateTime(time_t t, const char *tz);
 
 typedef struct
 {
@@ -52,7 +53,7 @@ void setup()
   {
     memcpy(&config, &readConfig, sizeof(EepromConfig));
   }
-  updateClockDelay.start(500);
+  updateClockDelay.start(2000);
   dcfclock.init();
   if (!sPlayer.init() || !dispbright.init())
   {
@@ -65,44 +66,45 @@ void setup()
   {
     alarms[i].setConfig(&config.alarmConfig[i]);
   }
+
 }
 
 void loop()
 {
   time_t localEpoch;
 
-  bool keyReleased = menuMgr.loop();
+  // bool keyReleased = menuMgr.loop();
   if (timetask.loop())
   {
     //Time is synced
     if (updateClockDelay.justFinished())
     {
-      updateClockDelay.repeat();
-      menuMgr.setClockSynced({timetask.getLocalHour(), timetask.getLocalMinute(), timetask.lastSyncOk(), true});
+      updateClockDelay.restart();
+      // menuMgr.setClockSynced({timetask.getLocalHour(), timetask.getLocalMinute(), timetask.lastSyncOk(), true});
+      localEpoch = timetask.getLocalEpoch();
+      printDateTime(localEpoch, "");
     }
-    localEpoch = timetask.getLocalEpoch();
-    if (alarmstask.loop(localEpoch) && keyReleased)
-    {
-      //alarm is ongoing
-      alarmstask.turnAlarmOff(localEpoch);
-    }
-    byte soonestAlarmIndex = 0xFF;
-    if (alarmstask.getSoonestAlarm(localEpoch, soonestAlarmIndex))
-    {
-      menuMgr.setSoonestAlarm(alarms[soonestAlarmIndex].getConfig());
-    }
-    else
-    {
-      menuMgr.setSoonestAlarm(nullptr);
-    }
+    // if (alarmstask.loop(localEpoch) && keyReleased)
+    // {
+    //   //alarm is ongoing
+    //   alarmstask.turnAlarmOff(localEpoch);
+    // }
+    // byte soonestAlarmIndex = 0xFF;
+    // if (alarmstask.getSoonestAlarm(localEpoch, soonestAlarmIndex))
+    // {
+    //   menuMgr.setSoonestAlarm(alarms[soonestAlarmIndex].getConfig());
+    // }
+    // else
+    // {
+    //   menuMgr.setSoonestAlarm(nullptr);
+    // }
   }
-  else
-  {
-    alarmstask.loop(0); //run alarm task even though time is not set yet.  It's needed to setup up the music of the alarm.
-    menuMgr.setClockSynced({0, 0, false, false});
-  }
-
-  delay(1); //sometimes MCP23017 stops responding after some time, adding this delay "fixes" it.
+  // else
+  // {
+  //   alarmstask.loop(0); //run alarm task even though time is not set yet.  It's needed to setup up the music of the alarm.
+  //   menuMgr.setClockSynced({0, 0, false, false});
+  // }
+  // delay(1); //stop locking up the MCP23017
 }
 
 void saveConfig()
@@ -124,10 +126,20 @@ void saveConfig()
 // format and print a time_t value, with a time zone appended.
 void printDateTime(time_t t, const char *tz)
 {
-  char buf[32];
-  char m[4]; // temporary storage for month string (DateStrings.cpp uses shared buffer)
-  strcpy(m, monthShortStr(month(t)));
-  sprintf(buf, "%.2d:%.2d:%.2d %s %.2d %s %d %s",
-          hour(t), minute(t), second(t), dayShortStr(weekday(t)), day(t), m, year(t), tz);
-  Serial.println(buf);
+  static long timediff = 0;
+  long diff = t - millis() / 1000;
+  if (diff != timediff && abs(timediff - diff) > 1)
+  {
+    char buf[32];
+    char m[4]; // temporary storage for month string (DateStrings.cpp uses shared buffer)
+    strcpy(m, monthShortStr(month(t)));
+    sprintf(buf, "%.2d:%.2d:%.2d %s %.2d %s %d %s",
+            hour(t), minute(t), second(t), dayShortStr(weekday(t)), day(t), m, year(t), tz);
+    Serial.print(buf);
+    Serial.print(" ");
+    Serial.print(timediff - diff);
+    Serial.print(" ");
+    Serial.println(millis());
+    timediff = diff;
+  }
 }

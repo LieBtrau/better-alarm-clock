@@ -7,8 +7,9 @@ class Stm32RtcWrapper
   public:
     Stm32RtcWrapper();
     void begin();
-    Chronos::EpochTime get();
-    bool setEpoch(Chronos::EpochTime epoch);
+    bool get(Chronos::EpochTime& epoch);
+    void setEpoch(Chronos::EpochTime epoch);
   private:
-    bool _isTimeSynced = false;
+    Chronos::DateTime lastSuccessfulSync;
+    const Chronos::Span::Days DEADRECKONING = 1;
 };

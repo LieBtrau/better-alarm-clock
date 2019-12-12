@@ -2,7 +2,7 @@
 #include <Timezone.h>
 #include <STM32RTC.h>
 
-void printDateTime();
+void printDateTime(Chronos::EpochTime epoch);
 void alarmMatch(void *data);
 
 unsigned long startUtc = 0;
@@ -18,6 +18,7 @@ STM32RTC& rtc = STM32RTC::getInstance();
 TimeChangeRule myDST = {"CEST", Last, Sun, Mar, 2, +120}; //Last Sunday of March, at 2AM, go to UTC+120min
 TimeChangeRule mySTD = {"CET", Last, Sun, Oct, 3, +60};   //Last Sunday of October, at 3AM, go to UTC+60min
 Timezone myTZ(myDST, mySTD);
+unsigned long starttime=0;
 
 void setup()
 {
@@ -33,7 +34,7 @@ void setup()
     //End of March switch from STD to DST
     //1553992200    Sunday, March 31, 2019 1:30:00 AM GMT+01:00
     //1553995800    Sunday, March 31, 2019 3:30:00 AM GMT+02:00
-    printDateTime();
+    printDateTime(rtc.getEpoch());
     Serial.println("Ready to receive UTC");
 }
 
@@ -48,7 +49,8 @@ void loop()
             {
                 startUtc = newutc;
                 rtc.setEpoch(newutc);
-                printDateTime();
+                setTime(newutc);
+                printDateTime(rtc.getEpoch());
                 rtc.setAlarmEpoch(rtc.getEpoch() + 10);
                 rtc.attachInterrupt(alarmMatch);
             }
@@ -61,15 +63,23 @@ void loop()
             }
         }
     }
+    if(millis()> starttime + 1000)
+    {
+        starttime=millis();
+        Serial.print("RTC: ");
+        printDateTime(rtc.getEpoch());
+        Serial.print("\tMillis: ");
+        printDateTime(now());
+        Serial.println();
+    }
 }
 
-void printDateTime()
+void printDateTime(Chronos::EpochTime epoch)
 {
     // Print date...
-    Chronos::DateTime utc(rtc.getEpoch());
+    Chronos::DateTime utc(epoch);
     Chronos::DateTime localTime = myTZ.toLocal(utc.asEpoch());
     localTime.printTo(Serial);
-    Serial.println();
 }
 
 void alarmMatch(void *data)

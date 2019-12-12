@@ -58,8 +58,6 @@ private:
     SelectParameter song = {nullptr, 1, 10, playSong, stopSong};
     FieldParameter hours = {0, nullptr, 23, 1, nullptr, nullptr};
     FieldParameter minutes = {0, nullptr, 55, 5, nullptr, nullptr};
-
-
     LedMatrixField fldLightness;
     LedMatrixField fldVolume;
     LedMatrixSelect sldSong;

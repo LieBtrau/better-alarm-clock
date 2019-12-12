@@ -1,5 +1,4 @@
 #pragma once
-#include "alarmcalendar.h"
 #include "robustDcf.h"
 
 class DcfUtcClock
@@ -9,9 +8,10 @@ public:
     void init();
     bool update();
     bool isLastSyncSuccessful();
+
 private:
-    bool dcfReady(Chronos::EpochTime& epoch);
-    bool _lastSyncSuccessful = false;
-    AlarmCalendar syncCalendar;
+    const Chronos::Span::Days DEADRECKONING = 1;
+    bool dcfReady();
+    Chronos::DateTime lastSuccessfulSync;
     RobustDcf _rd;
 };

@@ -48,7 +48,7 @@ bool DisplayBrightness::getDisplayBrightness(byte &brightness)
     {
         return false;
     }
-    _ambientLightSenseTimer.repeat();
+    _ambientLightSenseTimer.restart();
     uint32_t lum = tsl.getFullLuminosity();
     uint16_t ir, full;
     ir = lum >> 16;

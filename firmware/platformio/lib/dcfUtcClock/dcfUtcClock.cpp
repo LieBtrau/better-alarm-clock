@@ -2,14 +2,12 @@
 #include "time.h"
 #include "stm32rtcwrapper.h"
 
-static volatile bool syncOngoing = false;
 time_t getRtcTime();
 
 static Stm32RtcWrapper stmRtc;
 
-DcfUtcClock::DcfUtcClock(uint32_t dcfPin, bool activeHigh) : syncCalendar(5), _rd(dcfPin, activeHigh)
+DcfUtcClock::DcfUtcClock(uint32_t dcfPin, bool activeHigh) : _rd(dcfPin, activeHigh)
 {
-    syncCalendar.setDailyAlarm(0, 0); //sync at UTC midnight
 }
 
 void DcfUtcClock::init()
@@ -20,48 +18,35 @@ void DcfUtcClock::init()
 }
 
 /**  \brief returns true when MCU-time is valid
- */ 
+ */
 bool DcfUtcClock::update()
 {
-    bool mcuTimeValid = (timeStatus() == timeSet);
-    if (!mcuTimeValid)
-    {
-        syncOngoing = true;
-    }
-    else
+    Chronos::EpochTime rtcepoch;
+    //both millis() timer and RTC need to be set
+    bool mcuTimeValid = (timeStatus() == timeSet) && stmRtc.get(rtcepoch);
+    bool syncNeeded = !mcuTimeValid;
+    if (mcuTimeValid)
     {
         Chronos::DateTime timenow = Chronos::DateTime::now();
-        syncOngoing = syncCalendar.isAlarmOnGoing(&timenow);
+        syncNeeded = timenow.hour() == 2 && timenow - lastSuccessfulSync > Chronos::Span::Hours(20);
     }
-    if (syncOngoing)
+    if (syncNeeded && _rd.update(rtcepoch))
     {
-        Chronos::EpochTime epoch;
-        syncOngoing = !dcfReady(epoch);
-        _lastSyncSuccessful = !syncOngoing;
+        stmRtc.setEpoch(rtcepoch); //update RTC with DCF-data
+        setTime(rtcepoch);         //Update MCU-time by RTC: Force set time, otherwise it will only be set after 300s
+        lastSuccessfulSync = Chronos::DateTime(rtcepoch);
     }
     return mcuTimeValid;
 }
 
-// returns true when a valid DCF timestamp has been received
-bool DcfUtcClock::dcfReady(Chronos::EpochTime &epoch)
-{
-    if (!_rd.update(epoch))
-    {
-        return false;
-    }
-    if (stmRtc.setEpoch(epoch)) //update RTC with DCF-data
-    {
-        setTime(epoch); //Update MCU-time by RTC: Force set time, otherwise it will only be set after 300s
-    }
-    return true;
-}
-
 bool DcfUtcClock::isLastSyncSuccessful()
 {
-    return _lastSyncSuccessful;
+    Chronos::DateTime timenow = Chronos::DateTime::now();
+    return timenow - lastSuccessfulSync < DEADRECKONING;
 }
 
 time_t getRtcTime()
 {
-    return stmRtc.get();
+    Chronos::EpochTime epoch;
+    return stmRtc.get(epoch) ? epoch : 0;
 }
