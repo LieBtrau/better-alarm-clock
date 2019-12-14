@@ -80,6 +80,5 @@ bool DisplayBrightness::getDisplayBrightness(byte &brightness)
 
 bool DisplayBrightness::movementDetected()
 {
-    //return digitalRead(_pir_pin);
-    return false;
+    return digitalRead(_pir_pin);
 }
