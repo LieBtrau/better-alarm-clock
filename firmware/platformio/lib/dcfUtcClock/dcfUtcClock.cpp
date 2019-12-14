@@ -28,6 +28,7 @@ bool DcfUtcClock::update()
     if (mcuTimeValid)
     {
         Chronos::DateTime timenow = Chronos::DateTime::now();
+        //Even though clocks are set, a daily sync with DCF at 2AM is executed.
         syncNeeded = timenow.hour() == 2 && timenow - lastSuccessfulSync > Chronos::Span::Hours(20);
     }
     if (syncNeeded && _rd.update(rtcepoch))

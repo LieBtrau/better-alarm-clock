@@ -2,7 +2,6 @@
 
 DisplayBrightness::DisplayBrightness(byte pir_pin) : _pir_pin(pir_pin)
 {
-    _ambientLightSenseTimer.start(10000);
 }
 
 bool DisplayBrightness::init()
@@ -11,6 +10,8 @@ bool DisplayBrightness::init()
     {
         return false;
     }
+    _ambientLightSenseTimer.start(10000);
+    _displayOffTimer.start(DISPLAY_DARK_TIMEOUT);
     tsl.setGain(TSL2591_GAIN_MED);                // 25x gain
     tsl.setTiming(TSL2591_INTEGRATIONTIME_600MS); // longest integration time (dim light)
     pinMode(_pir_pin, INPUT);
@@ -26,9 +27,13 @@ bool DisplayBrightness::init()
  */
 bool DisplayBrightness::isDisplayOn(bool buttonPressed)
 {
-    if (movementDetected() || buttonPressed || _lastBrightness > 0 || _displayOffTimer.isRunning())
+    if (movementDetected() || buttonPressed || _lastBrightness > 0)
     {
-        _displayOffTimer.start(DISPLAY_DARK_TIMEOUT);
+        _displayOffTimer.restart();
+        return true;
+    }
+    if(!_displayOffTimer.justFinished() && _displayOffTimer.isRunning())
+    {
         return true;
     }
     return false;
@@ -75,5 +80,6 @@ bool DisplayBrightness::getDisplayBrightness(byte &brightness)
 
 bool DisplayBrightness::movementDetected()
 {
-    return digitalRead(_pir_pin);
+    //return digitalRead(_pir_pin);
+    return false;
 }

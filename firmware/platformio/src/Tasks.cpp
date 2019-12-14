@@ -73,7 +73,7 @@ bool Task_Alarms::getSoonestAlarm(time_t localEpochSecs, byte &soonestAlarmIndex
     bool alarmFound = false;
     for (byte i = 0; i < MAX_ALARMS; i++)
     {
-        if (_alarms[i].getAlarmBefore(localTime, remainingUntilNextAlarm, tempAlarm) && tempAlarm < earliestAlarm)
+        if (_alarms[i].getAlarmFromNowWithinSpan(localTime, remainingUntilNextAlarm, tempAlarm) && tempAlarm < earliestAlarm)
         {
             earliestAlarm = tempAlarm;
             soonestAlarmIndex = i;

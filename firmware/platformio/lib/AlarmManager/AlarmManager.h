@@ -23,7 +23,7 @@ public:
     void stopLightness();
     bool loop(const Chronos::DateTime *timenow);
     void turnAlarmOff();
-    bool getAlarmBefore(const Chronos::DateTime localTime, Chronos::Span::Days delta, Chronos::DateTime &alarmTime);
+    bool getAlarmFromNowWithinSpan(const Chronos::DateTime localTime, Chronos::Span::Days delta, Chronos::DateTime &alarmTime);
     void setConfig(AlarmConfig *config);
     AlarmConfig *getConfig();
 

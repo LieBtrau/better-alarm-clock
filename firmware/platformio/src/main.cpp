@@ -66,45 +66,43 @@ void setup()
   {
     alarms[i].setConfig(&config.alarmConfig[i]);
   }
-
 }
 
 void loop()
 {
   time_t localEpoch;
-
-  // bool keyReleased = menuMgr.loop();
+  bool keyReleased = menuMgr.loop();
+  
   if (timetask.loop())
   {
     //Time is synced
+    localEpoch = timetask.getLocalEpoch();
     if (updateClockDelay.justFinished())
     {
       updateClockDelay.restart();
-      // menuMgr.setClockSynced({timetask.getLocalHour(), timetask.getLocalMinute(), timetask.lastSyncOk(), true});
-      localEpoch = timetask.getLocalEpoch();
-      printDateTime(localEpoch, "");
+      menuMgr.setClockSynced({timetask.getLocalHour(), timetask.getLocalMinute(), timetask.lastSyncOk(), true});
     }
-    // if (alarmstask.loop(localEpoch) && keyReleased)
-    // {
-    //   //alarm is ongoing
-    //   alarmstask.turnAlarmOff(localEpoch);
-    // }
-    // byte soonestAlarmIndex = 0xFF;
-    // if (alarmstask.getSoonestAlarm(localEpoch, soonestAlarmIndex))
-    // {
-    //   menuMgr.setSoonestAlarm(alarms[soonestAlarmIndex].getConfig());
-    // }
-    // else
-    // {
-    //   menuMgr.setSoonestAlarm(nullptr);
-    // }
+    if (alarmstask.loop(localEpoch) && keyReleased)
+    {
+      //alarm is ongoing
+      alarmstask.turnAlarmOff(localEpoch);
+    }
+    byte soonestAlarmIndex = 0xFF;
+    if (alarmstask.getSoonestAlarm(localEpoch, soonestAlarmIndex))
+    {
+      menuMgr.setSoonestAlarm(alarms[soonestAlarmIndex].getConfig());
+    }
+    else
+    {
+      menuMgr.setSoonestAlarm(nullptr);
+    }
   }
-  // else
-  // {
-  //   alarmstask.loop(0); //run alarm task even though time is not set yet.  It's needed to setup up the music of the alarm.
-  //   menuMgr.setClockSynced({0, 0, false, false});
-  // }
-  // delay(1); //stop locking up the MCP23017
+  else
+  {
+    alarmstask.loop(0); //run alarm task even though time is not set yet.  It's needed to setup up the music of the alarm.
+    menuMgr.setClockSynced({0, 0, false, false});
+  }
+  delay(1); //stop locking up the MCP23017
 }
 
 void saveConfig()

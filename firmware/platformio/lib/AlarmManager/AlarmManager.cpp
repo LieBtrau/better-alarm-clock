@@ -118,7 +118,7 @@ void AlarmManager::handleAlarmLight(byte lightness)
 /**
  * \remark : Running this command when a calendar event is ongoing, will return that calendar event.
  */
-bool AlarmManager::getAlarmBefore(const Chronos::DateTime fromDT, Chronos::Span::Days delta, Chronos::DateTime &returnedDT)
+bool AlarmManager::getAlarmFromNowWithinSpan(const Chronos::DateTime fromDT, Chronos::Span::Days delta, Chronos::DateTime &returnedDT)
 {
     return calendar.getStartOfNextEvent(&fromDT, &returnedDT) && returnedDT < fromDT + delta;
 }

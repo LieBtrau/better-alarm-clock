@@ -38,6 +38,23 @@ MenuMgr::MenuMgr(Max72xxPanel *ledArray, DisplayBrightness *disp, Adafruit_MCP23
   _clockRefreshTimer.start(500);
 }
 
+void MenuMgr::showMenu()
+{
+  rec->setConsumer(nullptr, false);
+  if (curTime.valid)
+  {
+    clockface.setVisible(true);
+  }
+  mgrBtnAlarm.disable();
+  mgrBtnWeekday.disable();
+  matrix->fillScreen(0);
+  if (saveConfig != nullptr)
+  {
+    saveConfig();
+  }
+  state = SHOW_CLOCK;
+}
+
 /**
  * \return true when a key has changed state (pressed or released)
  */
@@ -50,16 +67,16 @@ bool MenuMgr::loop()
   bool displayOn = dispbright->isDisplayOn(keyReleased);
   if (displayOn)
   {
-    if (rec->render() | fldHours.render(!displayWasOn) | fldMinutes.render(!displayWasOn)  | !displayWasOn)
+    if (rec->render() | fldHours.render(!displayWasOn) | fldMinutes.render(!displayWasOn) | !displayWasOn)
     {
       matrix7.writeDisplay();
     }
     if (dispbright->getDisplayBrightness(brightness) && brightness != _brightness)
     {
+      _brightness = brightness;
       matrix7.setBrightness(brightness); // 0 -> 15
       matrix->setIntensity(brightness);  // 0 -> 15
     }
-    _brightness = brightness;
     matrix->write(); // Send bitmap to display
     switch (state)
     {
@@ -86,6 +103,7 @@ bool MenuMgr::loop()
         mgrBtnWeekday.enable();
         showAlarm(1);
         state = SETUP_ALARM1;
+        _setupTimeoutTimer.start(120000);
       }
       else
       {
@@ -124,11 +142,16 @@ bool MenuMgr::loop()
       mgrBtnWeekday.render(!displayWasOn);
       alarmTimeButton.render(!displayWasOn);
       rec->poll();
+      if (_setupTimeoutTimer.justFinished())
+      {
+        showMenu();
+      }
       if (keyReleased)
       {
         rotaryEncoderAttachment(lastKey);
         if (lastKey == MENU)
         {
+          _setupTimeoutTimer.restart();
           assignAlarmConfig(&alarms[ALARM2]);
           showAlarm(2);
           mgrBtnAlarm.render(true);
@@ -152,19 +175,12 @@ bool MenuMgr::loop()
         rotaryEncoderAttachment(lastKey);
         if (lastKey == MENU)
         {
-          if (curTime.valid)
-          {
-            clockface.setVisible(true);
-          }
-          mgrBtnAlarm.disable();
-          mgrBtnWeekday.disable();
-          matrix->fillScreen(0);
-          if (saveConfig != nullptr)
-          {
-            saveConfig();
-          }
-          state = SHOW_CLOCK;
+          showMenu();
         }
+      }
+      if (_setupTimeoutTimer.justFinished())
+      {
+        showMenu();
       }
       break;
     default:
@@ -177,7 +193,7 @@ bool MenuMgr::loop()
     if (displayWasOn)
     {
       matrix->fillScreen(0);
-      matrix->write();
+      matrix->write(true);
       matrix7.clear();
       matrix7.writeDisplay();
       byte pinModes = mcp->readPinMode(1);

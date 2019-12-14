@@ -37,6 +37,7 @@ private:
     STATE state = SHOW_SPLASH;
     void showLedState();
     void showAlarm(byte alarmNrnr);
+    void showMenu();
     void showSyncAnimation();
     void rotaryEncoderAttachment(byte key);
     void assignAlarmConfig(AlarmManager *curAlarm);
@@ -49,6 +50,7 @@ private:
     millisDelay _charliePlexingTimer;
     millisDelay _clockRefreshTimer;
     millisDelay _syncingTimer;
+    millisDelay _setupTimeoutTimer;
     Max72xxPanel *matrix;
     RotaryEncoderConsumer *rec;
     ClockTime curTime;
