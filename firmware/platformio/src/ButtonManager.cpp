@@ -117,6 +117,7 @@ void ButtonManager::disable()
     {
         _buttonlist[i]->disable();
     }
+    _activeButton = nullptr;
 }
 
 void ParameterButtonManager::enable()
@@ -135,4 +136,5 @@ void ParameterButtonManager::disable()
         _buttonlist[i]->disable();
         ((ParameterPushButton *)_buttonlist[i])->getParam()->setVisible(false);
     }
+    _activeButton = nullptr;
 }
