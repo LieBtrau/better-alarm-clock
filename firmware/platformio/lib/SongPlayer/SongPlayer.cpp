@@ -33,16 +33,17 @@ void SongPlayer::playSong(byte song, byte volume)
     {
         return;
     }
-    if (song != mysong)
+    if (song != currentSong)
     {
         songChanged = true;
     }
-    mysong = song;
+    currentSong = song;
     _singleShotTimer.start(200);
 }
 
 void SongPlayer::stop()
 {
+    currentSong = 0;
     mp3.stop();
 }
 
@@ -59,7 +60,7 @@ void SongPlayer::poll()
         mp3.setVolume(myvolume);
         if (songChanged)
         {
-            mp3.loopGlobalTrack(mysong);
+            mp3.loopGlobalTrack(currentSong);
             songChanged = false;
         }
     }

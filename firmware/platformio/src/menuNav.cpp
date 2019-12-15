@@ -148,10 +148,10 @@ bool MenuMgr::loop()
       }
       if (keyReleased)
       {
+        _setupTimeoutTimer.restart();
         rotaryEncoderAttachment(lastKey);
         if (lastKey == MENU)
         {
-          _setupTimeoutTimer.restart();
           assignAlarmConfig(&alarms[ALARM2]);
           showAlarm(2);
           mgrBtnAlarm.render(true);
@@ -172,6 +172,7 @@ bool MenuMgr::loop()
       rec->poll();
       if (keyReleased)
       {
+        _setupTimeoutTimer.restart();
         rotaryEncoderAttachment(lastKey);
         if (lastKey == MENU)
         {

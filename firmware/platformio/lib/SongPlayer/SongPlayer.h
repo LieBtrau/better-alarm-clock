@@ -82,7 +82,7 @@ private:
   bool isPlaying();
   void printDetail(uint8_t type, int value);
   uint32_t _busyPin;
-  byte mysong = 0;
+  byte currentSong = 0;
   byte myvolume = 0;
   byte totalTracks = 0;
   bool songChanged = false;

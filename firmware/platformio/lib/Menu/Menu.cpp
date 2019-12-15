@@ -122,6 +122,7 @@ void PushButton::disable()
 {
     _isEnabled = false;
     _led->setVisible(false);
+    _led->clear();
 }
 
 bool PushButton::isEnabled()
