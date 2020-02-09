@@ -41,6 +41,10 @@
 		{
 			"name": "tsl2591_test",
 			"path": "tsl2591_test"
+		},
+		{
+			"name": "encoder_test",
+			"path": "encoder_test"
 		}
 	],
 	"settings": {
