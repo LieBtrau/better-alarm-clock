@@ -50,14 +50,14 @@ const byte SX1509_ADDRESS = 0x3E; // SX1509 I2C address
 SX1509 io;                        // Create an SX1509 object to be used throughout
 
 #define KEY_ROWS 4 // Number of rows in the keypad matrix
-#define KEY_COLS 3 // Number of columns in the keypad matrix
+#define KEY_COLS 2 // Number of columns in the keypad matrix
 
 // keyMap maps row/column combinations to characters:
 char keyMap[KEY_ROWS][KEY_COLS] = {
-    {'1', '2', '3'},
-    {'4', '5', '6'},
-    {'7', '8', '9'},
-    {'*', '0', '#'}};
+    {'1', '2'},
+    {'4', '5'},
+    {'7', '8'},
+    {'*', '0'}};
 
 const byte ARDUINO_INTERRUPT_PIN = PC14;
 
@@ -75,21 +75,29 @@ void setup()
   }
   Serial.println("ready");
 
-  // Scan time range: 1-128 ms, powers of 2
-  byte scanTime = 20; // Scan time per row, in ms
+   // Use the internal 2MHz oscillator.
+  // Set LED clock to 500kHz (2MHz / (2^(3-1)):
+  io.clock(INTERNAL_CLOCK_2MHZ, 3);
+
+ // Scan time range: 1-128 ms, powers of 2
+  byte scanTime = 16; // Scan time per row, in ms
   // Debounce time range: 0.5 - 64 ms (powers of 2)
-  byte debounceTime = 10; // Debounce time
+  byte debounceTime = 8; // Debounce time
   // Sleep time range: 128 ms - 8192 ms (powers of 2) 0=OFF
-  byte sleepTime = 0;
+  byte sleepTime = 128;
   // Scan time must be greater than debounce time!
   io.keypad(KEY_ROWS, KEY_COLS,
             sleepTime, scanTime, debounceTime);
   io.pinMode(4, OUTPUT); // Set LED pin to OUTPUT
   io.pinMode(5, ANALOG_OUTPUT);; // Set LED pin to OUTPUT
+  io.pinMode(6, ANALOG_OUTPUT);
+  io.analogWrite(5, 20);
   io.pinMode(7, OUTPUT);
 
   // Blink the LED pin -- ~1000 ms LOW, ~500 ms HIGH:
   io.blink(4, 1000, 500);
+  io.breathe(6, 1000, 500, 500, 250);
+  io.digitalWrite(6, LOW);
   io.digitalWrite(7, LOW);
 
   // Set up the Arduino interrupt pin as an input w/
@@ -101,62 +109,46 @@ void setup()
 // is a bit more advanced. We'll use these varaibles to check
 // if a key is being held down, or has been released. Then we
 // can kind of emulate the operation of a computer keyboard.
-unsigned int previousKeyData = 0;         // Stores last key pressed
+unsigned int previousKeyData = 0; // Stores last key pressed
 unsigned int holdCount, releaseCount = 0; // Count durations
-const unsigned int holdCountMax = 15;     // Key hold limit
+const unsigned int holdCountMax = 15; // Key hold limit
 const unsigned int releaseCountMax = 100; // Release limit
 
-void loop()
+void loop() 
 {
-  for (int brightness=0; brightness<256; brightness++)
-  {
-    // Call io.analogWrite(<pin>, <0-255>) to configure the 
-    // PWM duty cycle
-    io.analogWrite(5, brightness);
-    delay(2); // Delay 2 milliseconds
-  }
-  delay(500); // Delay half-a-second
-  
-  // Ramp brightness down, from 255-0, delay 2ms in between 
-  // analogWrite's
-  for (int brightness=255; brightness>=0; brightness--)
-  {
-    io.analogWrite(5, brightness);
-    delay(2); // Delay 2 milliseconds
-  }
-  delay(500); // Delay half-a-second
   // If the SX1509 INT pin goes low, a keypad button has
   // been pressed:
   if (digitalRead(ARDUINO_INTERRUPT_PIN) == LOW)
   {
+    Serial.println("key");
     // Use io.readKeypad() to get the raw keypad row/column
     unsigned int keyData = io.readKeypad();
-    // Then use io.getRow() and io.getCol() to parse that
-    // data into row and column values.
+	// Then use io.getRow() and io.getCol() to parse that
+	// data into row and column values.
     byte row = io.getRow(keyData);
     byte col = io.getCol(keyData);
-    // Then plug row and column into keyMap to get which
-    // key was pressed.
+	// Then plug row and column into keyMap to get which
+	// key was pressed.
     char key = keyMap[row][col];
-
-    // If it's a new key pressed
+    
+	// If it's a new key pressed
     if (keyData != previousKeyData)
     {
-      holdCount = 0;               // Reset hold-down count
+      holdCount = 0; // Reset hold-down count
       Serial.println(String(key)); // Print the key
     }
     else // If the button's beging held down:
     {
-      holdCount++;                  // Increment holdCount
+      holdCount++; // Increment holdCount
       if (holdCount > holdCountMax) // If it exceeds threshold
-        Serial.println(key);        // Print the key
+        Serial.println(key); // Print the key
     }
-    releaseCount = 0;          // Clear the releaseCount variable
+    releaseCount = 0; // Clear the releaseCount variable
     previousKeyData = keyData; // Update previousKeyData
   }
-
+  
   // If no keys have been pressed we'll continuously increment
-  //  releaseCount. Eventually creating a release, once the
+  //  releaseCount. Eventually creating a release, once the 
   // count hits the max.
   releaseCount++;
   if (releaseCount >= releaseCountMax)
@@ -164,5 +156,5 @@ void loop()
     releaseCount = 0;
     previousKeyData = 0;
   }
-  delay(1); // Gives releaseCountMax a more intuitive unit
+  delay(1);  // Gives releaseCountMax a more intuitive unit
 }
