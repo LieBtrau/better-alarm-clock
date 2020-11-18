@@ -11,6 +11,7 @@ typedef struct
 } CFG;
 
 CFG config;
+CFG emtpyConfig={0,0,"0000"};
 
 void printConfig(CFG *cfg)
 {
@@ -26,13 +27,15 @@ void setup()
   while (!Serial)
     ;
   Serial.begin(115200);
+  Serial.printf("Build %s\r\n", __TIMESTAMP__);
   Wire.begin();
   if(!eeprom1.write(0, config))
   {
     Serial.println("write failed");
     return;
   }
-  memset(&config, 0, sizeof(CFG));
+  config = emtpyConfig;
+  Serial.println("Printing empty config: ");
   printConfig(&config);
   if(eeprom1.read(0, config))
   {
