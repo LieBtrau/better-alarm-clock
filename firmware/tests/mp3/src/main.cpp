@@ -4,10 +4,6 @@
 // it expects the sd card to contain these three mp3 files
 // but doesn't care whats in them
 //
-// sd:/mp3/0001.mp3
-// sd:/mp3/0002.mp3
-// sd:/mp3/0003.mp3
-
 #include "Arduino.h"
 #include <DFMiniMp3.h>
 
@@ -17,6 +13,22 @@
 class Mp3Notify
 {
 public:
+  static void PrintlnSourceAction(DfMp3_PlaySources source, const char* action)
+  {
+    if (source & DfMp3_PlaySources_Sd) 
+    {
+        Serial.print("SD Card, ");
+    }
+    if (source & DfMp3_PlaySources_Usb) 
+    {
+        Serial.print("USB Disk, ");
+    }
+    if (source & DfMp3_PlaySources_Flash) 
+    {
+        Serial.print("Flash, ");
+    }
+    Serial.println(action);
+  }
   static void OnError(uint16_t errorCode)
   {
     // see DfMp3_Error for code meaning
@@ -24,54 +36,22 @@ public:
     Serial.print("Com Error ");
     Serial.println(errorCode);
   }
-
-  static void OnPlayFinished(uint16_t globalTrack)
+  static void OnPlayFinished(DfMp3_PlaySources source, uint16_t track)
   {
-    Serial.println();
     Serial.print("Play finished for #");
-    Serial.println(globalTrack);   
+    Serial.println(track);  
   }
-
-  static void OnCardOnline(uint16_t code)
+  static void OnPlaySourceOnline(DfMp3_PlaySources source)
   {
-    Serial.println();
-    Serial.print("Card online ");
-    Serial.println(code);     
+    PrintlnSourceAction(source, "online");
   }
-
-  static void OnUsbOnline(uint16_t code)
+  static void OnPlaySourceInserted(DfMp3_PlaySources source)
   {
-    Serial.println();
-    Serial.print("USB Disk online ");
-    Serial.println(code);     
+    PrintlnSourceAction(source, "inserted");
   }
-
-  static void OnCardInserted(uint16_t code)
+  static void OnPlaySourceRemoved(DfMp3_PlaySources source)
   {
-    Serial.println();
-    Serial.print("Card inserted ");
-    Serial.println(code); 
-  }
-
-  static void OnUsbInserted(uint16_t code)
-  {
-    Serial.println();
-    Serial.print("USB Disk inserted ");
-    Serial.println(code); 
-  }
-
-  static void OnCardRemoved(uint16_t code)
-  {
-    Serial.println();
-    Serial.print("Card removed ");
-    Serial.println(code);  
-  }
-
-  static void OnUsbRemoved(uint16_t code)
-  {
-    Serial.println();
-    Serial.print("USB Disk removed ");
-    Serial.println(code);  
+    PrintlnSourceAction(source, "removed");
   }
 };
 
@@ -98,7 +78,7 @@ void setup()
   Serial.println(volume);
   mp3.setVolume(10);
   
-  uint16_t count = mp3.getTotalTrackCount();
+  uint16_t count = mp3.getTotalTrackCount(DfMp3_PlaySource_Sd);
   Serial.print("files ");
   Serial.println(count);
   
@@ -121,17 +101,18 @@ void waitMilliseconds(uint16_t msWait)
 void loop() 
 {
   Serial.println("track 1"); 
-  mp3.playGlobalTrack(1);
+  mp3.playGlobalTrack(1); 
   
-  waitMilliseconds(10000);
+  waitMilliseconds(5000);
   
   Serial.println("track 2"); 
-  mp3.playGlobalTrack(2); // sd:/mp3/0002.mp3
+  mp3.playGlobalTrack(2); 
   
-  waitMilliseconds(10000);
+  waitMilliseconds(5000);
   
   Serial.println("track 3");
-  mp3.playGlobalTrack(3); // sd:/mp3/0002.mp3
+  mp3.playGlobalTrack(3);
   
-  waitMilliseconds(10000); 
+  waitMilliseconds(5000); 
 }
+
