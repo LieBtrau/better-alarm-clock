@@ -12,28 +12,42 @@
 // The current position is printed on output when changed.
 
 // Hardware setup:
-// Attach a rotary encoder with output pins to A2 and A3.
+// Attach a rotary encoder with output pins to PB12 and PB13.
 // The common contact should be attached to ground.
 
 #include <RotaryEncoder.h>
 
-// Setup a RoraryEncoder for pins A2 and A3:
-RotaryEncoder encoder(A2, A3);
+// Setup a RoraryEncoder for the following pins:
+const int pinClk = PB12;
+const int pinData = PB13;
+const int pinSwitch = PA0;
+RotaryEncoder encoder(pinData, pinClk);
 
 void blink()
 {
   encoder.tick(); // just call tick() to check the state.
 }
 
+void switchAction()
+{
+  Serial.printf("Switch: %s\r\n",digitalRead(pinSwitch)? "pressed": "released");
+}
+
 void setup()
 {
   Serial.begin(115200);
-  Serial.println("SimplePollRotator example for the RotaryEncoder library.");
+  while(!Serial);
+  delay(100);
+  pinMode(LED_BUILTIN, OUTPUT);
+  Serial.printf("Build %s\r\n", __TIMESTAMP__);
 
-  pinMode(A2, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(A2), blink, CHANGE);
-  pinMode(A3, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(A3), blink, CHANGE);
+  pinMode(pinClk, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(pinClk), blink, CHANGE);
+  pinMode(pinData, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(pinData), blink, CHANGE);
+  pinMode(pinSwitch, INPUT_PULLDOWN);
+  attachInterrupt(digitalPinToInterrupt(pinSwitch), switchAction, CHANGE);
+
 } // setup()
 
 // Read the current position of the encoder and print out when changed.
@@ -48,13 +62,15 @@ void loop()
     Serial.println();
     pos = newPos;
 
-    // Just to show, that long lasting procedures don't break the rotary encoder:
+   // Just to show, that long lasting procedures don't break the rotary encoder:
     // When newPos is 66 the ouput will freeze, but the turned positions will be recognized even when not polled.
     // The interrupt still works.
     // The output is correct 6.6 seconds later.
     if (newPos == 66)
       delay(6600);
   } // if
-} // loop ()
+    digitalWrite(LED_BUILTIN, digitalRead(LED_BUILTIN) ? 0 : 1);
+    delay(200);
+ } // loop ()
 
 // The End
