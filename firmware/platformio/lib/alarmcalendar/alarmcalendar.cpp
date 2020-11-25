@@ -1,5 +1,6 @@
 #include "alarmcalendar.h"
 
+
 AlarmCalendar::AlarmCalendar(byte durationMinutes): _duration(durationMinutes)
 {
 }
@@ -85,11 +86,9 @@ void AlarmCalendar::listEvents(Chronos::DateTime nowTime)
     {
         for (int i = 0; i < numUpcoming; i++)
         {
-
             Chronos::Span::Absolute startsIn = (occurrenceList[i].start - nowTime);
             if (startsIn < Chronos::Span::Days(3))
             {
-
                 // coming soon, print a detailed listing...
                 Serial.print("Event ");
                 Serial.print((int)occurrenceList[i].id);

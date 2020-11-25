@@ -26,44 +26,49 @@
 
 AlarmCalendar ac1(2);
 HardwareSerial *ser1 = &Serial;
-
-void alarmCallback(bool bIsAlarmStartNotEnd)
-{
-    ser1->println();
-    Chronos::DateTime::now().printTo(*ser1);
-    if (bIsAlarmStartNotEnd)
-    {
-        ser1->println(": Start of alarm");
-    }
-    else
-    {
-        ser1->println(": End of alarm");
-    }
-}
+bool bStarted = false;
 
 void setup()
 {
     while (!*ser1)
         ;
     ser1->begin(115200);
+    Serial.printf("Build %s\r\n", __TIMESTAMP__);
     setTime(1552892378); //Monday, March 18, 2019 6:59:38 AM
 
-    // printTo is a convenience method useful for debugging
-    // in real life, you'd use accessors and format it however you like.
     Chronos::DateTime timenow = Chronos::DateTime::now();
-    timenow.printTo(*ser1); 
+    Serial.print("Current time: ");
+    timenow.printTo(*ser1);
+    Serial.println();
     Chronos::DateTime nextAlarmTime;
     ac1.setTime(7, 0);
     ac1.enableWeekday(Chronos::Weekday::Monday);
-    ac1.setAlarmCallBack(alarmCallback);
-    if (ac1.getStartOfNextEvent(&nextAlarmTime, &timenow))
+
+    if (ac1.getStartOfNextEvent(&timenow, &nextAlarmTime))
     {
+        Serial.print("Next alarm starts on: ");
         nextAlarmTime.printTo(*ser1);
+        Serial.println();
     }
 }
 
 void loop()
 {
     Chronos::DateTime timenow = Chronos::DateTime::now();
-    ac1.loop(&timenow);
+    if (ac1.isAlarmOnGoing(&timenow))
+    {
+        if (!bStarted)
+        {
+            bStarted = true;
+            Serial.println("start");
+        }
+    }
+    else
+    {
+        if (bStarted)
+        {
+            bStarted = false;
+            Serial.println("stop");
+        }
+    }
 }
