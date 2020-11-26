@@ -94,7 +94,7 @@ void setup(void)
 {
   Serial.begin(115200);
   
-  Serial.println(F("Starting Adafruit TSL2591 Test!"));
+  Serial.printf("Build %s\r\n", __TIMESTAMP__);
   
   if (tsl.begin()) 
   {
