@@ -1,20 +1,22 @@
 #include "DisplayBrightness.h"
+#include "AsyncDelay.h"
 
-DisplayBrightness::DisplayBrightness(byte pir_pin) : _pir_pin(pir_pin)
+DisplayBrightness::DisplayBrightness(PirSensor *ps, Adafruit_TSL2591 *tsl) : _ps(ps),
+                                                                             _tsl(tsl),
+                                                                             _ambientLightSenseTimer(LIGHT_SENSOR_READ_INTERVAL, AsyncDelay::MILLIS),
+                                                                             _displayOnTimer(DISPLAY_DARK_TIMEOUT, AsyncDelay::MILLIS)
 {
 }
 
 bool DisplayBrightness::init()
 {
-    if (!tsl.begin())
+    if (!_tsl->begin())
     {
         return false;
     }
-    _ambientLightSenseTimer.start(10000);
-    _displayOffTimer.start(DISPLAY_DARK_TIMEOUT);
-    tsl.setGain(TSL2591_GAIN_MED);                // 25x gain
-    tsl.setTiming(TSL2591_INTEGRATIONTIME_600MS); // longest integration time (dim light)
-    pinMode(_pir_pin, INPUT);
+    _tsl->setGain(TSL2591_GAIN_MED);                // 25x gain
+    _tsl->setTiming(TSL2591_INTEGRATIONTIME_600MS); // longest integration time (dim light)
+    _ps->init();
     return true;
 }
 
@@ -27,16 +29,12 @@ bool DisplayBrightness::init()
  */
 bool DisplayBrightness::isDisplayOn(bool buttonPressed)
 {
-    if (movementDetected() || buttonPressed || _lastBrightness > 0)
+    if (_ps->movementDetected() || buttonPressed || _lastBrightness > 0)
     {
-        _displayOffTimer.restart();
+        _displayOnTimer.restart();
         return true;
     }
-    if(!_displayOffTimer.justFinished() && _displayOffTimer.isRunning())
-    {
-        return true;
-    }
-    return false;
+    return !_displayOnTimer.isExpired();
 }
 
 /**
@@ -49,16 +47,16 @@ bool DisplayBrightness::isDisplayOn(bool buttonPressed)
  */
 bool DisplayBrightness::getDisplayBrightness(byte &brightness)
 {
-    if (!_ambientLightSenseTimer.justFinished())
+    if (!_ambientLightSenseTimer.isExpired())
     {
         return false;
     }
     _ambientLightSenseTimer.restart();
-    uint32_t lum = tsl.getFullLuminosity();
+    uint32_t lum = _tsl->getFullLuminosity();
     uint16_t ir, full;
     ir = lum >> 16;
     full = lum & 0xFFFF;
-    float luxlevel = tsl.calculateLux(full, ir);
+    float luxlevel = _tsl->calculateLux(full, ir);
     if (luxlevel == 0)
     {
         return false;
@@ -76,9 +74,4 @@ bool DisplayBrightness::getDisplayBrightness(byte &brightness)
     }
     _lastBrightness = brightness;
     return true;
-}
-
-bool DisplayBrightness::movementDetected()
-{
-    return digitalRead(_pir_pin);
 }

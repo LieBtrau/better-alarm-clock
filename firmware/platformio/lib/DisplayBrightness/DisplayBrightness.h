@@ -1,25 +1,27 @@
 #pragma once
 
-#include "millisDelay.h"
+#include "AsyncDelay.h"
 #include <Adafruit_Sensor.h>
 #include "Adafruit_TSL2591.h"
+#include "PirSensor.h"
 
 class DisplayBrightness
 {
-    public:
-    DisplayBrightness(byte pir_pin);
+public:
+    DisplayBrightness(PirSensor* ps, Adafruit_TSL2591* tsl);
     bool init();
-    bool getDisplayBrightness(byte& brightness);
+    bool getDisplayBrightness(byte &brightness);
     bool isDisplayOn(bool buttonPressed);
+
 private:
+    const int LIGHT_SENSOR_READ_INTERVAL = 10000;
     const int DISPLAY_DARK_TIMEOUT = 15000;
     bool movementDetected();
-    byte _displayBrightness=0xFF;
-    byte _desiredDisplayBrightness=5;
-    millisDelay _clockRefreshTimer;
-    millisDelay _displayOffTimer;
-    millisDelay _ambientLightSenseTimer;
-    Adafruit_TSL2591 tsl = Adafruit_TSL2591(2591);
-    byte _pir_pin;
-    int _lastBrightness=0;
+    byte _displayBrightness = 0xFF;
+    byte _desiredDisplayBrightness = 5;
+    PirSensor* _ps;
+    Adafruit_TSL2591* _tsl;
+    AsyncDelay _ambientLightSenseTimer;     //Control how often the light sensor is read
+    AsyncDelay _displayOnTimer;             //Control how long the display should be on
+    int _lastBrightness = 0;
 };
