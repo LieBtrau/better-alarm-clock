@@ -20,3 +20,8 @@ const byte pin_PIR = PB5;
 //Serial2
 const byte pin_TX2 = PA2;
 const byte pin_RX2 = PA3;
+
+//Sunrise simulation
+const byte pin_pwmh = PB8;
+const byte pin_pwml = PB9;
+const byte pin_en_sun = PB4;
