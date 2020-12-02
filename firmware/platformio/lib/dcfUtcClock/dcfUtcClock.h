@@ -4,7 +4,7 @@
 class DcfUtcClock
 {
 public:
-    DcfUtcClock(uint32_t dcfPin, bool activeHigh);
+    DcfUtcClock(uint32_t dcfPin, bool activeHigh, uint32_t disableDcfPin);
     void init();
     bool update();
     bool isLastSyncSuccessful();
@@ -14,4 +14,5 @@ private:
     bool dcfReady();
     Chronos::DateTime lastSuccessfulSync;
     RobustDcf _rd;
+    uint32_t _disableDcfPin;
 };

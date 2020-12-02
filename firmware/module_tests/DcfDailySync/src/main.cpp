@@ -3,10 +3,11 @@
  */
 
 #include "dcfUtcClock.h"
+#include "pins.h"
+
 HardwareSerial *ser1 = &Serial;
 
-DcfUtcClock dcfclock(PA8, true);
-const byte pinDisableDCF = PB1;
+DcfUtcClock dcfclock(pin_DCF, true, pin_nEn_DCF);
 // Central European Time (Frankfurt, Paris)
 TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 120}; // Central European Summer Time
 TimeChangeRule CET = {"CET ", Last, Sun, Oct, 3, 60};   // Central European Standard Time
@@ -19,8 +20,6 @@ void setup()
         ;
     ser1->begin(115200);
     ser1->printf("Build %s\r\n", __TIMESTAMP__);
-    pinMode(pinDisableDCF, OUTPUT);
-    digitalWrite(pinDisableDCF, LOW);
     dcfclock.init();
 }
 
