@@ -19,14 +19,12 @@ void SevenSegmentField::show()
 {
     _panel->writeDigitNum(_leftPos, (_data / 10) % 10);
     _panel->writeDigitNum(_leftPos + 1, _data % 10);
-    _panel->writeDisplay();
 }
 
 void SevenSegmentField::hide()
 {
     _panel->writeDigitRaw(_leftPos, 0x00);
     _panel->writeDigitRaw(_leftPos + 1, 0x00);
-    _panel->writeDisplay();
 }
 
 void SevenSegmentField::setValue(byte data)

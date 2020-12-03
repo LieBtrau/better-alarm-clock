@@ -46,3 +46,8 @@ hardware/BRD191216/
 hardware/BRD200110/
 
 **/.vscode
+firmware/hardware_tests/workspace-test.code-workspace
+firmware/tests/workspace-test.code-workspace
+hardware/mosfet_or_ing.raw
+hardware/BRD200330/Gerber_BRD200330.zip
+firmware/platformio/.vscode/extensions.json
