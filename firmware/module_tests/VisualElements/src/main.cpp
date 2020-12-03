@@ -32,22 +32,19 @@ void loop()
   alarmHoursDisplay.flash();
   // put your main code here, to run repeatedly:
   alarmHoursDisplay.setValue(hours);
-  // delay(100);
-  // alarmHoursDisplay.hide();
-  // delay(100);
-  alarmHoursDisplay.render();
-  // delay(100);
-
   alarmMinutesDisplay.setValue(minutes);
   // delay(100);
   // alarmMinutesDisplay.hide();
   // delay(100);
-  alarmMinutesDisplay.render();
-  delay(100);
   alarmMinutesDisplay.setBrightness(minutes & 0xF);
   if (++minutes > 59)
   {
     hours = hours == 23 ? 0 : hours + 1;
     minutes = 0;
   }
+  if(alarmMinutesDisplay.render() | alarmHoursDisplay.render()) //don't use double |, because both statements need to be executed.
+  {
+        matrix.writeDisplay();
+  }
+  delay(100);
 }
