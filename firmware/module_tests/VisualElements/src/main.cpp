@@ -15,6 +15,8 @@ Adafruit_7segment sevenSegment = Adafruit_7segment();
 SevenSegmentField alarmHoursDisplay(&sevenSegment);
 SevenSegmentField alarmMinutesDisplay(&sevenSegment);
 ClockFace cf(&matrix);
+LedMatrixField lmf(&matrix, {0, 0}, {11, 2}, 10);
+LedMatrixSelect lms(&matrix, {0, 7}, {11, 9}, 10);
 
 byte hours = 0;
 byte minutes = 0;
@@ -37,7 +39,9 @@ void setup()
   }
   alarmHoursDisplay.setVisible(true);
   alarmMinutesDisplay.setVisible(true);
-  cf.setVisible(true);
+  cf.setVisible(false);
+  lmf.setVisible(true);
+  lms.setVisible(true);
 }
 
 void loop()
@@ -46,7 +50,9 @@ void loop()
   // put your main code here, to run repeatedly:
   alarmHoursDisplay.setValue(hours);
   alarmMinutesDisplay.setValue(minutes);
-  cf.setTime(hours, minutes, true);
+  //cf.setTime(hours, minutes, true);
+  lmf.setValue(minutes/6);
+  lms.setValue(minutes/6);
 
   sevenSegment.setBrightness(minutes & 0xF);
   matrix.setIntensity(minutes & 0xF);
@@ -61,7 +67,7 @@ void loop()
   {
     sevenSegment.writeDisplay();
   }
-  if(cf.render())
+  if(cf.render() | lmf.render() | lms.render())
   {
     matrix.write();
   }

@@ -6,6 +6,12 @@
 #include "AsyncDelay.h"
 #include "Max72xxPanel.h"
 
+struct Coordinate
+{
+    byte x = 0;
+    byte y = 0;
+};
+
 class MenuOut
 {
 public:
@@ -60,4 +66,40 @@ private:
     byte _hours = 0;
     byte _minutes = 0;
     bool _synced = false;
+};
+
+class LedMatrixField : public MenuOut
+{
+public:
+    LedMatrixField(Max72xxPanel *panel, Coordinate topleft, Coordinate botRight, byte max);
+    void setValue(byte cur);
+
+protected:
+    virtual void show();
+    virtual void hide();
+
+private:
+    Max72xxPanel *_panel;
+    Coordinate _topleft;
+    Coordinate _botRight;
+    byte _max;
+    byte _cur;
+};
+
+class LedMatrixSelect : public MenuOut
+{
+public:
+    LedMatrixSelect(Max72xxPanel *panel, Coordinate topleft, Coordinate botRight, byte max);
+    void setValue(byte cur);
+
+protected:
+    virtual void show();
+    virtual void hide();
+
+private:
+    Max72xxPanel *_panel;
+    Coordinate _topleft;
+    Coordinate _botRight;
+    byte _max;
+    byte _cur;
 };
