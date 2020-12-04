@@ -11,7 +11,6 @@ bool SevenSegmentField::init(byte leftPos)
         return false;
     }
     _leftPos = leftPos;
-    _panel->begin(0x70); // pass in the address
     return true;
 }
 
@@ -30,11 +29,5 @@ void SevenSegmentField::hide()
 void SevenSegmentField::setValue(byte data)
 {
     _data = data;
-    updateNeeded=true;
-}
-
-void SevenSegmentField::setBrightness(byte brightness)
-{
-    _panel->setBrightness(brightness & 0xF);
     updateNeeded=true;
 }

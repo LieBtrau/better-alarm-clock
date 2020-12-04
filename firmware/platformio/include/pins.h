@@ -19,7 +19,7 @@ const byte pinSDA = PB7;
 //SPI
 const byte pinMOSI = PA7;
 const byte pinSCLK = PA5;
-const byte pinCS = PA1;
+const byte pinCS = PA4;
 
 //Serial2
 const byte pin_TX2 = PA2;
