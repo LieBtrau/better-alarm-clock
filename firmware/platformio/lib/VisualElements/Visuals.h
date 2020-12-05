@@ -5,6 +5,7 @@
 #include "Adafruit_LEDBackpack.h"
 #include "AsyncDelay.h"
 #include "Max72xxPanel.h"
+#include <SparkFunSX1509.h>
 
 struct Coordinate
 {
@@ -22,8 +23,8 @@ public:
 
 protected:
     virtual void show() = 0;  //routine that will write peripheral to show data
-    bool updateNeeded = true; //IO-hardware must be written to update the visuals, introduced so that there would be only hardware call for all visuals belonging to the same peripheral.
     virtual void hide() = 0;  //routine that will write peripheral to hide data
+    bool updateNeeded = true; //IO-hardware must be written to update the visuals, introduced so that there would be only hardware call for all visuals belonging to the same peripheral.
 
 private:
     const unsigned long FLASH_INTERVAL = 500;
@@ -35,15 +36,14 @@ private:
 class SevenSegmentField : public MenuOut
 {
 public:
-    SevenSegmentField(Adafruit_7segment *panel);
-    bool init(byte leftPos);
+    SevenSegmentField(Adafruit_7segment *panel, byte leftPos);
     void setValue(byte data);
-    virtual void hide();
     static const byte LEFTPOS = 0;
     static const byte RIGHTPOS = 3;
 
 protected:
     virtual void show();
+    virtual void hide();
 
 private:
     Adafruit_7segment *_panel;
@@ -102,4 +102,22 @@ private:
     Coordinate _botRight;
     byte _max;
     byte _cur;
+};
+
+class LedToggle : public MenuOut
+{
+public:
+    LedToggle(SX1509* io, byte pinNr);
+    void init();
+    void setBrightness(byte value);
+
+protected:
+    virtual void show();
+    virtual void hide();
+
+private:
+    SX1509* _io;
+    byte _pinNr;
+    bool _val;
+    byte _brightness;
 };

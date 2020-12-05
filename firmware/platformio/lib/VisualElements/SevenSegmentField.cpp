@@ -1,17 +1,12 @@
 #include "Visuals.h"
 
-SevenSegmentField::SevenSegmentField(Adafruit_7segment *panel) : _panel(panel)
-{
-}
-
-bool SevenSegmentField::init(byte leftPos)
+SevenSegmentField::SevenSegmentField(Adafruit_7segment *panel, byte leftPos) : _panel(panel)
 {
     if (leftPos < 0 || leftPos > 4)
     {
-        return false;
+        return;
     }
     _leftPos = leftPos;
-    return true;
 }
 
 void SevenSegmentField::show()
