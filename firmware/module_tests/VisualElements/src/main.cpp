@@ -7,33 +7,36 @@
 #include <SparkFunSX1509.h>
 #include "pins.h"
 
-int numberOfHorizontalDisplays = 4;
-int numberOfVerticalDisplays = 2;
-
-Max72xxPanel matrix = Max72xxPanel(pinMOSI, pinSCLK, pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
-Adafruit_7segment sevenSegment = Adafruit_7segment();
+const int numberOfHorizontalDisplays = 4;
+const int numberOfVerticalDisplays = 2;
 const byte IO1_SX1509_ADDRESS = 0x3E; // SX1509 I2C address
 const byte IO2_SX1509_ADDRESS = 0x3F; // SX1509 I2C address
-SX1509 io1, io2;                      // Create an SX1509 object to be used throughout
 
-SevenSegmentField alarmHoursDisplay(&sevenSegment,0);
-SevenSegmentField alarmMinutesDisplay(&sevenSegment,3);
+//Hardware peripherals
+Max72xxPanel matrix = Max72xxPanel(pinMOSI, pinSCLK, pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
+Adafruit_7segment sevenSegment = Adafruit_7segment();
+SX1509 io1, io2; // Create an SX1509 object to be used throughout
+LedDriverDimming ldd(pin_en_sun, pin_pwmh, pin_pwml);
+
+//Visual elements
+SevenSegmentField alarmHoursDisplay(&sevenSegment, 0);
+SevenSegmentField alarmMinutesDisplay(&sevenSegment, 3);
 ClockFace cf(&matrix);
 LedMatrixField lmf(&matrix, {0, 0}, {11, 2}, 10);
 LedMatrixSelect lms(&matrix, {0, 7}, {11, 9}, 10);
 LedToggle lt14(&io1, 4);
 LedToggle lt25(&io2, 5);
+SunRiseEmulation sre(&ldd);
 
 byte hours = 0;
 byte minutes = 0;
 
 void setup()
 {
-  // put your setup code here, to run once:
-#ifndef __AVR_ATtiny85__
   Serial.begin(115200);
   Serial.printf("Build %s\r\n", __TIMESTAMP__);
-#endif
+
+  //Initialize hardware peripherals
   matrix.init();
   sevenSegment.begin(0x70);
   if (!io1.begin(IO1_SX1509_ADDRESS))
@@ -50,6 +53,9 @@ void setup()
   }
   io1.clock(INTERNAL_CLOCK_2MHZ, 3);
   io2.clock(INTERNAL_CLOCK_2MHZ, 3);
+  ldd.init();
+
+  //Initialize visual elements
   lt14.init();
   lt25.init();
 
@@ -60,6 +66,7 @@ void setup()
   lms.setVisible(true);
   lt14.setVisible(true);
   lt25.setVisible(true);
+  sre.setVisible(true);
 }
 
 void loop()
@@ -76,6 +83,7 @@ void loop()
   matrix.setIntensity(minutes & 0xF);
   lt14.setBrightness(minutes << 2);
   lt25.setBrightness(minutes << 2);
+  sre.setBrightness(minutes * 100 / 60);
 
   if (++minutes > 59)
   {
@@ -93,5 +101,6 @@ void loop()
   }
   lt14.render();
   lt25.render();
+  sre.render();
   delay(100);
 }

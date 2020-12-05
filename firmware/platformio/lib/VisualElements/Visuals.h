@@ -6,6 +6,7 @@
 #include "AsyncDelay.h"
 #include "Max72xxPanel.h"
 #include <SparkFunSX1509.h>
+#include "LedDriverDimming.h"
 
 struct Coordinate
 {
@@ -118,6 +119,21 @@ protected:
 private:
     SX1509* _io;
     byte _pinNr;
-    bool _val;
     byte _brightness;
 };
+
+class SunRiseEmulation : public MenuOut
+{
+public:
+    SunRiseEmulation(LedDriverDimming* led);
+    void setBrightness(float value);
+
+protected:
+    virtual void show();
+    virtual void hide();
+
+private:
+    LedDriverDimming* _led;
+    float _brightness;
+};
+
