@@ -6,11 +6,16 @@ const byte pinDCF = PA8;
 const byte pin_nEn_DCF = PB1;
 
 //GPIO
-const byte pinIRQ = PB1;
+const byte pin_KeyPad_IRQ = PB11;
 const byte pinPlayBusy = PA4;
 const byte pin_DCF = PA8;
 const byte pin_TRG = PB15;
 const byte pin_PIR = PB5;
+
+//Rotary Encoder
+const byte pin_Clk = PB12;
+const byte pin_Data = PB13;
+
 
 //I²C
 const byte pinSCL = PB6;

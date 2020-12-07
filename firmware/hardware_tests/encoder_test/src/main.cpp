@@ -41,9 +41,7 @@ void setup()
   pinMode(LED_BUILTIN, OUTPUT);
   Serial.printf("Build %s\r\n", __TIMESTAMP__);
 
-  pinMode(pinClk, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(pinClk), blink, CHANGE);
-  pinMode(pinData, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(pinData), blink, CHANGE);
   pinMode(pinSwitch, INPUT_PULLDOWN);
   attachInterrupt(digitalPinToInterrupt(pinSwitch), switchAction, CHANGE);
