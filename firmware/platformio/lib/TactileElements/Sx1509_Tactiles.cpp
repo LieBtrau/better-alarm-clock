@@ -1,29 +1,9 @@
 #include "Tactiles.h"
 
-static Sx1509_Tactiles *pSt = nullptr;
-
-void irq_keyPad()
-{
-    pSt->processIrq();
-}
-
-//Will only be called as long a key is pressed.
-void Sx1509_Tactiles::processIrq()
-{
-    int keyData = _sx->readKeypad();
-    if (keyData != _previousKeyData)
-    {
-        _newKey = true;
-    }
-    _keyReleaseTimeout.restart();
-    _previousKeyData = keyData;
-}
-
 Sx1509_Tactiles::Sx1509_Tactiles(SX1509 *sx, byte pinIrq) : _sx(sx),
                                                             _pin_irq(pinIrq),
                                                             _keyReleaseTimeout(100, AsyncDelay::MILLIS)
 {
-    pSt = this;
 }
 
 void Sx1509_Tactiles::init(byte keyRows, byte keyCols)
@@ -37,21 +17,27 @@ void Sx1509_Tactiles::init(byte keyRows, byte keyCols)
     // Scan time must be greater than debounce time!
     _sx->keypad(keyRows, keyCols, sleepTime, scanTime, debounceTime);
     pinMode(_pin_irq, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(_pin_irq), irq_keyPad, FALLING);
 }
 
 //\return true when new key pressed or when a key is released
 bool Sx1509_Tactiles::isChanged()
 {
-    if (_newKey)
+    //I preferred using IRQ instead of polling this line, but that didn't work out well.
+    if (digitalRead(_pin_irq)==LOW)
     {
-        _newKey = false;
-        return true;
+        //IRQ low as long as a key is being pressed
+        int keyData = _sx->readKeypad();
+        _keyReleaseTimeout.restart();
+        if (keyData != _previousKeyData)
+        {
+            _previousKeyData = keyData;
+            return true;    //Key pressed
+        }
     }
     if (_keyReleaseTimeout.isExpired() && _previousKeyData != 0)
     {
         _previousKeyData = 0; //so that the same key can be pressed again.
-        return true;
+        return true; //Key released
     }
     return false;
 }
