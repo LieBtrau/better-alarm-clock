@@ -9,6 +9,7 @@ SX1509 io1, io2;
 //Tactile elements
 RotaryEncoder_Tactiles ret(pin_Data, pin_Clk);
 Sx1509_Tactiles st(&io1, pin_KeyPad_IRQ);
+Gpio_Tactiles gpiot(pin_switch, INPUT_PULLDOWN);
 
 void setup()
 {
@@ -54,5 +55,9 @@ void loop()
   if(st.isChanged())
   {
     Serial.println(st.getValue());
+  }
+  if(gpiot.isChanged())
+  {
+    Serial.println(gpiot.getValue());
   }
 }

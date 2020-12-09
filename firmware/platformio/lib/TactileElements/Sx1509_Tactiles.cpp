@@ -19,7 +19,9 @@ void Sx1509_Tactiles::processIrq()
     _previousKeyData = keyData;
 }
 
-Sx1509_Tactiles::Sx1509_Tactiles(SX1509 *sx, byte pinIrq) : _sx(sx), _pin_irq(pinIrq), _keyReleaseTimeout(100, AsyncDelay::MILLIS)
+Sx1509_Tactiles::Sx1509_Tactiles(SX1509 *sx, byte pinIrq) : _sx(sx),
+                                                            _pin_irq(pinIrq),
+                                                            _keyReleaseTimeout(100, AsyncDelay::MILLIS)
 {
     pSt = this;
 }
@@ -46,9 +48,9 @@ bool Sx1509_Tactiles::isChanged()
         _newKey = false;
         return true;
     }
-    if(_keyReleaseTimeout.isExpired() && _previousKeyData!=0)
+    if (_keyReleaseTimeout.isExpired() && _previousKeyData != 0)
     {
-        _previousKeyData=0; //so that the same key can be pressed again.
+        _previousKeyData = 0; //so that the same key can be pressed again.
         return true;
     }
     return false;

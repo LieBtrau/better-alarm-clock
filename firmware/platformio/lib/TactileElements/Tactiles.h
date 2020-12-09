@@ -42,3 +42,16 @@ private:
     bool _newKey = false;
     AsyncDelay _keyReleaseTimeout;
 };
+
+//The Bounce2 library could have been used, but it requires polling the gpio status.  I prefer interrupts.
+class Gpio_Tactiles : Tactiles
+{
+public:
+    Gpio_Tactiles(byte pinGpio, int pin_mode);
+    ~Gpio_Tactiles();
+    virtual bool isChanged();
+    virtual int getValue();
+private:
+    byte _pinGpio=0;
+    int _lastGpioState=0;
+};

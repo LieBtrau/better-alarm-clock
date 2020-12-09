@@ -2,7 +2,7 @@
 
 static RotaryEncoder *pLocalRe = nullptr;
 
-void blink()
+static void blink()
 {
     pLocalRe->tick(); // just call tick() to check the state.
 }
