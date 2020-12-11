@@ -26,6 +26,7 @@ void loop()
 
   // lmf_SunLightBrightness.setValue(minutes / 6);
   // lms_SongChoice.setValue(minutes / 6);
+  showAlarmDisplay((ALARM_DISPLAY)(minutes & 0x3));
 
   setBrightness(minutes & 0xF);
   //sre.setBrightness(minutes * 100 / 60);

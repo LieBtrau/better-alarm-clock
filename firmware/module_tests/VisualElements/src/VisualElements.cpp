@@ -138,3 +138,28 @@ void showWeekDay(WEEKDAYS wd)
         weekdays[i]->setVisible(wd & (1 << i) ? true : false);
     }
 }
+
+void showAlarmDisplay(ALARM_DISPLAY ad)
+{
+    switch (ad)
+    {
+    case AL_BOTH_OFF:
+        alarmHoursDisplay.setVisible(false);
+        alarmMinutesDisplay.setVisible(false);
+        break;
+    case AL_BOTH_ON:
+        alarmHoursDisplay.setVisible(true);
+        alarmMinutesDisplay.setVisible(true);
+        break;
+    case AL_HOURS_ONLY:
+        alarmHoursDisplay.setVisible(true);
+        alarmMinutesDisplay.setVisible(false);
+        break;
+    case AL_MINUTES_ONLY:
+        alarmHoursDisplay.setVisible(false);
+        alarmMinutesDisplay.setVisible(true);
+        break;
+    default:
+        break;
+    }
+}
