@@ -11,15 +11,21 @@ MenuOut::MenuOut()
  */
 bool MenuOut::render(bool forceRender)
 {
+    if (_flashMode && _flashTimer.isExpired())
+    {
+        _flashTimer.restart();
+        setVisible(flashVisible);
+        flashVisible = !flashVisible;
+    }
     if (updateNeeded || forceRender)
     {
-        if (!visible)
+        if (visible)
         {
-            hide();
+            show();
         }
         else
         {
-            show();
+            hide();
         }
     }
     bool retVal = updateNeeded;
@@ -37,14 +43,7 @@ void MenuOut::setVisible(bool toVisible)
     updateNeeded = true;
 }
 
-bool MenuOut::flash()
+void MenuOut::setFlashMode(bool isFlashing)
 {
-    if (!_flashTimer.isExpired())
-    {
-        return false;
-    }
-    _flashTimer.restart();
-    setVisible(flashVisible);
-    flashVisible = !flashVisible;
-    return true;
+    _flashMode = isFlashing;
 }

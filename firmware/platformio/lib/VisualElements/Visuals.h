@@ -19,7 +19,7 @@ class MenuOut
 public:
     MenuOut();
     bool render(bool forceRender = false);
-    bool flash();
+    void setFlashMode(bool isFlashing);
     void setVisible(bool isVisible);
 
 protected:
@@ -30,6 +30,7 @@ protected:
 private:
     const unsigned long FLASH_INTERVAL = 500;
     bool visible = false;
+    bool _flashMode = false;
     bool flashVisible = true;
     AsyncDelay _flashTimer;
 };
@@ -57,6 +58,7 @@ class ClockFace : public MenuOut
 public:
     ClockFace(Max72xxPanel *panel);
     void setTime(byte hours, byte minutes, bool synced);
+    void setValidity(bool timeIsValid);
 
 protected:
     virtual void show();
@@ -67,6 +69,7 @@ private:
     byte _hours = 0;
     byte _minutes = 0;
     bool _synced = false;
+    bool _timeIsValid=false;
 };
 
 class LedMatrixField : public MenuOut
