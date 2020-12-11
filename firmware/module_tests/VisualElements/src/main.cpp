@@ -19,15 +19,8 @@ void setup()
 
 void loop()
 {
-  // alarmHoursDisplay.setFlashMode();
-  // // put your main code here, to run repeatedly:
-  // alarmHoursDisplay.setValue(hours);
-  // alarmMinutesDisplay.setValue(minutes);
-
-  // lmf_SunLightBrightness.setValue(minutes / 6);
-  // lms_SongChoice.setValue(minutes / 6);
   showAlarmDisplay((ALARM_DISPLAY)(minutes & 0x3));
-
+  showAlarmTime(hours, minutes);
   setBrightness(minutes & 0xF);
   //sre.setBrightness(minutes * 100 / 60);
   showWeekDay((WEEKDAYS)minutes);

@@ -19,12 +19,15 @@ SX1509 io1, io2; // Create an SX1509 object to be used throughout
 LedDriverDimming ldd(pin_en_sun, pin_pwmh, pin_pwml);
 
 //Visual elements
+//--Alarm LCD elements
 SevenSegmentField alarmHoursDisplay(&sevenSegment, 0);
 SevenSegmentField alarmMinutesDisplay(&sevenSegment, 3);
+//--LED Array elements
 ClockFace cf(&matrix);
 LedMatrixField lmf_SunLightBrightness(&matrix, {0, 0}, {11, 2}, 10);
 LedMatrixField lmf_Volume(&matrix, {0, 7}, {11, 9}, 10);
 LedMatrixSelect lms_SongChoice(&matrix, {0, 13}, {11, 15}, 10);
+//--LED elements
 LedToggle ltSunLight(&io2, 4);
 LedToggle ltVolume(&io2, 5);
 LedToggle ltSongChoice(&io2, 6);
@@ -37,6 +40,7 @@ LedToggle ltFriday(&io1, 12);
 LedToggle ltSaturday(&io1, 13);
 LedToggle ltSunday(&io1, 14);
 LedToggle *weekdays[7] = {&ltMonday, &ltTuesday, &ltWednesday, &ltThursday, &ltFriday, &ltSaturday, &ltSunday};
+//--LED panel
 SunRiseEmulation sre(&ldd);
 
 bool initVisualElements()
@@ -99,13 +103,6 @@ void setBrightness(byte brightness)
     ltSunday.setBrightness(brightness << 2);
 }
 
-void showTime(byte hours, byte minutes, bool synced)
-{
-    cf.setTime(hours, minutes, true);
-    cf.setFlashMode(false);
-    cf.setValidity(true);
-}
-
 void redraw()
 {
     if (alarmMinutesDisplay.render() | alarmHoursDisplay.render()) //don't use double |, because both statements need to be executed.
@@ -162,4 +159,49 @@ void showAlarmDisplay(ALARM_DISPLAY ad)
     default:
         break;
     }
+}
+
+void showAlarmTime(byte hours, byte minutes)
+{
+    alarmHoursDisplay.setValue(hours);
+    alarmMinutesDisplay.setValue(minutes);
+}
+
+void showTime(byte hours, byte minutes, bool synced)
+{
+    cf.setVisible(true);
+    lmf_SunLightBrightness.setVisible(false);
+    lmf_Volume.setVisible(false);
+    lms_SongChoice.setVisible(false);
+
+    cf.setTime(hours, minutes, true);
+    cf.setFlashMode(false);
+    cf.setValidity(true);
+}
+
+void showSunlightSetting(byte value)
+{
+    cf.setVisible(false);
+    lmf_SunLightBrightness.setVisible(true);
+    lmf_Volume.setVisible(false);
+    lms_SongChoice.setVisible(false);
+
+}
+
+void showSongVolume(byte value)
+{
+    cf.setVisible(false);
+    lmf_SunLightBrightness.setVisible(false);
+    lmf_Volume.setVisible(true);
+    lms_SongChoice.setVisible(false);
+
+}
+
+void showSongChoice(byte value)
+{
+    cf.setVisible(false);
+    lmf_SunLightBrightness.setVisible(false);
+    lmf_Volume.setVisible(false);
+    lms_SongChoice.setVisible(true);
+
 }
