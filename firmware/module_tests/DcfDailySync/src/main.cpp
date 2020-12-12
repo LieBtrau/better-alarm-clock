@@ -1,18 +1,10 @@
 /*  Show UTC time
  *  Update UTC time once a day at 2AM.
  */
-
-#include "dcfUtcClock.h"
-#include "pins.h"
+#include "Arduino.h"
+#include "TimeSync.h"
 
 HardwareSerial *ser1 = &Serial;
-
-DcfUtcClock dcfclock(pin_DCF, true, pin_nEn_DCF);
-// Central European Time (Frankfurt, Paris)
-TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 120}; // Central European Summer Time
-TimeChangeRule CET = {"CET ", Last, Sun, Oct, 3, 60};   // Central European Standard Time
-Timezone CE(CEST, CET);
-byte lastMinute = 0;
 
 void setup()
 {
@@ -20,25 +12,19 @@ void setup()
         ;
     ser1->begin(115200);
     ser1->printf("Build %s\r\n", __TIMESTAMP__);
-    dcfclock.init();
+    initClock();
 }
 
 void loop()
 {
-    if (dcfclock.update())
+    byte hours, minutes;
+    if (getLocalTime(hours, minutes))
     {
-        time_t utc = now();
-        TimeChangeRule *tcr; // pointer to the time change rule, use to get the TZ abbrev
-        time_t t = CE.toLocal(utc, &tcr);
-        if (lastMinute != minute(t))
-        {
-            lastMinute = minute(t);
-            ser1->printf("%02d:%02d\r\n", hour(t), lastMinute);
-        }
+        ser1->printf("%02d%s%02d\r\n", hours, isStillSynced ? ":" : "v", minutes);
     }
     else
     {
         ser1->print(".");
-        delay(1000);
     }
+    delay(1000);
 }

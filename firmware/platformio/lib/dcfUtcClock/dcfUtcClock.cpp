@@ -20,7 +20,8 @@ void DcfUtcClock::init()
     setSyncProvider(getRtcTime); // set time source for time.h
 }
 
-/**  \brief returns true when MCU-time is valid
+/**  \brief  Needs to be called regularly to run the clock update process
+ *   \return true when MCU-time is valid
  */
 bool DcfUtcClock::update()
 {

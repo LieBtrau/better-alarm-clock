@@ -2,7 +2,7 @@
 #include "Arduino.h"
 
 //DCF
-const byte pinDCF = PA8;
+const byte pin_DCF = PA8;
 const byte pin_nEn_DCF = PB1;
 
 //GPIO
