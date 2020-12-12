@@ -1,5 +1,6 @@
 #pragma once
 
 void initClock();
-bool getLocalTime(byte& hours, byte& minutes);
+bool getLocalTimeSeconds(time_t& localTime);
+bool splitTime(time_t t, byte &hours, byte &minutes);
 bool isStillSynced();

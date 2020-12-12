@@ -17,7 +17,7 @@ void initClock()
  *  \brief Run this function regularly to keep clock up to date, especially when no sync has been acquired yet.
  *  \return true when time is valid and if it has changed since the last call.
  */
-bool getLocalTime(byte &hours, byte &minutes)
+bool getLocalTimeSeconds(time_t& locTime)
 {
     if (!dcfclock.update())
     {
@@ -25,7 +25,12 @@ bool getLocalTime(byte &hours, byte &minutes)
     }
     time_t utc = now();
     TimeChangeRule *tcr; // pointer to the time change rule, use to get the TZ abbrev
-    time_t t = CE.toLocal(utc, &tcr);
+    locTime = CE.toLocal(utc, &tcr);
+    return true;
+}
+
+bool splitTime(time_t t, byte &hours, byte &minutes)
+{
     if (lastMinute == minute(t))
     {
         return false;

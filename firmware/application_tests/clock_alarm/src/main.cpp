@@ -26,10 +26,11 @@ void setup()
 void loop()
 {
     byte hours, minutes;
-    if (getLocalTime(hours, minutes))
+    time_t localTime;
+    if (getLocalTimeSeconds(localTime) && splitTime(localTime, hours, minutes))
     {
         showTime(hours, minutes, isStillSynced());
-        ser1->printf("%02d%s%02d\r\n", hours, isStillSynced() ? ":" : "v", minutes);
+        ser1->printf("%02d%s%02d\r\n", hours, isStillSynced ? ":" : "v", minutes);
     }
     else
     {
