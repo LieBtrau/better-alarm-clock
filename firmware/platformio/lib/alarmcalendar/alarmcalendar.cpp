@@ -1,7 +1,6 @@
 #include "alarmcalendar.h"
 
-
-AlarmCalendar::AlarmCalendar(byte alarmDuration_minutes): _duration(alarmDuration_minutes)
+AlarmCalendar::AlarmCalendar(byte alarmDuration_minutes) : _duration(alarmDuration_minutes)
 {
 }
 
@@ -27,26 +26,37 @@ void AlarmCalendar::setDailyAlarm(Chronos::Hours hours, Chronos::Minutes minutes
 }
 
 /**
- * \brief remark that the end of an event is also return as an event.
+ * \brief 
  */
-bool AlarmCalendar::getSecondsToNextEvent(time_t tNow, time_t& totalSecondsToNextEvent)
+bool AlarmCalendar::getSecondsToStartOfNextEvent(time_t tNow, time_t &totalSecondsToNextEvent)
 {
     Chronos::DateTime tChronosNow(tNow);
-    Chronos::DateTime nextEventTime;
-    if(!_MyCalendar.nextDateTimeOfInterest(tChronosNow, nextEventTime))
+    Chronos::Event::Occurrence occurrenceList[1];
+    if(!_MyCalendar.listNext(1, occurrenceList, tChronosNow))
     {
         return false;
     }
-    Chronos::Span::Absolute diff = nextEventTime - tChronosNow;
+    Chronos::Span::Absolute diff = occurrenceList[0].start - tChronosNow;
     totalSecondsToNextEvent = diff.totalSeconds();
     return true;
 }
 
-bool AlarmCalendar::isAlarmOnGoing(time_t t)
+bool AlarmCalendar::isUnacknowledgedAlarmOnGoing(time_t t)
 {
     Chronos::DateTime timenow(t);
     Chronos::Event::Occurrence occurrenceList[MAX_NR_OF_EVENTS];
-    return _MyCalendar.listOngoing(MAX_NR_OF_EVENTS, occurrenceList, timenow) > 0;
+    bool alarmOngoing = _MyCalendar.listOngoing(MAX_NR_OF_EVENTS, occurrenceList, timenow) > 0;
+    if (!alarmOngoing)
+    {
+        _alarmAcked = false; //reset alarm acknowledgement
+        return false;
+    }
+    return !_alarmAcked;
+}
+
+void AlarmCalendar::acknowledgeAlarm()
+{
+    _alarmAcked = true;
 }
 
 void AlarmCalendar::disableWeekday(Chronos::Weekday::Day aDay)
@@ -88,12 +98,12 @@ bool AlarmCalendar::updateCalendar()
 
 void AlarmCalendar::listEvents(Chronos::DateTime nowTime)
 {
-    const byte OCCURRENCES_LIST_SIZE=30;
+    const byte OCCURRENCES_LIST_SIZE = 30;
     Chronos::Event::Occurrence occurrenceList[OCCURRENCES_LIST_SIZE];
     Serial.println("Coming up:");
 
     int numUpcoming = _MyCalendar.listNext(OCCURRENCES_LIST_SIZE, occurrenceList,
-                                          nowTime);
+                                           nowTime);
     if (numUpcoming)
     {
         for (int i = 0; i < numUpcoming; i++)

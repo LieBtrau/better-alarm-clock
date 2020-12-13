@@ -26,7 +26,8 @@
 
 AlarmCalendar ac1(2);
 HardwareSerial *ser1 = &Serial;
-bool bStarted = false;
+bool alarmStarted = false;
+unsigned long alarmStart = 0;
 
 void setup()
 {
@@ -34,38 +35,32 @@ void setup()
         ;
     ser1->begin(115200);
     Serial.printf("Build %s\r\n", __TIMESTAMP__);
-    setTime(1552892378); //Monday, March 18, 2019 6:59:38 AM
+    setTime(1552892385); //Monday, March 18, 2019 6:59:45 AM
 
     ac1.setAlarm(7, 0);
     ac1.enableWeekday(Chronos::Weekday::Monday);
-
 }
 
 void loop()
 {
     Chronos::DateTime timenow = Chronos::DateTime::now();
-    Serial.print("Current time: ");
-    timenow.printTo(*ser1);
-    Serial.println();
     time_t secondsToGo;
-    if (ac1.getSecondsToNextEvent(timenow.asEpoch(), secondsToGo) && !bStarted)
+    if (ac1.getSecondsToStartOfNextEvent(timenow.asEpoch(), secondsToGo))
     {
-        Serial.printf("Next alarm starts in %us.\r\n", secondsToGo);
+        Serial.printf("Next event occurs in %us.\r\n", secondsToGo);
     }
-    if (ac1.isAlarmOnGoing(Chronos::DateTime::now().asEpoch()))
+    if (ac1.isUnacknowledgedAlarmOnGoing(Chronos::DateTime::now().asEpoch()))
     {
-        if (!bStarted)
+        Serial.print("a-");
+        if (!alarmStarted)
         {
-            bStarted = true;
-            Serial.println("start");
+            alarmStart = millis();
         }
-    }
-    else
-    {
-        if (bStarted)
+        alarmStarted = true;
+        if (millis() - alarmStart > 5000)
         {
-            bStarted = false;
-            Serial.println("stop");
+            ac1.acknowledgeAlarm();
+            Serial.println("acknowledge alarm");
         }
     }
     delay(1000);

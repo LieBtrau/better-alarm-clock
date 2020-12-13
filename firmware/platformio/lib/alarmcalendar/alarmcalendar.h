@@ -36,8 +36,9 @@ public:
   void disableWeekday(Chronos::Weekday::Day aDay);
   void enableWeekday(Chronos::Weekday::Day aDay);
   bool setAlarm(Chronos::Hours hours, Chronos::Minutes minutes);
-  bool getSecondsToNextEvent(time_t tNow, time_t& totalSecondsToNextEvent);
-  bool isAlarmOnGoing(time_t t);
+  bool getSecondsToStartOfNextEvent(time_t tNow, time_t& totalSecondsToNextEvent);
+  bool isUnacknowledgedAlarmOnGoing(time_t t);
+  void acknowledgeAlarm();
   static byte dayToIndex(Chronos::Weekday::Day day);
   static Chronos::Weekday::Day indexToDay(byte index);
   void listEvents(Chronos::DateTime nowTime);
@@ -47,4 +48,5 @@ private:
   Calendar _MyCalendar;
   ALARM_CONFIG _config;
   byte _duration;
+  bool _alarmAcked = false;
 };
