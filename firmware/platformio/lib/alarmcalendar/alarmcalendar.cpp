@@ -1,7 +1,7 @@
 #include "alarmcalendar.h"
 
 
-AlarmCalendar::AlarmCalendar(byte durationMinutes): _duration(durationMinutes)
+AlarmCalendar::AlarmCalendar(byte alarmDuration_minutes): _duration(alarmDuration_minutes)
 {
 }
 
@@ -23,7 +23,7 @@ void AlarmCalendar::setDailyAlarm(Chronos::Hours hours, Chronos::Minutes minutes
     {
         _config.weekdays[i] = true;
     }
-    setTime(hours, minutes);
+    setAlarm(hours, minutes);
 }
 
 bool AlarmCalendar::getStartOfNextEvent(const Chronos::DateTime *fromDT, Chronos::DateTime *returnDT)
@@ -31,10 +31,11 @@ bool AlarmCalendar::getStartOfNextEvent(const Chronos::DateTime *fromDT, Chronos
     return _MyCalendar.nextDateTimeOfInterest(*fromDT, *returnDT);
 }
 
-bool AlarmCalendar::isAlarmOnGoing(const Chronos::DateTime *timenow)
+bool AlarmCalendar::isAlarmOnGoing(time_t t)
 {
+    Chronos::DateTime timenow(t);
     Chronos::Event::Occurrence occurrenceList[MAX_NR_OF_EVENTS];
-    return _MyCalendar.listOngoing(MAX_NR_OF_EVENTS, occurrenceList, *timenow) > 0;
+    return _MyCalendar.listOngoing(MAX_NR_OF_EVENTS, occurrenceList, timenow) > 0;
 }
 
 void AlarmCalendar::disableWeekday(Chronos::Weekday::Day aDay)
@@ -51,7 +52,7 @@ void AlarmCalendar::enableWeekday(Chronos::Weekday::Day aDay)
     updateCalendar();
 }
 
-bool AlarmCalendar::setTime(Chronos::Hours hours, Chronos::Minutes minutes)
+bool AlarmCalendar::setAlarm(Chronos::Hours hours, Chronos::Minutes minutes)
 {
     _config.hour = hours;
     _config.mins = minutes;
