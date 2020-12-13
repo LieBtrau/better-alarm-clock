@@ -20,12 +20,7 @@
 
 #pragma once
 
-#if (ARDUINO >= 100)
 #include <Arduino.h>
-#else
-#include <WProgram.h>
-#include "pins_arduino.h"
-#endif
 #include <Adafruit_GFX.h>
 
 class Max72xxPanel : public Adafruit_GFX
@@ -91,6 +86,6 @@ private:
   /* We keep track of the led-status for 8 devices in this array */
   byte *bitmap;
   byte bitmapSize;
-  bool useSoftSpi = true;
+  bool useSoftSpi = false;
   bool refreshNeeded = true;
 };

@@ -35,7 +35,7 @@ void showAlarmDisplay(ALARM_DISPLAY ad);
 void showAlarmTime(byte hours, byte minutes);
 
 //Controls for the LED array
-void showTime(byte hours, byte minutes, bool synced);
+void showTime(byte hours, byte minutes, bool synced, bool alarmOngoing);
 void showSunlightSetting(byte value);
 void showSongChoice(byte value);
 void showSongVolume(byte value);

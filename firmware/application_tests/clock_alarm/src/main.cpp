@@ -8,7 +8,6 @@
 
 AlarmCalendar ac1(2);
 HardwareSerial *ser1 = &Serial;
-bool bStarted = false;
 
 void setup()
 {
@@ -24,7 +23,7 @@ void setup()
             ; // If we fail to communicate, loop forever.
     }
     setBrightness(15);
-    ac1.setAlarm(11, 35);
+    ac1.setAlarm(16, 10);
     ac1.enableWeekday(Chronos::Weekday::Sunday);
 }
 
@@ -34,24 +33,8 @@ void loop()
     time_t localTime;
     if (getLocalTimeSeconds(localTime) && splitTime(localTime, hours, minutes))
     {
-        showTime(hours, minutes, isStillSynced());
+        showTime(hours, minutes, isStillSynced(), ac1.isAlarmOnGoing(localTime));
         ser1->printf("%02d%s%02d\r\n", hours, isStillSynced() ? ":" : "v", minutes);
-        if (ac1.isAlarmOnGoing(localTime))
-        {
-            if (!bStarted)
-            {
-                bStarted = true;
-                Serial.println("start");
-            }
-        }
-        else
-        {
-            if (bStarted)
-            {
-                bStarted = false;
-                Serial.println("stop");
-            }
-        }
     }
     else
     {
