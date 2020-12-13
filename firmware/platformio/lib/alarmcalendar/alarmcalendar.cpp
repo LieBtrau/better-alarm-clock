@@ -26,9 +26,20 @@ void AlarmCalendar::setDailyAlarm(Chronos::Hours hours, Chronos::Minutes minutes
     setAlarm(hours, minutes);
 }
 
-bool AlarmCalendar::getStartOfNextEvent(const Chronos::DateTime *fromDT, Chronos::DateTime *returnDT)
+/**
+ * \brief remark that the end of an event is also return as an event.
+ */
+bool AlarmCalendar::getSecondsToNextEvent(time_t tNow, time_t& totalSecondsToNextEvent)
 {
-    return _MyCalendar.nextDateTimeOfInterest(*fromDT, *returnDT);
+    Chronos::DateTime tChronosNow(tNow);
+    Chronos::DateTime nextEventTime;
+    if(!_MyCalendar.nextDateTimeOfInterest(tChronosNow, nextEventTime))
+    {
+        return false;
+    }
+    Chronos::Span::Absolute diff = nextEventTime - tChronosNow;
+    totalSecondsToNextEvent = diff.totalSeconds();
+    return true;
 }
 
 bool AlarmCalendar::isAlarmOnGoing(time_t t)

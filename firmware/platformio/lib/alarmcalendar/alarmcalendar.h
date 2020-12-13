@@ -36,7 +36,7 @@ public:
   void disableWeekday(Chronos::Weekday::Day aDay);
   void enableWeekday(Chronos::Weekday::Day aDay);
   bool setAlarm(Chronos::Hours hours, Chronos::Minutes minutes);
-  bool getStartOfNextEvent(const Chronos::DateTime *timenow, Chronos::DateTime *returnDT);
+  bool getSecondsToNextEvent(time_t tNow, time_t& totalSecondsToNextEvent);
   bool isAlarmOnGoing(time_t t);
   static byte dayToIndex(Chronos::Weekday::Day day);
   static Chronos::Weekday::Day indexToDay(byte index);

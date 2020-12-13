@@ -36,26 +36,23 @@ void setup()
     Serial.printf("Build %s\r\n", __TIMESTAMP__);
     setTime(1552892378); //Monday, March 18, 2019 6:59:38 AM
 
-    Chronos::DateTime timenow = Chronos::DateTime::now();
-    Serial.print("Current time: ");
-    timenow.printTo(*ser1);
-    Serial.println();
-    Chronos::DateTime nextAlarmTime;
-    ac1.setTime(7, 0);
+    ac1.setAlarm(7, 0);
     ac1.enableWeekday(Chronos::Weekday::Monday);
 
-    if (ac1.getStartOfNextEvent(&timenow, &nextAlarmTime))
-    {
-        Serial.print("Next alarm starts on: ");
-        nextAlarmTime.printTo(*ser1);
-        Serial.println();
-    }
 }
 
 void loop()
 {
     Chronos::DateTime timenow = Chronos::DateTime::now();
-    if (ac1.isAlarmOnGoing(&timenow))
+    Serial.print("Current time: ");
+    timenow.printTo(*ser1);
+    Serial.println();
+    time_t secondsToGo;
+    if (ac1.getSecondsToNextEvent(timenow.asEpoch(), secondsToGo) && !bStarted)
+    {
+        Serial.printf("Next alarm starts in %us.\r\n", secondsToGo);
+    }
+    if (ac1.isAlarmOnGoing(Chronos::DateTime::now().asEpoch()))
     {
         if (!bStarted)
         {
@@ -71,4 +68,5 @@ void loop()
             Serial.println("stop");
         }
     }
+    delay(1000);
 }
