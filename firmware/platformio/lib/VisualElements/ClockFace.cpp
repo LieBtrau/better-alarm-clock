@@ -20,10 +20,10 @@ void ClockFace::show()
     if (_timeIsValid)
     {
         byte font = 4; //0 to 4
-        _panel->drawBitmap(-3, 1, bigFont[(_hours / 10 != 0 ? _hours / 10 : 10) + 11 * font], 8, 12, 1);
-        _panel->drawBitmap(5, 1, bigFont[(_hours % 10) + 11 * font], 8, 12, 1);
-        _panel->drawBitmap(16, 1, bigFont[(_minutes / 10 != 0 ? _minutes / 10 : 10) + 11 * font], 8, 12, 1);
-        _panel->drawBitmap(24, 1, bigFont[(_minutes % 10) + 11 * font], 8, 12, 1);
+        _panel->drawBitmap(-3, 2, bigFont[(_hours / 10 != 0 ? _hours / 10 : 10) + 11 * font], 8, 12, 1);
+        _panel->drawBitmap(5, 2, bigFont[(_hours % 10) + 11 * font], 8, 12, 1);
+        _panel->drawBitmap(16, 2, bigFont[(_minutes / 10 != 0 ? _minutes / 10 : 10) + 11 * font], 8, 12, 1);
+        _panel->drawBitmap(24, 2, bigFont[(_minutes % 10) + 11 * font], 8, 12, 1);
         if (_synced)
         {
             _panel->fillRect(15, 4, 2, 2, 1);

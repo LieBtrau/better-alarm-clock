@@ -81,7 +81,7 @@ bool initVisualElements()
     ltVolume.setVisible(true);
     // sre.setVisible(true);
     cf.setVisible(true);
-    cf.setFlashMode(true);
+    // cf.setFlashMode(true);  //It's better to disable flash mode during syncing to avoid EM-interference.
     return true;
 }
 
@@ -101,6 +101,33 @@ void setBrightness(byte brightness)
     ltFriday.setBrightness(brightness << 2);
     ltSaturday.setBrightness(brightness << 2);
     ltSunday.setBrightness(brightness << 2);
+}
+
+void setVisible(bool isVisible)
+{
+    if(!isVisible)
+    {
+        lmf_SunLightBrightness.setVisible(false);
+        lmf_Volume.setVisible(false);
+        lms_SongChoice.setVisible(false);
+    }
+    
+    //depending on mode
+    cf.setVisible(isVisible);
+    
+    alarmHoursDisplay.setVisible(isVisible);
+    alarmMinutesDisplay.setVisible(isVisible);
+    ltSunLight.setVisible(isVisible);
+    ltVolume.setVisible(isVisible);
+    ltSongChoice.setVisible(isVisible);
+    ltAlarm.setVisible(isVisible);
+    ltMonday.setVisible(isVisible);
+    ltTuesday.setVisible(isVisible);
+    ltWednesday.setVisible(isVisible);
+    ltThursday.setVisible(isVisible);
+    ltFriday.setVisible(isVisible);
+    ltSaturday.setVisible(isVisible);
+    ltSunday.setVisible(isVisible);
 }
 
 void redraw()
@@ -169,7 +196,6 @@ void showAlarmTime(byte hours, byte minutes)
 
 void showTime(byte hours, byte minutes, bool synced, bool alarmOngoing)
 {
-    cf.setVisible(true);
     lmf_SunLightBrightness.setVisible(false);
     lmf_Volume.setVisible(false);
     lms_SongChoice.setVisible(false);

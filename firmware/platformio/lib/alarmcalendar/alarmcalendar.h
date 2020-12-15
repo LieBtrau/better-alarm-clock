@@ -1,10 +1,10 @@
 /**
  * AlarmCalendar
  * 
- * It's a class that defines objest that can hold one alarm.  This alarm is determined by : 
- *  - a time of day when the alarm will go off : e.g. 0715h.
+ * It's a class that defines an object that can hold one alarm.  This alarm is determined by : 
+ *  - a time of day when the alarm will go off : e.g. 07h15.
  *  - a list of days of the week on which the alarm will be enabled
- *  - the duration of the alarm
+ *  - the duration of the alarm in minutes
  * 
  * This calendar is time zone agnostic.  In the use case of an alarm clock, local time will be used because it's more practical.
  *  You may want to get up at 7AM local time no matter whether it is daylight savings time or not.  

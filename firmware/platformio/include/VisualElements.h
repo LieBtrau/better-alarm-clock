@@ -6,6 +6,7 @@
 //Common controls for all display elements
 bool initVisualElements();
 void setBrightness(byte brightness);
+void setVisible(bool isVisible);
 void redraw();
 
 //Controls for the weekday LEDs
