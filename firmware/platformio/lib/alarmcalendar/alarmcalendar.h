@@ -35,8 +35,9 @@ public:
   void setDailyAlarm(Chronos::Hours hours, Chronos::Minutes minutes);
   void disableWeekday(Chronos::Weekday::Day aDay);
   void enableWeekday(Chronos::Weekday::Day aDay);
-  bool setAlarm(Chronos::Hours hours, Chronos::Minutes minutes);
+  bool setAlarmTime(Chronos::Hours hours, Chronos::Minutes minutes);
   bool getSecondsToStartOfNextEvent(time_t tNow, time_t& totalSecondsToNextEvent);
+  bool isAlarmIn24Hours(time_t tNow);
   bool isUnacknowledgedAlarmOnGoing(time_t t);
   void acknowledgeAlarm();
   static byte dayToIndex(Chronos::Weekday::Day day);

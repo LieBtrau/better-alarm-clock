@@ -1,7 +1,14 @@
 #pragma once
 #include "Arduino.h"
 
+typedef enum
+{
+    DISPLAY_OFF,
+    DISPLAY_TURNED_ON,
+    DISPLAY_ON,
+    DISPLAY_TURNED_OFF
+} DISPLAY_STATE;
+
 bool initDisplayOnOffControl();
-bool displayTurnedOn(bool buttonPressed);
-bool isDisplayOn(bool buttonPressed);
-bool getDisplayBrightness(byte &brightness);
+DISPLAY_STATE getDisplayState(bool buttonPressed, bool newAlarmOngoing);
+byte getDisplayBrightness(bool newAlarmOngoing);

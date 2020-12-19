@@ -37,7 +37,7 @@ void setup()
     Serial.printf("Build %s\r\n", __TIMESTAMP__);
     setTime(1552892385); //Monday, March 18, 2019 6:59:45 AM
 
-    ac1.setAlarm(7, 0);
+    ac1.setAlarmTime(0, 0);
     ac1.enableWeekday(Chronos::Weekday::Monday);
 }
 
@@ -62,6 +62,10 @@ void loop()
             ac1.acknowledgeAlarm();
             Serial.println("acknowledge alarm");
         }
+    }
+    if(ac1.isAlarmIn24Hours(timenow.asEpoch()))
+    {
+        Serial.println("Alarm within 24h.");
     }
     delay(1000);
 }

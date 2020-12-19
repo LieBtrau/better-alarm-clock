@@ -1,6 +1,6 @@
 #pragma once
 
-void initClock();
+void initClockSource();
 bool getLocalTimeSeconds(time_t& localTime);
-bool splitTime(time_t t, byte &hours, byte &minutes);
+bool isNewMinuteStarted(time_t t, byte &hours, byte &minutes);
 bool isStillSynced();

@@ -9,6 +9,7 @@
 
 AlarmCalendar ac1(2);
 HardwareSerial *ser1 = &Serial;
+byte alarmHours = 21, alarmMinutes = 45;
 
 void setup()
 {
@@ -16,7 +17,7 @@ void setup()
         ;
     ser1->begin(115200);
     ser1->printf("Build %s\r\n", __TIMESTAMP__);
-    initClock();
+    initClockSource();
     if (!initVisualElements() || !initDisplayOnOffControl())
     {
         ser1->println("Failed to initialize.");
@@ -24,8 +25,14 @@ void setup()
             ; // If we fail to communicate, loop forever.
     }
 
-    ac1.setAlarm(21, 53);
-    ac1.enableWeekday(Chronos::Weekday::Tuesday);
+    ac1.setAlarmTime(alarmHours, alarmMinutes);
+    ac1.enableWeekday(Chronos::Weekday::Saturday);
+}
+
+bool isAlarmBusy()
+{
+    time_t localTime;
+    return getLocalTimeSeconds(localTime) && ac1.isUnacknowledgedAlarmOnGoing(localTime);
 }
 
 void loop()
@@ -33,34 +40,42 @@ void loop()
     byte hours, minutes;
     time_t localTime;
     bool buttonPressed = false;
+    DISPLAY_STATE ds = getDisplayState(buttonPressed, isAlarmBusy());
 
-    //Redraw LED array
-    if (getLocalTimeSeconds(localTime) && (splitTime(localTime, hours, minutes) || displayTurnedOn(buttonPressed) || ac1.isUnacknowledgedAlarmOnGoing(localTime)))
+    if (getLocalTimeSeconds(localTime))
     {
-        showTime(hours, minutes, isStillSynced(), ac1.isUnacknowledgedAlarmOnGoing(localTime));
-        ser1->printf("%02d%s%02d\r\n", hours, isStillSynced() ? ":" : "v", minutes);
+        //Redraw LED array
+        if (ds == DISPLAY_TURNED_ON || isNewMinuteStarted(localTime, hours, minutes))
+        {
+            showClockTime(hours, minutes, isStillSynced(), ac1.isUnacknowledgedAlarmOnGoing(localTime));
+            ser1->printf("%02d%s%02d\r\n", hours, isStillSynced() ? ":" : "v", minutes);
+        }
+        //Redraw alarm LCD
+        if (ac1.isAlarmIn24Hours(localTime) && ((ds == DISPLAY_TURNED_ON) || (ds == DISPLAY_ON)))
+        {
+            showAlarmDisplay(AL_BOTH_ON);
+        }
+        if (ac1.isAlarmIn24Hours(localTime))
+        {
+            showAlarmTime(alarmHours, alarmMinutes);
+        }
     }
-    if (ac1.isUnacknowledgedAlarmOnGoing(localTime))
+
+    //Brightness control for all elements
+    switch (ds)
     {
-        setBrightness(15);
+    case DISPLAY_TURNED_ON:
         setVisible(true);
-    }
-    else
-    {
-        if (isDisplayOn(buttonPressed))
-        {
-            byte brightness;
-            if (getDisplayBrightness(brightness))
-            {
-                Serial.printf("New brightness: %d\r\n", brightness);
-                setBrightness(brightness);
-            }
-            setVisible(true);
-        }
-        else
-        {
-            setVisible(false);
-        }
+        break;
+    case DISPLAY_ON:
+        setBrightness(getDisplayBrightness(isAlarmBusy()));
+        break;
+    case DISPLAY_TURNED_OFF:
+        setVisible(false);
+        break;
+    case DISPLAY_OFF:
+    default:
+        break;
     }
 
     redraw();

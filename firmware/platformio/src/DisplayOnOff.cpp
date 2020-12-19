@@ -2,32 +2,55 @@
 #include "Adafruit_TSL2591.h"
 #include "PirSensor.h"
 #include "DisplayBrightness.h"
+#include "DisplayOnOff.h"
 #include "pins.h"
 
 static PirSensor ps(pin_PIR);
 static Adafruit_TSL2591 tsl(2591);
 static DisplayBrightness db(&ps, &tsl);
-static bool previousDisplayOnState = false;
-static bool currentDisplayOnState = false;
+static DISPLAY_STATE displayState = DISPLAY_OFF;
 
 bool initDisplayOnOffControl()
 {
     return db.init();
 }
 
-bool displayTurnedOn(bool buttonPressed)
+DISPLAY_STATE getDisplayState(bool buttonPressed, bool newAlarmOngoing)
 {
-    currentDisplayOnState = db.isDisplayOn(buttonPressed);
-    return !previousDisplayOnState && currentDisplayOnState;
+    bool displayOn = db.isDisplayOn() || buttonPressed || newAlarmOngoing;
+    switch (displayState)
+    {
+    case DISPLAY_OFF:
+        if (displayOn)
+        {
+            displayState = DISPLAY_TURNED_ON;
+        }
+        break;
+    case DISPLAY_TURNED_ON:
+        displayState = displayOn ? DISPLAY_ON : DISPLAY_TURNED_OFF;
+        break;
+    case DISPLAY_ON:
+        if (!displayOn)
+        {
+            displayState = DISPLAY_TURNED_OFF;
+        }
+        break;
+    case DISPLAY_TURNED_OFF:
+        displayState = displayOn ? DISPLAY_TURNED_ON : DISPLAY_OFF;
+        break;
+    default:
+        displayState = DISPLAY_OFF;
+        break;
+    }
+    
+    return displayState;
 }
 
-bool isDisplayOn(bool buttonPressed)
+byte getDisplayBrightness(bool newAlarmOngoing)
 {
-    currentDisplayOnState = db.isDisplayOn(buttonPressed);
-    return currentDisplayOnState;
-}
-
-bool getDisplayBrightness(byte &brightness)
-{
-    return db.getDisplayBrightness(brightness);
+    if (newAlarmOngoing)
+    {
+        return 15;
+    }
+    return db.getDisplayBrightness();
 }

@@ -22,7 +22,7 @@ void AlarmCalendar::setDailyAlarm(Chronos::Hours hours, Chronos::Minutes minutes
     {
         _config.weekdays[i] = true;
     }
-    setAlarm(hours, minutes);
+    setAlarmTime(hours, minutes);
 }
 
 /**
@@ -39,6 +39,18 @@ bool AlarmCalendar::getSecondsToStartOfNextEvent(time_t tNow, time_t &totalSecon
     Chronos::Span::Absolute diff = occurrenceList[0].start - tChronosNow;
     totalSecondsToNextEvent = diff.totalSeconds();
     return true;
+}
+
+bool AlarmCalendar::isAlarmIn24Hours(time_t tNow)
+{
+    Chronos::DateTime tChronosNow(tNow);
+    Chronos::Event::Occurrence occurrenceList[1];
+    if(!_MyCalendar.listNext(1, occurrenceList, tChronosNow))
+    {
+        return false;
+    }
+    Chronos::Span::Delta diff = occurrenceList[0].start - tChronosNow;
+    return diff.days() < 1;
 }
 
 bool AlarmCalendar::isUnacknowledgedAlarmOnGoing(time_t t)
@@ -73,7 +85,7 @@ void AlarmCalendar::enableWeekday(Chronos::Weekday::Day aDay)
     updateCalendar();
 }
 
-bool AlarmCalendar::setAlarm(Chronos::Hours hours, Chronos::Minutes minutes)
+bool AlarmCalendar::setAlarmTime(Chronos::Hours hours, Chronos::Minutes minutes)
 {
     _config.hour = hours;
     _config.mins = minutes;

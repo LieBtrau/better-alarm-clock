@@ -8,7 +8,7 @@ static TimeChangeRule CET = {"CET ", Last, Sun, Oct, 3, 60};   // Central Europe
 static Timezone CE(CEST, CET);
 static byte lastMinute = 0xFF;
 
-void initClock()
+void initClockSource()
 {
     dcfclock.init();
 }
@@ -29,7 +29,7 @@ bool getLocalTimeSeconds(time_t& locTime)
     return true;
 }
 
-bool splitTime(time_t t, byte &hours, byte &minutes)
+bool isNewMinuteStarted(time_t t, byte &hours, byte &minutes)
 {
     if (lastMinute == minute(t))
     {

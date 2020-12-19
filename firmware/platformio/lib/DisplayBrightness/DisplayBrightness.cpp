@@ -21,15 +21,15 @@ bool DisplayBrightness::init()
 }
 
 /**
- * \brief Determines whether display should be on, based on four inputs:
+ * \brief Determines whether display should be on, based on three inputs:
  *          - user waving at the clock
- *          - a button being pressed
  *          - ambient light level
  *          - timeout
  */
-bool DisplayBrightness::isDisplayOn(bool buttonPressed)
+bool DisplayBrightness::isDisplayOn()
 {
-    if (_ps->movementDetected() || buttonPressed || _lastBrightness > 0)
+    byte brightness = getDisplayBrightness();
+    if (_ps->movementDetected() || brightness > 0)
     {
         _displayOnTimer.restart();
         return true;
@@ -42,14 +42,15 @@ bool DisplayBrightness::isDisplayOn(bool buttonPressed)
  * \note  Setting occurs fully automatically.  Should a user want to add adjustments, then this function could be changed so that it adds an offset to the selected element in the table.
  *        e.g.  If autobrightness selects index 5, but the user wants a little bit brighter, then the resulting brightness = index + useroffset
  *        Default value for useroffset = 0, but it could be -15 up to +15.
- * \param brightness    will contain a value [0,15] when returning
- * \return true when result valid, else when light sensor is still busy
- */
-bool DisplayBrightness::getDisplayBrightness(byte &brightness)
+ * \return brightness will contain a value [0,15] when returning
+  */
+byte DisplayBrightness::getDisplayBrightness()
 {
+    byte brightness;
+    
     if (!_ambientLightSenseTimer.isExpired())
     {
-        return false;
+        return _lastBrightness;
     }
     _ambientLightSenseTimer.restart();
     uint32_t lum = _tsl->getFullLuminosity();
@@ -59,7 +60,7 @@ bool DisplayBrightness::getDisplayBrightness(byte &brightness)
     float luxlevel = _tsl->calculateLux(full, ir);
     if (luxlevel == 0)
     {
-        return false;
+        return _lastBrightness;
     }
     const float lightLevels[] = {0.07, 0.13, 0.25, 0.49, 0.97, 1.89, 3.7, 7.24, 14.17, 27.73, 54.26, 106.16, 207.71, 406.4, 795.16, 1555.82};
     float smallestDifference = INT32_MAX;
@@ -73,5 +74,5 @@ bool DisplayBrightness::getDisplayBrightness(byte &brightness)
         }
     }
     _lastBrightness = brightness;
-    return true;
+    return _lastBrightness;
 }

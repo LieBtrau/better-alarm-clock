@@ -43,6 +43,8 @@ LedToggle *weekdays[7] = {&ltMonday, &ltTuesday, &ltWednesday, &ltThursday, &ltF
 //--LED panel
 SunRiseEmulation sre(&ldd);
 
+byte lastBrightNess=0xFF;
+
 bool initVisualElements()
 {
     //Initialize hardware peripherals
@@ -72,8 +74,6 @@ bool initVisualElements()
     ltFriday.init();
     ltSaturday.init();
     ltSunday.init();
-    alarmHoursDisplay.setVisible(true);
-    alarmMinutesDisplay.setVisible(true);
 
     // lmf_SunLightBrightness.setVisible(true);
     // lms_SongChoice.setVisible(true);
@@ -81,13 +81,19 @@ bool initVisualElements()
     ltVolume.setVisible(true);
     // sre.setVisible(true);
     cf.setVisible(true);
-    // cf.setFlashMode(true);  //It's better to disable flash mode during syncing to avoid EM-interference.
+    //cf.setFlashMode(true);  //It's better to disable flash mode during syncing to avoid EM-interference.
     return true;
 }
 
 // \param brightness 0-15
 void setBrightness(byte brightness)
 {
+    if(brightness==lastBrightNess)
+    {
+        return;
+    }
+    lastBrightNess = brightness;
+
     sevenSegment.setBrightness(brightness);
     matrix.setIntensity(brightness);
     ltSunLight.setBrightness(brightness << 2);
@@ -105,18 +111,17 @@ void setBrightness(byte brightness)
 
 void setVisible(bool isVisible)
 {
-    if(!isVisible)
+    if (!isVisible)
     {
         lmf_SunLightBrightness.setVisible(false);
         lmf_Volume.setVisible(false);
         lms_SongChoice.setVisible(false);
+        alarmHoursDisplay.setVisible(false);
+        alarmMinutesDisplay.setVisible(false);
+        cf.setVisible(false);
     }
-    
-    //depending on mode
-    cf.setVisible(isVisible);
-    
-    alarmHoursDisplay.setVisible(isVisible);
-    alarmMinutesDisplay.setVisible(isVisible);
+
+
     ltSunLight.setVisible(isVisible);
     ltVolume.setVisible(isVisible);
     ltSongChoice.setVisible(isVisible);
@@ -165,27 +170,8 @@ void showWeekDay(WEEKDAYS wd)
 
 void showAlarmDisplay(ALARM_DISPLAY ad)
 {
-    switch (ad)
-    {
-    case AL_BOTH_OFF:
-        alarmHoursDisplay.setVisible(false);
-        alarmMinutesDisplay.setVisible(false);
-        break;
-    case AL_BOTH_ON:
-        alarmHoursDisplay.setVisible(true);
-        alarmMinutesDisplay.setVisible(true);
-        break;
-    case AL_HOURS_ONLY:
-        alarmHoursDisplay.setVisible(true);
-        alarmMinutesDisplay.setVisible(false);
-        break;
-    case AL_MINUTES_ONLY:
-        alarmHoursDisplay.setVisible(false);
-        alarmMinutesDisplay.setVisible(true);
-        break;
-    default:
-        break;
-    }
+    alarmHoursDisplay.setVisible((ad==AL_HOURS_ONLY) || (ad==AL_BOTH_ON) ? true : false);
+    alarmMinutesDisplay.setVisible((ad==AL_MINUTES_ONLY) || (ad==AL_BOTH_ON) ? true : false);
 }
 
 void showAlarmTime(byte hours, byte minutes)
@@ -194,11 +180,12 @@ void showAlarmTime(byte hours, byte minutes)
     alarmMinutesDisplay.setValue(minutes);
 }
 
-void showTime(byte hours, byte minutes, bool synced, bool alarmOngoing)
+void showClockTime(byte hours, byte minutes, bool synced, bool alarmOngoing)
 {
     lmf_SunLightBrightness.setVisible(false);
     lmf_Volume.setVisible(false);
     lms_SongChoice.setVisible(false);
+    cf.setVisible(true);
 
     cf.setTime(hours, minutes, true);
     cf.setFlashMode(false);
@@ -212,7 +199,6 @@ void showSunlightSetting(byte value)
     lmf_SunLightBrightness.setVisible(true);
     lmf_Volume.setVisible(false);
     lms_SongChoice.setVisible(false);
-
 }
 
 void showSongVolume(byte value)
@@ -221,7 +207,6 @@ void showSongVolume(byte value)
     lmf_SunLightBrightness.setVisible(false);
     lmf_Volume.setVisible(true);
     lms_SongChoice.setVisible(false);
-
 }
 
 void showSongChoice(byte value)
@@ -230,5 +215,4 @@ void showSongChoice(byte value)
     lmf_SunLightBrightness.setVisible(false);
     lmf_Volume.setVisible(false);
     lms_SongChoice.setVisible(true);
-
 }
