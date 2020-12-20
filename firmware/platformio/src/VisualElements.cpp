@@ -43,7 +43,7 @@ LedToggle *weekdays[7] = {&ltMonday, &ltTuesday, &ltWednesday, &ltThursday, &ltF
 //--LED panel
 SunRiseEmulation sre(&ldd);
 
-byte lastBrightNess=0xFF;
+byte lastBrightNess = 0xFF;
 
 bool initVisualElements()
 {
@@ -88,7 +88,7 @@ bool initVisualElements()
 // \param brightness 0-15
 void setBrightness(byte brightness)
 {
-    if(brightness==lastBrightNess)
+    if (brightness == lastBrightNess)
     {
         return;
     }
@@ -120,7 +120,6 @@ void setVisible(bool isVisible)
         alarmMinutesDisplay.setVisible(false);
         cf.setVisible(false);
     }
-
 
     ltSunLight.setVisible(isVisible);
     ltVolume.setVisible(isVisible);
@@ -170,8 +169,14 @@ void showWeekDay(WEEKDAYS wd)
 
 void showAlarmDisplay(ALARM_DISPLAY ad)
 {
-    alarmHoursDisplay.setVisible((ad==AL_HOURS_ONLY) || (ad==AL_BOTH_ON) ? true : false);
-    alarmMinutesDisplay.setVisible((ad==AL_MINUTES_ONLY) || (ad==AL_BOTH_ON) ? true : false);
+    static ALARM_DISPLAY _ad = AL_BOTH_OFF;
+    if (ad == _ad)
+    {
+        return;
+    }
+    _ad = ad;
+    alarmHoursDisplay.setVisible((ad == AL_HOURS_ONLY) || (ad == AL_BOTH_ON) ? true : false);
+    alarmMinutesDisplay.setVisible((ad == AL_MINUTES_ONLY) || (ad == AL_BOTH_ON) ? true : false);
 }
 
 void showAlarmTime(byte hours, byte minutes)

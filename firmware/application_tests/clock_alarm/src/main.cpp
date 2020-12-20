@@ -9,7 +9,7 @@
 
 AlarmCalendar ac1(2);
 HardwareSerial *ser1 = &Serial;
-byte alarmHours = 21, alarmMinutes = 45;
+byte alarmHours = 13, alarmMinutes = 25;
 
 void setup()
 {
@@ -26,7 +26,7 @@ void setup()
     }
 
     ac1.setAlarmTime(alarmHours, alarmMinutes);
-    ac1.enableWeekday(Chronos::Weekday::Saturday);
+    ac1.enableWeekday(Chronos::Weekday::Sunday);
 }
 
 bool isAlarmBusy()
@@ -51,9 +51,9 @@ void loop()
             ser1->printf("%02d%s%02d\r\n", hours, isStillSynced() ? ":" : "v", minutes);
         }
         //Redraw alarm LCD
-        if (ac1.isAlarmIn24Hours(localTime) && ((ds == DISPLAY_TURNED_ON) || (ds == DISPLAY_ON)))
+        if ((ds == DISPLAY_TURNED_ON) || (ds == DISPLAY_ON))
         {
-            showAlarmDisplay(AL_BOTH_ON);
+            showAlarmDisplay(ac1.isAlarmIn24Hours(localTime) ? AL_BOTH_ON : AL_BOTH_OFF);
         }
         if (ac1.isAlarmIn24Hours(localTime))
         {
