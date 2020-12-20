@@ -18,11 +18,9 @@ bool AlarmCalendar::setConfig(ALARM_CONFIG *pconfig)
 void AlarmCalendar::setDailyAlarm(Chronos::Hours hours, Chronos::Minutes minutes)
 {
     //Enable bit 1 (Sunday) up to 7 (Saturday);
-    for (byte i = 0; i < 7; i++)
-    {
-        _config.weekdays[i] = true;
-    }
+    _config.weekdays = (WEEKDAYS)(WD_MONDAY | WD_TUESDAY | WD_WEDNESDAY | WD_THURSDAY | WD_FRIDAY | WD_SATURDAY | WD_SUNDAY);
     setAlarmTime(hours, minutes);
+    updateCalendar();
 }
 
 /**
@@ -32,7 +30,7 @@ bool AlarmCalendar::getSecondsToStartOfNextEvent(time_t tNow, time_t &totalSecon
 {
     Chronos::DateTime tChronosNow(tNow);
     Chronos::Event::Occurrence occurrenceList[1];
-    if(!_MyCalendar.listNext(1, occurrenceList, tChronosNow))
+    if (!_MyCalendar.listNext(1, occurrenceList, tChronosNow))
     {
         return false;
     }
@@ -45,7 +43,7 @@ bool AlarmCalendar::isAlarmIn24Hours(time_t tNow)
 {
     Chronos::DateTime tChronosNow(tNow);
     Chronos::Event::Occurrence occurrenceList[1];
-    if(!_MyCalendar.listNext(1, occurrenceList, tChronosNow))
+    if (!_MyCalendar.listNext(1, occurrenceList, tChronosNow))
     {
         return false;
     }
@@ -71,17 +69,9 @@ void AlarmCalendar::acknowledgeAlarm()
     _alarmAcked = true;
 }
 
-void AlarmCalendar::disableWeekday(Chronos::Weekday::Day aDay)
+void AlarmCalendar::setWeekdays(WEEKDAYS wd)
 {
-    //Chronos::Weekday::Day uses bits 1 to 7
-    _config.weekdays[dayToIndex(aDay)] = false;
-    updateCalendar();
-}
-
-void AlarmCalendar::enableWeekday(Chronos::Weekday::Day aDay)
-{
-    //Chronos::Weekday::Day uses bits 1 to 7
-    _config.weekdays[dayToIndex(aDay)] = true;
+    _config.weekdays = wd;
     updateCalendar();
 }
 
@@ -97,9 +87,11 @@ bool AlarmCalendar::updateCalendar()
     _MyCalendar.clear();
     for (byte index = 0; index < 7; index++)
     {
-        if (_config.weekdays[index])
+        if (_config.weekdays & (1 << index))
         {
-            if (!_MyCalendar.add(Chronos::Event(indexToDay(index), Chronos::Mark::Weekly(indexToDay(index), _config.hour, _config.mins, 00), Chronos::Span::Minutes(_duration))))
+            if (!_MyCalendar.add(
+                    Chronos::Event(indexToDay(index), Chronos::Mark::Weekly(indexToDay(index), _config.hour, _config.mins, 00),
+                                   Chronos::Span::Minutes(_duration))))
             {
                 return false;
             }
@@ -152,46 +144,25 @@ void AlarmCalendar::listEvents(Chronos::DateTime nowTime)
     }
 }
 
-Chronos::Weekday::Day AlarmCalendar::indexToDay(byte index)
+Chronos::Weekday::Day AlarmCalendar::indexToDay(int index)
 {
-    switch (index)
+    WEEKDAYS wd = (WEEKDAYS)(1 << index);
+    switch (wd)
     {
     default:
-    case 0:
+    case WD_MONDAY:
         return Chronos::Weekday::Monday;
-    case 1:
+    case WD_TUESDAY:
         return Chronos::Weekday::Tuesday;
-    case 2:
+    case WD_WEDNESDAY:
         return Chronos::Weekday::Wednesday;
-    case 3:
+    case WD_THURSDAY:
         return Chronos::Weekday::Thursday;
-    case 4:
+    case WD_FRIDAY:
         return Chronos::Weekday::Friday;
-    case 5:
+    case WD_SATURDAY:
         return Chronos::Weekday::Saturday;
-    case 6:
+    case WD_SUNDAY:
         return Chronos::Weekday::Sunday;
-    }
-}
-
-byte AlarmCalendar::dayToIndex(Chronos::Weekday::Day day)
-{
-    switch (day)
-    {
-    default:
-    case Chronos::Weekday::Monday:
-        return 0;
-    case Chronos::Weekday::Tuesday:
-        return 1;
-    case Chronos::Weekday::Wednesday:
-        return 2;
-    case Chronos::Weekday::Thursday:
-        return 3;
-    case Chronos::Weekday::Friday:
-        return 4;
-    case Chronos::Weekday::Saturday:
-        return 5;
-    case Chronos::Weekday::Sunday:
-        return 6;
     }
 }
