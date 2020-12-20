@@ -10,6 +10,7 @@
 AlarmCalendar ac1(2);
 HardwareSerial *ser1 = &Serial;
 byte alarmHours = 13, alarmMinutes = 25;
+WEEKDAYS wd = WD_SUNDAY;
 
 void setup()
 {
@@ -26,7 +27,7 @@ void setup()
     }
 
     ac1.setAlarmTime(alarmHours, alarmMinutes);
-    ac1.enableWeekday(Chronos::Weekday::Sunday);
+    ac1.setWeekdays(wd);
 }
 
 bool isAlarmBusy()
@@ -59,6 +60,8 @@ void loop()
         {
             showAlarmTime(alarmHours, alarmMinutes);
         }
+        //Redraw Weekday LEDs
+        showWeekDay(wd);
     }
 
     //Brightness control for all elements

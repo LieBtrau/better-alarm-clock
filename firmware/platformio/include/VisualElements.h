@@ -2,6 +2,7 @@
  */
 
 #pragma once
+#include "alarmcalendar.h"
 
 //Common controls for all display elements
 bool initVisualElements();
@@ -10,17 +11,6 @@ void setVisible(bool isVisible);
 void redraw();
 
 //Controls for the weekday LEDs
-typedef enum
-{
-    WD_MONDAY = 0x01,
-    WD_TUESDAY = 0x02,
-    WD_WEDNESDAY = 0x04,
-    WD_THURSDAY = 0x08,
-    WD_FRIDAY = 0x10,
-    WD_SATURDAY = 0x20,
-    WD_SUNDAY = 0x40
-}
-WEEKDAYS;
 void showWeekDay(WEEKDAYS wd);
 
 //Control of Alarm display

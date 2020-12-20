@@ -67,14 +67,10 @@ bool initVisualElements()
     ltVolume.init();
     ltSongChoice.init();
     ltAlarm.init();
-    ltMonday.init();
-    ltTuesday.init();
-    ltWednesday.init();
-    ltThursday.init();
-    ltFriday.init();
-    ltSaturday.init();
-    ltSunday.init();
-
+    for (int i = 0; i < 7; i++)
+    {
+        weekdays[i]->init();
+    }
     // lmf_SunLightBrightness.setVisible(true);
     // lms_SongChoice.setVisible(true);
     ltSunLight.setVisible(true);
@@ -88,7 +84,7 @@ bool initVisualElements()
 // \param brightness 0-15
 void setBrightness(byte brightness)
 {
-    if (brightness == lastBrightNess)
+    if (brightness == lastBrightNess || brightness > 15)
     {
         return;
     }
@@ -96,66 +92,58 @@ void setBrightness(byte brightness)
 
     sevenSegment.setBrightness(brightness);
     matrix.setIntensity(brightness);
-    ltSunLight.setBrightness(brightness << 2);
-    ltVolume.setBrightness(brightness << 2);
-    ltSongChoice.setBrightness(brightness << 2);
-    ltAlarm.setBrightness(brightness << 2);
-    ltMonday.setBrightness(brightness << 2);
-    ltTuesday.setBrightness(brightness << 2);
-    ltWednesday.setBrightness(brightness << 2);
-    ltThursday.setBrightness(brightness << 2);
-    ltFriday.setBrightness(brightness << 2);
-    ltSaturday.setBrightness(brightness << 2);
-    ltSunday.setBrightness(brightness << 2);
+    byte ledToggleBrightness = 15 + (brightness << 4);
+    ltSunLight.setBrightness(ledToggleBrightness);
+    ltVolume.setBrightness(ledToggleBrightness);
+    ltSongChoice.setBrightness(ledToggleBrightness);
+    ltAlarm.setBrightness(ledToggleBrightness);
+    for (int i = 0; i < 7; i++)
+    {
+        weekdays[i]->setBrightness(ledToggleBrightness);
+    }
 }
 
 void setVisible(bool isVisible)
 {
     if (!isVisible)
     {
+        cf.setVisible(false);
+        alarmHoursDisplay.setVisible(false);
+        alarmMinutesDisplay.setVisible(false);
+        for (int i = 0; i < 7; i++)
+        {
+            weekdays[i]->setVisible(false);
+        }
         lmf_SunLightBrightness.setVisible(false);
         lmf_Volume.setVisible(false);
         lms_SongChoice.setVisible(false);
-        alarmHoursDisplay.setVisible(false);
-        alarmMinutesDisplay.setVisible(false);
-        cf.setVisible(false);
     }
 
     ltSunLight.setVisible(isVisible);
     ltVolume.setVisible(isVisible);
     ltSongChoice.setVisible(isVisible);
     ltAlarm.setVisible(isVisible);
-    ltMonday.setVisible(isVisible);
-    ltTuesday.setVisible(isVisible);
-    ltWednesday.setVisible(isVisible);
-    ltThursday.setVisible(isVisible);
-    ltFriday.setVisible(isVisible);
-    ltSaturday.setVisible(isVisible);
-    ltSunday.setVisible(isVisible);
 }
 
 void redraw()
 {
-    if (alarmMinutesDisplay.render() | alarmHoursDisplay.render()) //don't use double |, because both statements need to be executed.
-    {
-        sevenSegment.writeDisplay();
-    }
     if (cf.render() | lmf_SunLightBrightness.render() | lms_SongChoice.render())
     {
         //true must be passed in, otherwise flashing doesn't work.
         matrix.write(true);
     }
+    if (alarmMinutesDisplay.render() | alarmHoursDisplay.render()) //don't use double |, because both statements need to be executed.
+    {
+        sevenSegment.writeDisplay();
+    }
+    for (int i = 0; i < 7; i++)
+    {
+        weekdays[i]->render();
+    }
     ltSunLight.render();
     ltVolume.render();
     ltSongChoice.render();
     ltAlarm.render();
-    ltMonday.render();
-    ltTuesday.render();
-    ltWednesday.render();
-    ltThursday.render();
-    ltFriday.render();
-    ltSaturday.render();
-    ltSunday.render();
     sre.render();
 }
 
