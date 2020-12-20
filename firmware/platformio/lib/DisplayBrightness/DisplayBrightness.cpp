@@ -46,7 +46,7 @@ bool DisplayBrightness::isDisplayOn()
   */
 byte DisplayBrightness::getDisplayBrightness()
 {
-    byte brightness;
+    byte brightness=0;
     
     if (!_ambientLightSenseTimer.isExpired())
     {

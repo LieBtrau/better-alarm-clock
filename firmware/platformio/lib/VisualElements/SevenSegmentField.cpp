@@ -23,6 +23,9 @@ void SevenSegmentField::hide()
 
 void SevenSegmentField::setValue(byte data)
 {
+    if (_data != data)
+    {
+        updateNeeded = true;
+    }
     _data = data;
-    updateNeeded=true;
 }

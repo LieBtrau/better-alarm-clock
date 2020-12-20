@@ -10,7 +10,7 @@
 AlarmCalendar ac1(2);
 HardwareSerial *ser1 = &Serial;
 byte alarmHours = 13, alarmMinutes = 25;
-WEEKDAYS wd = WD_SUNDAY;
+WEEKDAYS wd = (WEEKDAYS)(WD_MONDAY | WD_SUNDAY);
 
 void setup()
 {
@@ -49,7 +49,8 @@ void loop()
         if (ds == DISPLAY_TURNED_ON || isNewMinuteStarted(localTime, hours, minutes))
         {
             showClockTime(hours, minutes, isStillSynced(), ac1.isUnacknowledgedAlarmOnGoing(localTime));
-            ser1->printf("%02d%s%02d\r\n", hours, isStillSynced() ? ":" : "v", minutes);
+            Chronos::DateTime::now().printTo(*ser1);
+            Serial.println();
         }
         //Redraw alarm LCD
         if ((ds == DISPLAY_TURNED_ON) || (ds == DISPLAY_ON))

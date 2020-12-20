@@ -48,7 +48,7 @@ bool AlarmCalendar::isAlarmIn24Hours(time_t tNow)
         return false;
     }
     Chronos::Span::Delta diff = occurrenceList[0].start - tChronosNow;
-    return diff.days() < 1;
+    return diff.days() == 0;
 }
 
 bool AlarmCalendar::isUnacknowledgedAlarmOnGoing(time_t t)
