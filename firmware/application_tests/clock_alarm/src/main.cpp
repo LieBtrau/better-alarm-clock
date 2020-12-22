@@ -6,18 +6,24 @@
 #include "VisualElements.h"
 #include "alarmcalendar.h"
 #include "DisplayOnOff.h"
+#include <DFMiniMp3.h>
+#include "Mp3Notify.h"
 
 AlarmCalendar ac1(2);
 HardwareSerial *ser1 = &Serial;
-byte alarmHours = 13, alarmMinutes = 25;
-WEEKDAYS wd = (WEEKDAYS)(WD_MONDAY | WD_SUNDAY);
+byte alarmHours = 20, alarmMinutes = 35;
+WEEKDAYS wd = (WEEKDAYS)(WD_TUESDAY);
+DFMiniMp3<HardwareSerial, Mp3Notify> mp3(Serial2);
+byte volume = 15;
+byte track = 10;
+bool isMusicPlaying = false;
 
 void setup()
 {
     while (!*ser1)
         ;
     ser1->begin(115200);
-    ser1->printf("Build %s\r\n", __TIMESTAMP__);
+    ser1->printf("Build %s\r\n", __TIMESTAMP__);//only updated when this file is being recompiled.
     initClockSource();
     if (!initVisualElements() || !initDisplayOnOffControl())
     {
@@ -28,6 +34,20 @@ void setup()
 
     ac1.setAlarmTime(alarmHours, alarmMinutes);
     ac1.setWeekdays(wd);
+    mp3.begin();
+    if (volume > 30)
+    {
+        volume = 30;
+    }
+    if (track < 1)
+    {
+        track = 1;
+    }
+    byte totalTrackCount = mp3.getTotalTrackCount(DfMp3_PlaySource_Sd);
+    if (track > totalTrackCount)
+    {
+        track = totalTrackCount;
+    }
 }
 
 bool isAlarmBusy()
@@ -63,6 +83,24 @@ void loop()
         }
         //Redraw Weekday LEDs
         showWeekDay(wd);
+        //Handle music
+        if (ac1.isUnacknowledgedAlarmOnGoing(localTime))
+        {
+            if (!isMusicPlaying)
+            {
+                mp3.setVolume(volume);
+                mp3.loopGlobalTrack(track);
+                isMusicPlaying = true;
+            }
+        }
+        else
+        {
+            if (isMusicPlaying)
+            {
+                mp3.stop();
+                isMusicPlaying = false;
+            }
+        }
     }
 
     //Brightness control for all elements

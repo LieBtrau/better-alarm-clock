@@ -34,7 +34,7 @@ void setup()
     while (!*ser1)
         ;
     ser1->begin(115200);
-    Serial.printf("Build %s\r\n", __TIMESTAMP__);
+    ser1->printf("Build %s\r\n", __TIMESTAMP__);
     setTime(1552892385); //Monday, March 18, 2019 6:59:45 AM
 
     ac1.setAlarmTime(7, 0);
@@ -47,11 +47,11 @@ void loop()
     time_t secondsToGo;
     if (ac1.getSecondsToStartOfNextEvent(timenow.asEpoch(), secondsToGo))
     {
-        Serial.printf("Next event occurs in %us.\r\n", secondsToGo);
+        ser1->printf("Next event occurs in %us.\r\n", secondsToGo);
     }
     if (ac1.isUnacknowledgedAlarmOnGoing(Chronos::DateTime::now().asEpoch()))
     {
-        Serial.print("a-");
+        ser1->print("a-");
         if (!alarmStarted)
         {
             alarmStart = millis();
@@ -60,12 +60,12 @@ void loop()
         if (millis() - alarmStart > 5000)
         {
             ac1.acknowledgeAlarm();
-            Serial.println("acknowledge alarm");
+            ser1->println("acknowledge alarm");
         }
     }
     if(ac1.isAlarmIn24Hours(timenow.asEpoch()))
     {
-        Serial.println("Alarm within 24h.");
+        ser1->println("Alarm within 24h.");
     }
     delay(1000);
 }
