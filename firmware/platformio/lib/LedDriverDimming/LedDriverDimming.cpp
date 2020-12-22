@@ -17,7 +17,7 @@ void LedDriverDimming::init()
     pinMode(_pinEn, OUTPUT);
     analogWrite(_pinPwmH, 255);
     analogWrite(_pinPwmL, 255);
-    digitalWrite(_pinEn, HIGH);
+    digitalWrite(_pinEn, LOW);  //disabled by default
 }
 
 void LedDriverDimming::enable(bool enable)

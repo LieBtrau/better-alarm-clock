@@ -16,7 +16,7 @@ const byte IO2_SX1509_ADDRESS = 0x3F; // SX1509 I2C address
 Max72xxPanel matrix = Max72xxPanel(pinMOSI, pinSCLK, pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
 Adafruit_7segment sevenSegment = Adafruit_7segment();
 SX1509 io1, io2; // Create an SX1509 object to be used throughout
-LedDriverDimming ldd(pin_en_sun, pin_pwmh, pin_pwml);
+//LedDriverDimming ldd(pin_en_sun, pin_pwmh, pin_pwml);
 
 //Visual elements
 //--Alarm LCD elements
@@ -41,7 +41,7 @@ LedToggle ltSaturday(&io1, 13);
 LedToggle ltSunday(&io1, 14);
 LedToggle *weekdays[7] = {&ltMonday, &ltTuesday, &ltWednesday, &ltThursday, &ltFriday, &ltSaturday, &ltSunday};
 //--LED panel
-SunRiseEmulation sre(&ldd);
+//SunRiseEmulation sre(&ldd);
 
 byte lastBrightNess = 0xFF;
 
@@ -60,7 +60,7 @@ bool initVisualElements()
     }
     io1.clock(INTERNAL_CLOCK_2MHZ, 3);
     io2.clock(INTERNAL_CLOCK_2MHZ, 3);
-    ldd.init();
+    //ldd.init();
 
     //Initialize visual elements
     ltSunLight.init();
@@ -144,7 +144,7 @@ void redraw()
     ltVolume.render();
     ltSongChoice.render();
     ltAlarm.render();
-    sre.render();
+    //sre.render();
 }
 
 void showWeekDay(WEEKDAYS wd)

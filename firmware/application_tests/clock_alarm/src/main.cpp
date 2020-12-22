@@ -8,22 +8,30 @@
 #include "DisplayOnOff.h"
 #include <DFMiniMp3.h>
 #include "Mp3Notify.h"
+#include "LedDriverDimming.h"
+#include "pins.h"
 
+const int SECONDS_IN_30_MINS = 1800;
 AlarmCalendar ac1(2);
 HardwareSerial *ser1 = &Serial;
-byte alarmHours = 20, alarmMinutes = 35;
-WEEKDAYS wd = (WEEKDAYS)(WD_TUESDAY);
+bool isMusicPlaying = false;
 DFMiniMp3<HardwareSerial, Mp3Notify> mp3(Serial2);
+LedDriverDimming ldd(pin_en_sun, pin_pwmh, pin_pwml);
+
+//Variables to be stored in a user config
+byte alarmHours = 21, alarmMinutes = 30;
+WEEKDAYS wd = (WEEKDAYS)(WD_TUESDAY);
 byte volume = 15;
 byte track = 10;
-bool isMusicPlaying = false;
+float finalSunBrightness = 50; //percent.
+bool isBrightnessSet = false;
 
 void setup()
 {
     while (!*ser1)
         ;
     ser1->begin(115200);
-    ser1->printf("Build %s\r\n", __TIMESTAMP__);//only updated when this file is being recompiled.
+    ser1->printf("Build %s\r\n", __TIMESTAMP__); //only updated when this file is being recompiled.
     initClockSource();
     if (!initVisualElements() || !initDisplayOnOffControl())
     {
@@ -48,6 +56,7 @@ void setup()
     {
         track = totalTrackCount;
     }
+    ldd.init();
 }
 
 bool isAlarmBusy()
@@ -59,7 +68,7 @@ bool isAlarmBusy()
 void loop()
 {
     byte hours, minutes;
-    time_t localTime;
+    time_t localTime, totalSecondsToNextEvent;
     bool buttonPressed = false;
     DISPLAY_STATE ds = getDisplayState(buttonPressed, isAlarmBusy());
 
@@ -99,6 +108,30 @@ void loop()
             {
                 mp3.stop();
                 isMusicPlaying = false;
+            }
+        }
+        //Handle sun rise emulation
+        if (ac1.isUnacknowledgedAlarmOnGoing(localTime))
+        {
+            if (!isBrightnessSet)
+            {
+                ldd.enable(true);
+                ldd.setBrightness(finalSunBrightness);
+                isBrightnessSet = true;
+            }
+        }
+        else
+        {
+            if (ac1.getSecondsToStartOfNextEvent(localTime, totalSecondsToNextEvent) && totalSecondsToNextEvent < SECONDS_IN_30_MINS)
+            {
+                float brightness = finalSunBrightness * (SECONDS_IN_30_MINS - totalSecondsToNextEvent) / SECONDS_IN_30_MINS;
+                ldd.enable(true);
+                ldd.setBrightness(brightness);
+            }
+            else
+            {
+                ldd.enable(false);
+                isBrightnessSet = false;
             }
         }
     }
