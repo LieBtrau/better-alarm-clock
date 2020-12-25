@@ -23,7 +23,7 @@ typedef enum
     AL_BOTH_OFF
 }
 ALARM_DISPLAY;
-void showAlarmDisplay(ALARM_DISPLAY ad);
+void showAlarmDisplay(ALARM_DISPLAY ad, bool setup=false);
 void showAlarmTime(byte hours, byte minutes);
 
 //Controls for the LED array

@@ -4,5 +4,5 @@
 #include "inputs.h"
 
 void setWeekdayPointer(WEEKDAYS* pwd);
-bool processButtonEvent(KEY_CODE key);
+bool processWeekdayButtonEvent(KEY_CODE key);
 void showWeek();

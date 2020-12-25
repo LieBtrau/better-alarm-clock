@@ -42,7 +42,7 @@ LedToggle *weekdays[7] = {&ltMonday, &ltTuesday, &ltWednesday, &ltThursday, &ltF
 
 byte lastBrightNess = 0xFF;
 
-bool initVisualElements(SX1509* io1, SX1509*io2) // Create an SX1509 object to be used throughout
+bool initVisualElements(SX1509 *io1, SX1509 *io2) // Create an SX1509 object to be used throughout
 {
     //Initialize hardware peripherals
     matrix.init();
@@ -58,10 +58,6 @@ bool initVisualElements(SX1509* io1, SX1509*io2) // Create an SX1509 object to b
     {
         weekdays[i]->init(io1);
     }
-    // lmf_SunLightBrightness.setVisible(true);
-    // lms_SongChoice.setVisible(true);
-    ltSunLight.setVisible(true);
-    ltVolume.setVisible(true);
     // sre.setVisible(true);
     cf.setVisible(true);
     //cf.setFlashMode(true);  //It's better to disable flash mode during syncing to avoid EM-interference.
@@ -114,7 +110,7 @@ void setVisible(bool isVisible)
 
 void redraw()
 {
-    if (cf.render() | lmf_SunLightBrightness.render() | lms_SongChoice.render())
+    if (lmf_SunLightBrightness.render() | lmf_Volume.render() | lms_SongChoice.render() | cf.render())
     {
         //true must be passed in, otherwise flashing doesn't work.
         matrix.write(true);
@@ -142,8 +138,17 @@ void showWeekDay(WEEKDAYS wd)
     }
 }
 
-void showAlarmDisplay(ALARM_DISPLAY ad)
+void showAlarmDisplay(ALARM_DISPLAY ad, bool setup)
 {
+    if (setup)
+    {
+        lmf_SunLightBrightness.setVisible(false);
+        lmf_Volume.setVisible(false);
+        lms_SongChoice.setVisible(false);
+        cf.setVisible(false);
+        redraw();
+    }
+
     static ALARM_DISPLAY _ad = AL_BOTH_OFF;
     if (ad == _ad)
     {
@@ -152,6 +157,11 @@ void showAlarmDisplay(ALARM_DISPLAY ad)
     _ad = ad;
     alarmHoursDisplay.setVisible((ad == AL_HOURS_ONLY) || (ad == AL_BOTH_ON) ? true : false);
     alarmMinutesDisplay.setVisible((ad == AL_MINUTES_ONLY) || (ad == AL_BOTH_ON) ? true : false);
+
+    ltSunLight.setVisible(false);
+    ltVolume.setVisible(false);
+    ltSongChoice.setVisible(false);
+    ltAlarm.setVisible(true);
 }
 
 void showAlarmTime(byte hours, byte minutes)
@@ -165,28 +175,50 @@ void showClockTime(byte hours, byte minutes, bool synced, bool alarmOngoing)
     lmf_SunLightBrightness.setVisible(false);
     lmf_Volume.setVisible(false);
     lms_SongChoice.setVisible(false);
+    redraw();
     cf.setVisible(true);
 
     cf.setTime(hours, minutes, true);
     cf.setFlashMode(false);
     cf.setValidity(true);
     cf.setFlashMode(alarmOngoing);
+
+    ltSunLight.setVisible(false);
+    ltVolume.setVisible(false);
+    ltSongChoice.setVisible(false);
+    ltAlarm.setVisible(false);
 }
 
 void showSunlightSetting(byte value)
 {
     cf.setVisible(false);
-    lmf_SunLightBrightness.setVisible(true);
     lmf_Volume.setVisible(false);
     lms_SongChoice.setVisible(false);
+    redraw();
+    lmf_SunLightBrightness.setVisible(true);
+
+    lmf_SunLightBrightness.setValue(value);
+
+    ltSunLight.setVisible(true);
+    ltVolume.setVisible(false);
+    ltSongChoice.setVisible(false);
+    ltAlarm.setVisible(false);
 }
 
 void showSongVolume(byte value)
 {
     cf.setVisible(false);
     lmf_SunLightBrightness.setVisible(false);
-    lmf_Volume.setVisible(true);
     lms_SongChoice.setVisible(false);
+    redraw();
+    lmf_Volume.setVisible(true);
+
+    lmf_Volume.setValue(value);
+
+    ltSunLight.setVisible(false);
+    ltVolume.setVisible(true);
+    ltSongChoice.setVisible(false);
+    ltAlarm.setVisible(false);
 }
 
 void showSongChoice(byte value)
@@ -194,5 +226,13 @@ void showSongChoice(byte value)
     cf.setVisible(false);
     lmf_SunLightBrightness.setVisible(false);
     lmf_Volume.setVisible(false);
+    redraw();
     lms_SongChoice.setVisible(true);
+
+    lms_SongChoice.setValue(value);
+
+    ltSunLight.setVisible(false);
+    ltVolume.setVisible(false);
+    ltSongChoice.setVisible(true);
+    ltAlarm.setVisible(false);
 }

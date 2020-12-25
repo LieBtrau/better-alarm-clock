@@ -14,7 +14,7 @@ void setWeekdayPointer(WEEKDAYS* pwd)
 /**
  * \return true when a weekday changed state
  */
-bool processButtonEvent(KEY_CODE key)
+bool processWeekdayButtonEvent(KEY_CODE key)
 {
     static WEEKDAYS day = WD_NODAY;
     if (key != 0)
@@ -59,9 +59,4 @@ bool processButtonEvent(KEY_CODE key)
         *weekdays = (WEEKDAYS)(*weekdays ^ day);
     }
     return true;
-}
-
-void showWeek()
-{
-    Serial.println(*weekdays, HEX);
 }
