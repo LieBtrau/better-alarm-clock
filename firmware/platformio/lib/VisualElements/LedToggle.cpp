@@ -1,12 +1,12 @@
 #include "Visuals.h"
 
-LedToggle::LedToggle(SX1509 *io, byte pinNr) : _io(io),
-                                               _pinNr(pinNr)
+LedToggle::LedToggle(byte pinNr) : _pinNr(pinNr)
 {
 }
 
-void LedToggle::init()
+void LedToggle::init(SX1509 *io)
 {
+    _io = io;
     _io->pinMode(_pinNr, ANALOG_OUTPUT);
 }
 

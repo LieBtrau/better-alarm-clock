@@ -1,13 +1,14 @@
 #include "Tactiles.h"
 
-Sx1509_Tactiles::Sx1509_Tactiles(SX1509 *sx, byte pinIrq) : _sx(sx),
+Sx1509_Tactiles::Sx1509_Tactiles(byte pinIrq) :
                                                             _pin_irq(pinIrq),
                                                             _keyReleaseTimeout(100, AsyncDelay::MILLIS)
 {
 }
 
-void Sx1509_Tactiles::init(byte keyRows, byte keyCols)
+void Sx1509_Tactiles::init(SX1509 *sx, byte keyRows, byte keyCols)
 {
+    _sx = sx;
     // Scan time range: 1-128 ms, powers of 2
     const byte scanTime = 16; // Scan time per row, in ms
     // Debounce time range: 0.5 - 64 ms (powers of 2)

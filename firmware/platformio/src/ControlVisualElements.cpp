@@ -9,13 +9,10 @@
 
 const int numberOfHorizontalDisplays = 4;
 const int numberOfVerticalDisplays = 2;
-const byte IO1_SX1509_ADDRESS = 0x3E; // SX1509 I2C address
-const byte IO2_SX1509_ADDRESS = 0x3F; // SX1509 I2C address
 
 //Hardware peripherals
 Max72xxPanel matrix = Max72xxPanel(pinMOSI, pinSCLK, pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
 Adafruit_7segment sevenSegment = Adafruit_7segment();
-SX1509 io1, io2; // Create an SX1509 object to be used throughout
 //LedDriverDimming ldd(pin_en_sun, pin_pwmh, pin_pwml);
 
 //Visual elements
@@ -28,48 +25,38 @@ LedMatrixField lmf_SunLightBrightness(&matrix, {0, 0}, {11, 2}, 10);
 LedMatrixField lmf_Volume(&matrix, {0, 7}, {11, 9}, 10);
 LedMatrixSelect lms_SongChoice(&matrix, {0, 13}, {11, 15}, 10);
 //--LED elements
-LedToggle ltSunLight(&io2, 4);
-LedToggle ltVolume(&io2, 5);
-LedToggle ltSongChoice(&io2, 6);
-LedToggle ltAlarm(&io2, 7);
-LedToggle ltMonday(&io1, 4);
-LedToggle ltTuesday(&io1, 5);
-LedToggle ltWednesday(&io1, 6);
-LedToggle ltThursday(&io1, 7);
-LedToggle ltFriday(&io1, 12);
-LedToggle ltSaturday(&io1, 13);
-LedToggle ltSunday(&io1, 14);
+LedToggle ltSunLight(4);
+LedToggle ltVolume(5);
+LedToggle ltSongChoice(6);
+LedToggle ltAlarm(7);
+LedToggle ltMonday(4);
+LedToggle ltTuesday(5);
+LedToggle ltWednesday(6);
+LedToggle ltThursday(7);
+LedToggle ltFriday(12);
+LedToggle ltSaturday(13);
+LedToggle ltSunday(14);
 LedToggle *weekdays[7] = {&ltMonday, &ltTuesday, &ltWednesday, &ltThursday, &ltFriday, &ltSaturday, &ltSunday};
 //--LED panel
 //SunRiseEmulation sre(&ldd);
 
 byte lastBrightNess = 0xFF;
 
-bool initVisualElements()
+bool initVisualElements(SX1509* io1, SX1509*io2) // Create an SX1509 object to be used throughout
 {
     //Initialize hardware peripherals
     matrix.init();
     sevenSegment.begin(0x70);
-    if (!io1.begin(IO1_SX1509_ADDRESS))
-    {
-        return false;
-    }
-    if (!io2.begin(IO2_SX1509_ADDRESS))
-    {
-        return false;
-    }
-    io1.clock(INTERNAL_CLOCK_2MHZ, 3);
-    io2.clock(INTERNAL_CLOCK_2MHZ, 3);
     //ldd.init();
 
     //Initialize visual elements
-    ltSunLight.init();
-    ltVolume.init();
-    ltSongChoice.init();
-    ltAlarm.init();
+    ltSunLight.init(io2);
+    ltVolume.init(io2);
+    ltSongChoice.init(io2);
+    ltAlarm.init(io2);
     for (int i = 0; i < 7; i++)
     {
-        weekdays[i]->init();
+        weekdays[i]->init(io1);
     }
     // lmf_SunLightBrightness.setVisible(true);
     // lms_SongChoice.setVisible(true);

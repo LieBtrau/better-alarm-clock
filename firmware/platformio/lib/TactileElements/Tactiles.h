@@ -36,8 +36,8 @@ private:
 class Sx1509_Tactiles : Tactiles
 {
 public:
-    Sx1509_Tactiles(SX1509 *sx, byte pinIrq);
-    void init(byte keyRows, byte keyCols);
+    Sx1509_Tactiles(byte pinIrq);
+    void init(SX1509 *sx, byte keyRows, byte keyCols);
     virtual bool isChanged();
     virtual int getValue();
 

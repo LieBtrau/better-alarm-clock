@@ -2,10 +2,10 @@
  */
 
 #pragma once
-#include "alarmcalendar.h"
+#include "Weekdays.h"
 
 //Common controls for all display elements
-bool initVisualElements();
+bool initVisualElements(SX1509* io1, SX1509*io2);
 void setBrightness(byte brightness);
 void setVisible(bool isVisible);
 void redraw();

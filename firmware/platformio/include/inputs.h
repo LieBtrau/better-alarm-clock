@@ -18,7 +18,7 @@ typedef enum
     KEY_SUNDAY = 516
 } KEY_CODE;
 
-bool setupInputs();
+bool setupInputs(SX1509* io1, SX1509* io2);
 bool inputsChanged();
 bool isRotaryEncoderChanged(RotaryEncoder_Tactiles::DIRECTION &dir);
 bool isButtonChanged(KEY_CODE &key);

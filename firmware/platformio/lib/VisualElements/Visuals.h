@@ -111,8 +111,8 @@ private:
 class LedToggle : public MenuOut
 {
 public:
-    LedToggle(SX1509* io, byte pinNr);
-    void init();
+    LedToggle(byte pinNr);
+    void init(SX1509* io);
     void setBrightness(byte value);
 
 protected:
