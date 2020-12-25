@@ -10,6 +10,7 @@
 #include "Mp3Notify.h"
 #include "LedDriverDimming.h"
 #include "pins.h"
+#include <SparkFunSX1509.h> // Include SX1509 library
 
 const int SECONDS_IN_30_MINS = 1800;
 AlarmCalendar ac1(2);
@@ -17,6 +18,9 @@ HardwareSerial *ser1 = &Serial;
 bool isMusicPlaying = false;
 DFMiniMp3<HardwareSerial, Mp3Notify> mp3(Serial2);
 LedDriverDimming ldd(pin_en_sun, pin_pwmh, pin_pwml);
+SX1509 io1, io2;
+const byte IO1_SX1509_ADDRESS = 0x3E; // SX1509 I2C address
+const byte IO2_SX1509_ADDRESS = 0x3F; // SX1509 I2C address
 
 //Variables to be stored in a user config
 byte alarmHours = 21, alarmMinutes = 30;
@@ -33,7 +37,21 @@ void setup()
     ser1->begin(115200);
     ser1->printf("Build %s\r\n", __TIMESTAMP__); //only updated when this file is being recompiled.
     initClockSource();
-    if (!initVisualElements() || !initDisplayOnOffControl())
+    if (!io1.begin(IO1_SX1509_ADDRESS))
+    {
+        while (1)
+            ;
+    }
+    if (!io2.begin(IO2_SX1509_ADDRESS))
+    {
+        while (1)
+            ;
+    }
+    // Use the internal 2MHz oscillator.
+    // Set LED clock to 500kHz (2MHz / (2^(3-1)):
+    io1.clock(INTERNAL_CLOCK_2MHZ, 3);
+    io2.clock(INTERNAL_CLOCK_2MHZ, 3);
+    if (!initVisualElements(&io1, &io2) || !initDisplayOnOffControl())
     {
         ser1->println("Failed to initialize.");
         while (1)
@@ -41,7 +59,7 @@ void setup()
     }
 
     ac1.setAlarmTime(alarmHours, alarmMinutes);
-    ac1.setWeekdays(wd);
+    ac1.setWeekdays((AlarmCalendar::WEEKDAYS)wd);
     mp3.begin();
     if (volume > 30)
     {

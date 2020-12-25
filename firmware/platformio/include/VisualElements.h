@@ -3,6 +3,7 @@
 
 #pragma once
 #include "Weekdays.h"
+#include <SparkFunSX1509.h> // Include SX1509 library
 
 //Common controls for all display elements
 bool initVisualElements(SX1509* io1, SX1509*io2);

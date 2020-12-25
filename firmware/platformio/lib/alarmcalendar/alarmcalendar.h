@@ -16,18 +16,6 @@
 #include "Time.h"
 #include "Chronos.h"
 
-typedef enum
-{
-  WD_NODAY = 0x00,
-  WD_MONDAY = 0x01,
-  WD_TUESDAY = 0x02,
-  WD_WEDNESDAY = 0x04,
-  WD_THURSDAY = 0x08,
-  WD_FRIDAY = 0x10,
-  WD_SATURDAY = 0x20,
-  WD_SUNDAY = 0x40
-} WEEKDAYS;
-
 static const byte MAX_NR_OF_EVENTS = 7; // each day of the week can have one event
 DefineCalendarType(Calendar, MAX_NR_OF_EVENTS);
 
@@ -35,12 +23,23 @@ typedef struct
 {
   Chronos::Hours hour = 0;
   Chronos::Minutes mins = 0;
-  WEEKDAYS weekdays = WD_NODAY;
+  byte weekdays = 0;
 } ALARM_CONFIG;
 
 class AlarmCalendar
 {
 public:
+  enum WEEKDAYS
+  {
+    WD_NODAY = 0x00,
+    WD_MONDAY = 0x01,
+    WD_TUESDAY = 0x02,
+    WD_WEDNESDAY = 0x04,
+    WD_THURSDAY = 0x08,
+    WD_FRIDAY = 0x10,
+    WD_SATURDAY = 0x20,
+    WD_SUNDAY = 0x40
+  };
   AlarmCalendar(byte alarmDuration_minutes);
   void getConfig(ALARM_CONFIG *config);
   bool setConfig(ALARM_CONFIG *config);
@@ -61,3 +60,4 @@ private:
   byte _duration;
   bool _alarmAcked = false;
 };
+
