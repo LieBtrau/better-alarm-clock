@@ -29,10 +29,10 @@ void setup()
   Serial.begin(115200);
   Serial.printf("Build %s\r\n", __TIMESTAMP__);
   Wire.begin();
-  if(!eeprom1.write(0, config))
+  printConfig(&config);
+  if(eeprom1.write(0, config))
   {
-    Serial.println("write failed");
-    return;
+    Serial.println("write OK");
   }
   config = emtpyConfig;
   Serial.println("Printing empty config: ");

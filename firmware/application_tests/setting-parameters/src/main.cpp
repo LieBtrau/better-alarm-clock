@@ -11,6 +11,7 @@
 
 typedef enum
 {
+  STORE_SETTINGS,
   CLOCK_ALARM,
   SET_SUNRISE,
   SET_VOLUME,
@@ -19,16 +20,10 @@ typedef enum
   SET_ALARM_HOURS
 } OPERATING_MODE;
 
+CFG config;
 AsyncDelay ledTimer(500, AsyncDelay::MILLIS);
 AsyncDelay parameterSetupTimeout(SETUP_TIMEOUT, AsyncDelay::MILLIS);
 OPERATING_MODE state = CLOCK_ALARM;
-
-WEEKDAYS wd;
-float sunRiseSetting = 50.0;
-int volume = 10;
-int songchoice = 12;
-int alarmHours = 9;
-int alarmMinutes = 10;
 
 void setup()
 {
@@ -38,8 +33,8 @@ void setup()
     ;
   delay(200);
   Serial.printf("Build %s\r\n", __TIMESTAMP__);
-  initPeripherals();
-  setWeekdayPointer(&wd);
+  initPeripherals(&config);
+  setWeekdayPointer(&config.wd);
   setBrightness(8);
   Serial.println("ready");
 }
@@ -53,18 +48,16 @@ void loop()
   //process buttons
   if (isButtonChanged(key))
   {
-    disableParameterSetting();
-
     switch (key)
     {
     case KEY_SUNRISE:
-      state = state == SET_SUNRISE ? CLOCK_ALARM : SET_SUNRISE;
+      state = state == SET_SUNRISE ? STORE_SETTINGS : SET_SUNRISE;
       break;
     case KEY_VOLUME:
-      state = state == SET_VOLUME ? CLOCK_ALARM : SET_VOLUME;
+      state = state == SET_VOLUME ? STORE_SETTINGS : SET_VOLUME;
       break;
     case KEY_SONGCHOICE:
-      state = state == SET_SONGCHOICE ? CLOCK_ALARM : SET_SONGCHOICE;
+      state = state == SET_SONGCHOICE ? STORE_SETTINGS : SET_SONGCHOICE;
       break;
     case KEY_ALARM:
       switch (state)
@@ -73,7 +66,7 @@ void loop()
         state = SET_ALARM_MINUTES;
         break;
       case SET_ALARM_MINUTES:
-        state = CLOCK_ALARM;
+        state = STORE_SETTINGS;
         break;
       default:
         state = SET_ALARM_HOURS;
@@ -81,7 +74,10 @@ void loop()
       }
       break;
     default:
-      processWeekdayButtonEvent(key);
+      if (processWeekdayButtonEvent(key))
+      {
+        state = STORE_SETTINGS;
+      }
       break;
     }
     parameterSetupTimeout.restart();
@@ -90,56 +86,59 @@ void loop()
   {
     parameterSetupTimeout.restart();
   }
-  if (parameterSetupTimeout.isExpired())
+  if (parameterSetupTimeout.isExpired() && state != CLOCK_ALARM)
   {
-    disableParameterSetting();
-    state = CLOCK_ALARM;
+    state = STORE_SETTINGS;
   }
 
   //Act according to state
   switch (state)
   {
+  case STORE_SETTINGS:
+    disableParameterSetting(&config);
+    state = CLOCK_ALARM;
+    break;
   case CLOCK_ALARM:
     showClockTime(0, 1, false, false);
     break;
   case SET_SUNRISE:
     if (rotEncMoved)
     {
-      updateParameter(&sunRiseSetting, 0.0f, 100.0f, 10.0f, dir);
+      updateParameter(&config.sunRiseSetting, 0.0f, 100.0f, 10.0f, dir);
     }
-    showSunriseSetting(sunRiseSetting);
-    showSunlightSetting(rescaleParameter(&sunRiseSetting, 0.0f, 100.0f, 10.0f));
+    showSunriseSetting(config.sunRiseSetting);
+    showSunlightSetting(rescaleParameter(&config.sunRiseSetting, 0.0f, 100.0f, 10.0f));
     break;
   case SET_VOLUME:
     if (rotEncMoved)
     {
-      updateParameter(&volume, 0, MAX_VOLUME, 1, dir);
+      updateParameter(&config.volume, 0, MAX_VOLUME, 1, dir);
     }
-    playMusic(songchoice, volume);
-    showSongVolume(rescaleParameter(&volume, 0, MAX_VOLUME, 10));
+    playMusic(config.songchoice, config.volume);
+    showSongVolume(rescaleParameter(&config.volume, 0, MAX_VOLUME, 10));
     break;
   case SET_SONGCHOICE:
     if (rotEncMoved)
     {
-      updateParameter(&songchoice, 1, getTrackCount(), 1, dir);
+      updateParameter(&config.songchoice, 1, getTrackCount(), 1, dir);
     }
-    playMusic(songchoice, volume);
-    showSongChoice(rescaleParameter(&songchoice, 1, getTrackCount(), 10));
+    playMusic(config.songchoice, config.volume);
+    showSongChoice(rescaleParameter(&config.songchoice, 1, getTrackCount(), 10));
     break;
   case SET_ALARM_HOURS:
     if (rotEncMoved)
     {
-      updateParameter(&alarmHours, 0, 23, 1, dir);
+      updateParameter(&config.alarmHours, 0, 23, 1, dir);
     }
-    showAlarmTime(alarmHours, alarmMinutes);
+    showAlarmTime(config.alarmHours, config.alarmMinutes);
     showAlarmDisplay(AL_HOURS_ONLY, true);
     break;
   case SET_ALARM_MINUTES:
     if (rotEncMoved)
     {
-      updateParameter(&alarmMinutes, 0, 55, 5, dir);
+      updateParameter(&config.alarmMinutes, 0, 55, 5, dir);
     }
-    showAlarmTime(alarmHours, alarmMinutes);
+    showAlarmTime(config.alarmHours, config.alarmMinutes);
     showAlarmDisplay(AL_MINUTES_ONLY, true);
     break;
   default:
@@ -151,6 +150,6 @@ void loop()
     ledTimer.restart();
     digitalWrite(LED_BUILTIN, digitalRead(LED_BUILTIN) ? LOW : HIGH);
   }
-  showWeekDay(wd);
+  showWeekDay(config.wd);
   redraw();
 }

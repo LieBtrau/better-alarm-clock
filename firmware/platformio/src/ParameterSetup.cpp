@@ -5,25 +5,53 @@
 #include <DFMiniMp3.h>
 #include "inputs.h"
 #include "VisualElements.h"
+#include "Weekdays.h"
+#include "at24c.h"
+#include "ParameterSetup.h"
 
 const byte IO1_SX1509_ADDRESS = 0x3E; // SX1509 I2C address
 const byte IO2_SX1509_ADDRESS = 0x3F; // SX1509 I2C address
 
 LedDriverDimming ldd(pin_en_sun, pin_pwmh, pin_pwml);
 DFMiniMp3<HardwareSerial, Mp3Notify> mp3(Serial2);
+AT24C eeprom1(AT24C::AT24C02, 0x50, &Wire);
 SX1509 io1, io2;
+
 int trackCount = 0;
 bool isMusicPlaying = false;
 
-void disableParameterSetting()
+void showConfig(CFG *config)
 {
-    ldd.enable(false);
-    mp3.stop();
-    isMusicPlaying = false;
+  Serial.println(config->wd);
+  Serial.println(config->sunRiseSetting);
+  Serial.println(config->volume);
+  Serial.println(config->songchoice);
+  Serial.println(config->alarmHours);
+  Serial.println(config->alarmMinutes);
 }
 
-void initPeripherals()
+void disableParameterSetting(CFG *config)
 {
+  Serial.println("Store settings");
+  if (eeprom1.write(0, *config))
+  {
+    showConfig(config);
+  }
+  ldd.enable(false);
+  mp3.stop();
+  isMusicPlaying = false;
+}
+
+void initPeripherals(CFG *config)
+{
+  Wire.begin();
+  CFG tempCFG;
+  if (eeprom1.read(0, tempCFG))
+  {
+    Serial.println("EEPROM read ok");
+    *config = tempCFG;
+  }
+  showConfig(config);
   if (!io1.begin(IO1_SX1509_ADDRESS))
   {
     while (1)
@@ -52,32 +80,35 @@ void initPeripherals()
     while (1)
       ; // If we fail to communicate, loop forever.
   }
-    ldd.init();
-    mp3.begin();
-    trackCount = mp3.getTotalTrackCount(DfMp3_PlaySource_Sd);
+  ldd.init();
+  mp3.begin();
+  trackCount = mp3.getTotalTrackCount(DfMp3_PlaySource_Sd);
 }
 
 void showSunriseSetting(float sunRiseSetting)
 {
-    ldd.enable(true);
-    ldd.setBrightness(sunRiseSetting);
+  ldd.enable(true);
+  ldd.setBrightness(sunRiseSetting);
 }
 
 int getTrackCount()
 {
-    return trackCount;
+  return trackCount;
 }
 
 void playMusic(int track, int volume)
 {
-    static int lastTrack = 0;
-    static int lastVolume = -1;
-    if (!isMusicPlaying || track != lastTrack || volume != lastVolume)
-    {
-        mp3.setVolume(volume);
-        mp3.loopGlobalTrack(track);
-        lastTrack = track;
-        lastVolume = volume;
-        isMusicPlaying = true;
-    }
+  static int lastTrack = 0;
+  static int lastVolume = -1;
+  if (volume != lastVolume)
+  {
+    mp3.setVolume(volume);
+  }
+  if (!isMusicPlaying || track != lastTrack)
+  {
+    mp3.loopGlobalTrack(track);
+    lastTrack = track;
+    lastVolume = volume;
+    isMusicPlaying = true;
+  }
 }
