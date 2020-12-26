@@ -1,6 +1,15 @@
 #pragma once
 #include "Tactiles.h"
 
+void disableParameterSetting();
+void initPeripherals();
+void showSunriseSetting(float sunRiseSetting);
+int getTrackCount();
+void playMusic(int track, int volume);
+
+const int MAX_VOLUME = 30;
+const int SETUP_TIMEOUT = 30000;    // period during which parameters can be adjusted (e.g. for )
+
 template <typename T>
 byte rescaleParameter(T *parameter, T paramMin, T paramMax, byte maxVisualScale)
 {

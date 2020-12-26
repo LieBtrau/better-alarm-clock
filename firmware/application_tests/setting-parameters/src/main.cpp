@@ -4,7 +4,6 @@
  */
 
 #include <Arduino.h>
-#include "inputs.h"
 #include "Weekdays.h"
 #include "VisualElements.h"
 #include "WeekdayButtons.h"
@@ -20,19 +19,16 @@ typedef enum
   SET_ALARM_HOURS
 } OPERATING_MODE;
 
-WEEKDAYS wd;
-SX1509 io1, io2;
 AsyncDelay ledTimer(500, AsyncDelay::MILLIS);
-AsyncDelay parameterSetupTimeout(5000, AsyncDelay::MILLIS);
-const byte IO1_SX1509_ADDRESS = 0x3E; // SX1509 I2C address
-const byte IO2_SX1509_ADDRESS = 0x3F; // SX1509 I2C address
+AsyncDelay parameterSetupTimeout(SETUP_TIMEOUT, AsyncDelay::MILLIS);
 OPERATING_MODE state = CLOCK_ALARM;
 
+WEEKDAYS wd;
 float sunRiseSetting = 50.0;
 int volume = 10;
 int songchoice = 12;
 int alarmHours = 9;
-int alarmMinutes=10;
+int alarmMinutes = 10;
 
 void setup()
 {
@@ -42,35 +38,7 @@ void setup()
     ;
   delay(200);
   Serial.printf("Build %s\r\n", __TIMESTAMP__);
-  // put your setup code here, to run once:
-  if (!io1.begin(IO1_SX1509_ADDRESS))
-  {
-    while (1)
-      ;
-  }
-  if (!io2.begin(IO2_SX1509_ADDRESS))
-  {
-    while (1)
-      ;
-  }
-
-  // Use the internal 2MHz oscillator.
-  // Set LED clock to 500kHz (2MHz / (2^(3-1)):
-  io1.clock(INTERNAL_CLOCK_2MHZ, 3);
-  io2.clock(INTERNAL_CLOCK_2MHZ, 3);
-
-  if (!setupInputs(&io1, &io2))
-  {
-    Serial.println("Can't setup all input devices.");
-    while (true)
-      ;
-  }
-  if (!initVisualElements(&io1, &io2))
-  {
-    Serial.println("Failed to initialize.");
-    while (1)
-      ; // If we fail to communicate, loop forever.
-  }
+  initPeripherals();
   setWeekdayPointer(&wd);
   setBrightness(8);
   Serial.println("ready");
@@ -85,6 +53,8 @@ void loop()
   //process buttons
   if (isButtonChanged(key))
   {
+    disableParameterSetting();
+
     switch (key)
     {
     case KEY_SUNRISE:
@@ -122,6 +92,7 @@ void loop()
   }
   if (parameterSetupTimeout.isExpired())
   {
+    disableParameterSetting();
     state = CLOCK_ALARM;
   }
 
@@ -136,32 +107,35 @@ void loop()
     {
       updateParameter(&sunRiseSetting, 0.0f, 100.0f, 10.0f, dir);
     }
+    showSunriseSetting(sunRiseSetting);
     showSunlightSetting(rescaleParameter(&sunRiseSetting, 0.0f, 100.0f, 10.0f));
     break;
   case SET_VOLUME:
     if (rotEncMoved)
     {
-      updateParameter(&volume, 0, 32, 1, dir);
+      updateParameter(&volume, 0, MAX_VOLUME, 1, dir);
     }
-    showSongVolume(rescaleParameter(&volume, 0, 32, 10));
+    playMusic(songchoice, volume);
+    showSongVolume(rescaleParameter(&volume, 0, MAX_VOLUME, 10));
     break;
   case SET_SONGCHOICE:
     if (rotEncMoved)
     {
-      updateParameter(&songchoice, 1, 24, 1, dir);
+      updateParameter(&songchoice, 1, getTrackCount(), 1, dir);
     }
-    showSongChoice(rescaleParameter(&songchoice, 1, 24, 10));
+    playMusic(songchoice, volume);
+    showSongChoice(rescaleParameter(&songchoice, 1, getTrackCount(), 10));
     break;
   case SET_ALARM_HOURS:
-    if(rotEncMoved)
+    if (rotEncMoved)
     {
-      updateParameter(&alarmHours, 0,23,1, dir);
+      updateParameter(&alarmHours, 0, 23, 1, dir);
     }
     showAlarmTime(alarmHours, alarmMinutes);
     showAlarmDisplay(AL_HOURS_ONLY, true);
     break;
   case SET_ALARM_MINUTES:
-    if(rotEncMoved)
+    if (rotEncMoved)
     {
       updateParameter(&alarmMinutes, 0, 55, 5, dir);
     }
