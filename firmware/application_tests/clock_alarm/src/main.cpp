@@ -7,6 +7,7 @@
 #include "alarmcalendar.h"
 #include "DisplayOnOff.h"
 #include <DFMiniMp3.h>
+#include "inputs.h"
 #include "Mp3Notify.h"
 #include "LedDriverDimming.h"
 #include "pins.h"
@@ -23,10 +24,10 @@ const byte IO1_SX1509_ADDRESS = 0x3E; // SX1509 I2C address
 const byte IO2_SX1509_ADDRESS = 0x3F; // SX1509 I2C address
 
 //Variables to be stored in a user config
-byte alarmHours = 21, alarmMinutes = 30;
-WEEKDAYS wd = (WEEKDAYS)(WD_TUESDAY);
-byte volume = 15;
-byte track = 10;
+byte alarmHours = 10, alarmMinutes = 30;
+WEEKDAYS wd = (WEEKDAYS)(WD_SUNDAY);
+byte volume = 10;
+byte track = 20;
 float finalSunBrightness = 50; //percent.
 bool isBrightnessSet = false;
 
@@ -47,11 +48,25 @@ void setup()
         while (1)
             ;
     }
+
     // Use the internal 2MHz oscillator.
     // Set LED clock to 500kHz (2MHz / (2^(3-1)):
     io1.clock(INTERNAL_CLOCK_2MHZ, 3);
     io2.clock(INTERNAL_CLOCK_2MHZ, 3);
-    if (!initVisualElements(&io1, &io2) || !initDisplayOnOffControl())
+
+    if (!setupInputs(&io1, &io2))
+    {
+        Serial.println("Can't setup all input devices.");
+        while (true)
+            ;
+    }
+    if (!initVisualElements(&io1, &io2))
+    {
+        Serial.println("Failed to initialize.");
+        while (1)
+            ; // If we fail to communicate, loop forever.
+    }
+    if (!initDisplayOnOffControl())
     {
         ser1->println("Failed to initialize.");
         while (1)
@@ -89,11 +104,18 @@ void loop()
     time_t localTime, totalSecondsToNextEvent;
     bool buttonPressed = false;
     DISPLAY_STATE ds = getDisplayState(buttonPressed, isAlarmBusy());
+    bool alarmAcked = false;
+    KEY_CODE key;
 
     if (getLocalTimeSeconds(localTime))
     {
+        if (isButtonChanged(key))
+        {
+            ac1.acknowledgeAlarm();
+            alarmAcked = true;
+        }
         //Redraw LED array
-        if (ds == DISPLAY_TURNED_ON || isNewMinuteStarted(localTime, hours, minutes))
+        if (ds == DISPLAY_TURNED_ON || isNewMinuteStarted(localTime, hours, minutes) || alarmAcked)
         {
             showClockTime(hours, minutes, isStillSynced(), ac1.isUnacknowledgedAlarmOnGoing(localTime));
             Chronos::DateTime::now().printTo(*ser1);
