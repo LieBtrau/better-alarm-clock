@@ -32,14 +32,12 @@ void showConfig(CFG *config)
 
 void disableParameterSetting(CFG *config)
 {
-  Serial.println("Store settings");
   if (eeprom1.write(0, *config))
   {
-    showConfig(config);
+    //showConfig(config);
   }
-  ldd.enable(false);
-  mp3.stop();
-  isMusicPlaying = false;
+  stopSunrise();
+  stopMusic();
 }
 
 void initPeripherals(CFG *config)
@@ -48,17 +46,18 @@ void initPeripherals(CFG *config)
   CFG tempCFG;
   if (eeprom1.read(0, tempCFG))
   {
-    Serial.println("EEPROM read ok");
     *config = tempCFG;
   }
-  showConfig(config);
+  //showConfig(config);
   if (!io1.begin(IO1_SX1509_ADDRESS))
   {
+    Serial.println("io1 not found.");
     while (1)
       ;
   }
   if (!io2.begin(IO2_SX1509_ADDRESS))
   {
+    Serial.println("io2 not found.");
     while (1)
       ;
   }
@@ -91,6 +90,11 @@ void showSunriseSetting(float sunRiseSetting)
   ldd.setBrightness(sunRiseSetting);
 }
 
+void stopSunrise()
+{
+  ldd.enable(false);
+}
+
 int getTrackCount()
 {
   return trackCount;
@@ -111,4 +115,10 @@ void playMusic(int track, int volume)
     lastVolume = volume;
     isMusicPlaying = true;
   }
+}
+
+void stopMusic()
+{
+  mp3.stop();
+  isMusicPlaying = false;
 }

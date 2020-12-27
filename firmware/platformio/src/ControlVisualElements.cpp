@@ -146,22 +146,16 @@ void showAlarmDisplay(ALARM_DISPLAY ad, bool setup)
         lmf_Volume.setVisible(false);
         lms_SongChoice.setVisible(false);
         cf.setVisible(false);
+        ltAlarm.setVisible(true);
         redraw();
     }
 
-    static ALARM_DISPLAY _ad = AL_BOTH_OFF;
-    if (ad == _ad)
-    {
-        return;
-    }
-    _ad = ad;
     alarmHoursDisplay.setVisible((ad == AL_HOURS_ONLY) || (ad == AL_BOTH_ON) ? true : false);
     alarmMinutesDisplay.setVisible((ad == AL_MINUTES_ONLY) || (ad == AL_BOTH_ON) ? true : false);
 
     ltSunLight.setVisible(false);
     ltVolume.setVisible(false);
     ltSongChoice.setVisible(false);
-    ltAlarm.setVisible(true);
 }
 
 void showAlarmTime(byte hours, byte minutes)

@@ -15,10 +15,10 @@ bool setupInputs(SX1509* io1, SX1509* io2)
     return true;
 }
 
-bool inputsChanged()
-{
-    return ret.isChanged() || st1.isChanged() || st2.isChanged() || gpiot.isChanged();
-}
+// bool inputsChanged()
+// {
+//     return ret.isChanged() || st1.isChanged() || st2.isChanged() || gpiot.isChanged();
+// }
 
 bool isRotaryEncoderChanged(RotaryEncoder_Tactiles::DIRECTION &dir)
 {
@@ -40,6 +40,11 @@ bool isButtonChanged(KEY_CODE &key)
     if (st2.isChanged())
     {
         key = (KEY_CODE)(st2.getValue() | 0x1000);
+        return true;
+    }
+    if(gpiot.isChanged())
+    {
+        key = KEY_ROTENC;
         return true;
     }
     return false;

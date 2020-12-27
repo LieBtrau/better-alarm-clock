@@ -9,6 +9,7 @@ static PirSensor ps(pin_PIR);
 static Adafruit_TSL2591 tsl(2591);
 static DisplayBrightness db(&ps, &tsl);
 static DISPLAY_STATE displayState = DISPLAY_OFF;
+static AsyncDelay delayedOffTimer(10000, AsyncDelay::MILLIS);
 
 bool initDisplayOnOffControl()
 {
@@ -24,13 +25,14 @@ DISPLAY_STATE getDisplayState(bool buttonPressed, bool newAlarmOngoing)
         if (displayOn)
         {
             displayState = DISPLAY_TURNED_ON;
+            delayedOffTimer.restart();
         }
         break;
     case DISPLAY_TURNED_ON:
-        displayState = displayOn ? DISPLAY_ON : DISPLAY_TURNED_OFF;
+        displayState = displayOn || !delayedOffTimer.isExpired() ? DISPLAY_ON : DISPLAY_TURNED_OFF;
         break;
     case DISPLAY_ON:
-        if (!displayOn)
+        if (!displayOn && delayedOffTimer.isExpired())
         {
             displayState = DISPLAY_TURNED_OFF;
         }
@@ -42,7 +44,7 @@ DISPLAY_STATE getDisplayState(bool buttonPressed, bool newAlarmOngoing)
         displayState = DISPLAY_OFF;
         break;
     }
-    
+
     return displayState;
 }
 

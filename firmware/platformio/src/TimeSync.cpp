@@ -29,15 +29,16 @@ bool getLocalTimeSeconds(time_t& locTime)
     return true;
 }
 
+
+/**
+ * \brief Calculate hours and minutes from timestamp
+ */
 bool isNewMinuteStarted(time_t t, byte &hours, byte &minutes)
 {
-    if (lastMinute == minute(t))
-    {
-        return false;
-    }
+    bool retVal= lastMinute != minute(t);
     lastMinute = minutes = minute(t);
     hours = hour(t);
-    return true;
+    return retVal;
 }
 
 bool isStillSynced()

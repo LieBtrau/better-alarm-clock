@@ -17,6 +17,8 @@ void initPeripherals(CFG* config);
 void showSunriseSetting(float sunRiseSetting);
 int getTrackCount();
 void playMusic(int track, int volume);
+void stopMusic();
+void stopSunrise();
 
 const int MAX_VOLUME = 30;
 const int SETUP_TIMEOUT = 5000;    // period during which parameters can be adjusted (e.g. for )

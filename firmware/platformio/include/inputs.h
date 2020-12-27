@@ -5,6 +5,7 @@
 
 typedef enum
 {
+    KEY_ROTENC = 1,
     KEY_SUNRISE = 4353,
     KEY_VOLUME = 4354,
     KEY_SONGCHOICE = 4356,
@@ -19,6 +20,6 @@ typedef enum
 } KEY_CODE;
 
 bool setupInputs(SX1509* io1, SX1509* io2);
-bool inputsChanged();
+//bool inputsChanged();
 bool isRotaryEncoderChanged(RotaryEncoder_Tactiles::DIRECTION &dir);
 bool isButtonChanged(KEY_CODE &key);
