@@ -55,11 +55,11 @@ SX1509 io1, io2;                      // Create an SX1509 object to be used thro
 
 // keyMap maps row/column combinations to characters:
 char* io1_keyMap[KEY_ROWS][KEY_COLS] = {
-    {"Mon", "Fri"},
-    {"Tue", "Sat"},
-    {"Wed", "Sun"},
-    {"Thu", "No"}};
-char* io2_keyMap[KEY_ROWS]={"Light", "Volume", "Song", "AlarmTime"};
+    {"Mon", "Thu"},
+    {"Tue", "Fri"},
+    {"Wed", "Sat"},
+    {"No", "Sun"}};
+char* io2_keyMap[KEY_ROWS]={"AlarmTime", "Song", "Volume", "Light"};
 
 const byte ARDUINO_INTERRUPT_PIN = PB11;
 
