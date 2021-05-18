@@ -25,17 +25,17 @@ LedMatrixField lmf_SunLightBrightness(&matrix, {0, 0}, {11, 2}, 10);
 LedMatrixField lmf_Volume(&matrix, {0, 7}, {11, 9}, 10);
 LedMatrixSelect lms_SongChoice(&matrix, {0, 13}, {11, 15}, 10);
 //--LED elements
-LedToggle ltSunLight(4);
-LedToggle ltVolume(5);
-LedToggle ltSongChoice(6);
-LedToggle ltAlarm(7);
-LedToggle ltMonday(4);
-LedToggle ltTuesday(5);
-LedToggle ltWednesday(6);
-LedToggle ltThursday(7);
-LedToggle ltFriday(12);
-LedToggle ltSaturday(13);
-LedToggle ltSunday(14);
+LedToggle ltSunLight(pin_sunlight);
+LedToggle ltVolume(pin_volume);
+LedToggle ltSongChoice(pin_songChoice);
+LedToggle ltAlarm(pin_alarm);
+LedToggle ltMonday(pin_Monday);
+LedToggle ltTuesday(pin_Tuesday);
+LedToggle ltWednesday(pin_Wednesday);
+LedToggle ltThursday(pin_Thursday);
+LedToggle ltFriday(pin_Friday);
+LedToggle ltSaturday(pin_Saturday);
+LedToggle ltSunday(pin_Sunday);
 LedToggle *weekdays[7] = {&ltMonday, &ltTuesday, &ltWednesday, &ltThursday, &ltFriday, &ltSaturday, &ltSunday};
 //--LED panel
 //SunRiseEmulation sre(&ldd);

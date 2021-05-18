@@ -11,10 +11,11 @@ Max72xxPanel matrix = Max72xxPanel(pinMOSI, pinSCLK, pinCS, numberOfHorizontalDi
 
 void setup()
 {
-  matrix.init();
-  matrix.setCursor(2, 5);
-  matrix.print("99:99");
-  matrix.write(); // Send bitmap to display
+	delay(100);
+	matrix.init();
+	matrix.setCursor(2, 5);
+	matrix.print("99:99");
+	matrix.write(); // Send bitmap to display
 }
 
 void loop()

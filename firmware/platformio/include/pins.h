@@ -34,3 +34,17 @@ const byte pin_RX2 = PA3;
 const byte pin_pwmh = PB8;
 const byte pin_pwml = PB9;
 const byte pin_en_sun = PB4;
+
+//SX1509 LED pins
+const byte pin_sunlight = 4;
+const byte pin_volume = 5;
+const byte pin_songChoice = 6;
+const byte pin_alarm = 7;
+const byte pin_Monday = 4;
+const byte pin_Tuesday = 5;
+const byte pin_Wednesday = 6;
+const byte pin_Thursday = 12;
+const byte pin_Friday = 13;
+const byte pin_Saturday = 14;
+const byte pin_Sunday = 15;
+

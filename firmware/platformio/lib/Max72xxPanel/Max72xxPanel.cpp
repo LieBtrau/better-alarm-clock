@@ -55,6 +55,7 @@ Max72xxPanel::Max72xxPanel(byte csPin, byte hDisplays, byte vDisplays) : Max72xx
 
 void Max72xxPanel::init()
 {
+	delay(100); //to get a bigger chance of initializing all arrays correctly.
 	pinMode(SPI_CS, OUTPUT);
 	digitalWrite(SPI_CS, HIGH);
 	if (SPI_MOSI > 0)

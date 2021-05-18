@@ -15,6 +15,7 @@ void setup()
   delay(100);
   Serial.printf("Build %s\r\n", __TIMESTAMP__);
   ldd.init();
+  ldd.enable(true);
 }
 
 void loop()
