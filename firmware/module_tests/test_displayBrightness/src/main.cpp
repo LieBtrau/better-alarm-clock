@@ -31,11 +31,10 @@ void setup()
 void loop()
 {
   // put your main code here, to run repeatedly:
-  byte brightness;
-  if (db.getDisplayBrightness(brightness))
+  byte brightness = db.getDisplayBrightness();
   {
     Serial.printf("New brightness: %d\r\n", brightness);
   }
-  Serial.printf("Display: %s\r\n", db.isDisplayOn(false) ? "on" : "off");
+  Serial.printf("Display: %s\r\n", db.isDisplayOn() ? "on" : "off");
   delay(1000);
 }
