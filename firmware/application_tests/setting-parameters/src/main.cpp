@@ -100,6 +100,7 @@ void loop()
 		break;
 	case CLOCK_ALARM:
 		showClockTime(0, 1, false, false);
+		showAlarmDisplay(AL_BOTH_OFF, false);
 		break;
 	case SET_SUNRISE:
 		if (rotEncMoved)

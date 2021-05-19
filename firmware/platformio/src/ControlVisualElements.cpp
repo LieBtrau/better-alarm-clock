@@ -21,9 +21,9 @@ SevenSegmentField alarmHoursDisplay(&sevenSegment, 0);
 SevenSegmentField alarmMinutesDisplay(&sevenSegment, 3);
 //--LED Array elements
 ClockFace cf(&matrix);
-LedMatrixField lmf_SunLightBrightness(&matrix, {0, 0}, {11, 2}, 10);
-LedMatrixField lmf_Volume(&matrix, {0, 7}, {11, 9}, 10);
-LedMatrixSelect lms_SongChoice(&matrix, {0, 13}, {11, 15}, 10);
+LedMatrixField lmf_SunLightBrightness(&matrix, {20, 0}, {31, 2}, 10);
+LedMatrixField lmf_Volume(&matrix, {20, 7}, {31, 9}, 10);
+LedMatrixSelect lms_SongChoice(&matrix, {20, 13}, {31, 15}, 10);
 //--LED elements
 LedToggle ltSunLight(pin_sunlight);
 LedToggle ltVolume(pin_volume);

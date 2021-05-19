@@ -36,10 +36,10 @@ const byte pin_pwml = PB9;
 const byte pin_en_sun = PB4;
 
 //SX1509 LED pins
-const byte pin_sunlight = 4;
-const byte pin_volume = 5;
-const byte pin_songChoice = 6;
-const byte pin_alarm = 7;
+const byte pin_sunlight = 7;
+const byte pin_volume = 6;
+const byte pin_songChoice = 5;
+const byte pin_alarm = 4;
 const byte pin_Monday = 4;
 const byte pin_Tuesday = 5;
 const byte pin_Wednesday = 6;
