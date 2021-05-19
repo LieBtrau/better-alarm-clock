@@ -55,7 +55,6 @@ Max72xxPanel::Max72xxPanel(byte csPin, byte hDisplays, byte vDisplays) : Max72xx
 
 void Max72xxPanel::init()
 {
-	delay(100); //to get a bigger chance of initializing all arrays correctly.
 	pinMode(SPI_CS, OUTPUT);
 	digitalWrite(SPI_CS, HIGH);
 	if (SPI_MOSI > 0)
@@ -66,25 +65,28 @@ void Max72xxPanel::init()
 	{
 		pinMode(SPI_CLK, OUTPUT);
 	}
+	for (int i = 0; i < 2; i++)
+	{
+		// Make sure we are not in test mode
+		spiTransfer(OP_DISPLAYTEST, 0);
 
-	// Make sure we are not in test mode
-	spiTransfer(OP_DISPLAYTEST, 0);
+		// We need the multiplexer to scan all segments
+		spiTransfer(OP_SCANLIMIT, 7);
 
-	// We need the multiplexer to scan all segments
-	spiTransfer(OP_SCANLIMIT, 7);
+		// We don't want the multiplexer to decode segments for us
+		spiTransfer(OP_DECODEMODE, 0);
 
-	// We don't want the multiplexer to decode segments for us
-	spiTransfer(OP_DECODEMODE, 0);
+		// Enable display
+		shutdown(false);
 
-	// Enable display
-	shutdown(false);
+		// Set the brightness to a medium value
+		setIntensity(7);
 
-	// Set the brightness to a medium value
-	setIntensity(7);
-
-	// Clear the screen
-	fillScreen(0);
-	write();
+		// Clear the screen
+		fillScreen(0);
+		write(true);
+		delay(100);
+	}
 }
 
 void Max72xxPanel::shutdown(bool b)
@@ -123,7 +125,7 @@ void Max72xxPanel::drawPixel(int16_t x, int16_t y, uint16_t color)
 void Max72xxPanel::write(bool forceRefresh)
 {
 	// Send the bitmap buffer to the displays.
-	if(!forceRefresh && !refreshNeeded)
+	if (!forceRefresh && !refreshNeeded)
 	{
 		return;
 	}
