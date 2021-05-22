@@ -65,23 +65,23 @@ void Max72xxPanel::init()
 	{
 		pinMode(SPI_CLK, OUTPUT);
 	}
-	for (int i = 0; i < 2; i++)
+	for (int i = 0; i < 3; i++)
 	{
 		// Make sure we are not in test mode
 		spiTransfer(OP_DISPLAYTEST, 0);
-
+		delay(1);
 		// We need the multiplexer to scan all segments
 		spiTransfer(OP_SCANLIMIT, 7);
-
+		delay(1);
 		// We don't want the multiplexer to decode segments for us
 		spiTransfer(OP_DECODEMODE, 0);
-
+		delay(1);
 		// Enable display
 		shutdown(false);
-
+		delay(1);
 		// Set the brightness to a medium value
 		setIntensity(7);
-
+		delay(1);
 		// Clear the screen
 		fillScreen(0);
 		write(true);

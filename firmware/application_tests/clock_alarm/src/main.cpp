@@ -24,8 +24,10 @@ const byte IO1_SX1509_ADDRESS = 0x3E; // SX1509 I2C address
 const byte IO2_SX1509_ADDRESS = 0x3F; // SX1509 I2C address
 
 //Variables to be stored in a user config
-byte alarmHours = 10, alarmMinutes = 30;
-WEEKDAYS wd = (WEEKDAYS)(WD_SUNDAY);
+//Alarm time:
+byte alarmHours = 21, alarmMinutes = 45;
+WEEKDAYS wd = (WEEKDAYS)(WD_FRIDAY);
+//Other settings
 byte volume = 10;
 byte track = 20;
 float finalSunBrightness = 50; //percent.

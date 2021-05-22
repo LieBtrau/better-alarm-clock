@@ -29,7 +29,12 @@ bool DisplayBrightness::init()
 bool DisplayBrightness::isDisplayOn()
 {
     byte brightness = getDisplayBrightness();
-    if (_ps->movementDetected() || brightness > 0)
+    bool movementDetected = _ps->movementDetected();
+    // if(movementDetected)
+    // {
+    //     Serial.println("movement");
+    // }
+    if (movementDetected || brightness > 0)
     {
         _displayOnTimer.restart();
         return true;
