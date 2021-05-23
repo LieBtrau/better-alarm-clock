@@ -164,7 +164,7 @@ void showAlarmTime(byte hours, byte minutes)
     alarmMinutesDisplay.setValue(minutes);
 }
 
-void showClockTime(byte hours, byte minutes, bool synced, bool alarmOngoing)
+void showClockTime(byte hours, byte minutes, bool synced, bool alarmOngoing, bool isTimeValid)
 {
     lmf_SunLightBrightness.setVisible(false);
     lmf_Volume.setVisible(false);
@@ -172,9 +172,9 @@ void showClockTime(byte hours, byte minutes, bool synced, bool alarmOngoing)
     redraw();
     cf.setVisible(true);
 
-    cf.setTime(hours, minutes, true);
+    cf.setTime(hours, minutes, synced);
     cf.setFlashMode(false);
-    cf.setValidity(true);
+    cf.setValidity(isTimeValid);
     cf.setFlashMode(alarmOngoing);
 
     ltSunLight.setVisible(false);

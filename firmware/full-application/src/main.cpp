@@ -15,7 +15,7 @@
 typedef enum
 {
   STORE_SETTINGS,
-  CLOCK_ALARM,
+  CLOCK_ALARM,      //< Normal state : Clock and alarm are visible
   SET_SUNRISE,
   SET_VOLUME,
   SET_SONGCHOICE,
@@ -81,7 +81,7 @@ void clockloop(DISPLAY_STATE ds, bool buttonPressed)
     //Redraw LED array
     if ((isNewMinuteStarted(localTime, hours, minutes) && ds == DISPLAY_ON) || ds == DISPLAY_TURNED_ON || alarmAcked)
     {
-      showClockTime(hours, minutes, isStillSynced(), ac1.isUnacknowledgedAlarmOnGoing(localTime));
+      showClockTime(hours, minutes, isStillSynced(), ac1.isUnacknowledgedAlarmOnGoing(localTime), true);
       Chronos::DateTime::now().printTo(Serial);
       Serial.println();
     }
@@ -120,6 +120,18 @@ void clockloop(DISPLAY_STATE ds, bool buttonPressed)
         stopSunrise();
       }
     }
+  }
+  else
+  {
+    //Time is not valid
+    //Redraw LED array
+    showClockTime(0, 0, false, false, false);
+    //Redraw alarm LCD
+    showAlarmDisplay(AL_BOTH_OFF);
+    //Handle music
+    stopMusic();
+    //Handle sun rise emulation
+    stopSunrise();
   }
 }
 

@@ -119,7 +119,7 @@ void loop()
         //Redraw LED array
         if (ds == DISPLAY_TURNED_ON || isNewMinuteStarted(localTime, hours, minutes) || alarmAcked)
         {
-            showClockTime(hours, minutes, isStillSynced(), ac1.isUnacknowledgedAlarmOnGoing(localTime));
+            showClockTime(hours, minutes, isStillSynced(), ac1.isUnacknowledgedAlarmOnGoing(localTime), true);
             Chronos::DateTime::now().printTo(*ser1);
             Serial.println();
         }
