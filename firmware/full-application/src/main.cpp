@@ -262,7 +262,7 @@ void loop()
   switch (ds)
   {
   case DISPLAY_TURNED_ON:
-    setVisible(true);
+    clockloop(ds, false);
     break;
   case DISPLAY_ON:
     setBrightness(getDisplayBrightness(isAlarmBusy()));
