@@ -1,8 +1,10 @@
+#include "AsyncDelay.h"
 #include "robustDcf.h"
 #include "pins.h"
 
 RobustDcf rd(pin_DCF, true);
 HardwareSerial *ser1 = &Serial;
+AsyncDelay ledTimer(500, AsyncDelay::MILLIS);
 void runClock();
 
 void setup()
@@ -11,6 +13,7 @@ void setup()
     ;
   ser1->begin(115200);
   ser1->printf("Build %s\r\n", __TIMESTAMP__);
+  pinMode(LED_BUILTIN, OUTPUT);
   pinMode(pin_nEn_DCF, OUTPUT);
   digitalWrite(pin_nEn_DCF, LOW);
   rd.init();
@@ -18,6 +21,11 @@ void setup()
 
 void loop()
 {
+  if (ledTimer.isExpired())
+  {
+    ledTimer.restart();
+    digitalWrite(LED_BUILTIN, digitalRead(LED_BUILTIN) ? LOW : HIGH);
+  }
   runClock();
 }
 
