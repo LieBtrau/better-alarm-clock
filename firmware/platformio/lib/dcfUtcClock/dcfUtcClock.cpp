@@ -28,8 +28,9 @@ bool DcfUtcClock::update()
     Chronos::EpochTime rtcepoch;
     //both millis() timer and RTC need to be set
     bool mcuTimeValid = (timeStatus() == timeSet) && stmRtc.get(rtcepoch);
-    Chronos::DateTime timenow = Chronos::DateTime::now();
-    bool syncNeeded = mcuTimeValid ? timenow.hour() == 2 && timenow - lastSuccessfulSync > Chronos::Span::Hours(20) : true;
+    Chronos::DateTime utctimenow = Chronos::DateTime::now();
+    //Resync at 4AM UTC-time
+    bool syncNeeded = mcuTimeValid ? utctimenow.hour() == 4 && utctimenow - lastSuccessfulSync > Chronos::Span::Hours(20) : true;
     if (syncNeeded)
     {
         digitalWrite(_disableDcfPin, LOW);

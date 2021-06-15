@@ -1,5 +1,8 @@
 #include "DFMiniMp3.h"
-#include "Arduino.h"
+
+class Mp3Notify;
+
+typedef DFMiniMp3<HardwareSerial, Mp3Notify> DfMp3; 
 
 class Mp3Notify
 {
@@ -20,27 +23,27 @@ public:
     }
     Serial.println(action);
   }
-  static void OnError(uint16_t errorCode)
+  static void OnError(DfMp3& mp3, uint16_t errorCode)
   {
     // see DfMp3_Error for code meaning
     Serial.println();
     Serial.print("Com Error ");
     Serial.println(errorCode);
   }
-  static void OnPlayFinished(DfMp3_PlaySources source, uint16_t track)
+  static void OnPlayFinished(DfMp3& mp3, DfMp3_PlaySources source, uint16_t track)
   {
     Serial.print("Play finished for #");
     Serial.println(track);  
   }
-  static void OnPlaySourceOnline(DfMp3_PlaySources source)
+  static void OnPlaySourceOnline(DfMp3& mp3, DfMp3_PlaySources source)
   {
     PrintlnSourceAction(source, "online");
   }
-  static void OnPlaySourceInserted(DfMp3_PlaySources source)
+  static void OnPlaySourceInserted(DfMp3& mp3, DfMp3_PlaySources source)
   {
     PrintlnSourceAction(source, "inserted");
   }
-  static void OnPlaySourceRemoved(DfMp3_PlaySources source)
+  static void OnPlaySourceRemoved(DfMp3& mp3, DfMp3_PlaySources source)
   {
     PrintlnSourceAction(source, "removed");
   }

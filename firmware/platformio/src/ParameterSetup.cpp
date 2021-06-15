@@ -2,7 +2,7 @@
 #include "LedDriverDimming.h"
 #include "pins.h"
 #include "Mp3Notify.h"
-#include <DFMiniMp3.h>
+#include "DFMiniMp3.h"
 #include "inputs.h"
 #include "VisualElements.h"
 #include "Weekdays.h"
@@ -13,7 +13,7 @@ const byte IO1_SX1509_ADDRESS = 0x3E; // SX1509 I2C address
 const byte IO2_SX1509_ADDRESS = 0x3F; // SX1509 I2C address
 
 LedDriverDimming ldd(pin_en_sun, pin_pwmh, pin_pwml);
-DFMiniMp3<HardwareSerial, Mp3Notify> mp3(Serial2);
+DfMp3 mp3(Serial2);
 AT24C eeprom1(AT24C::AT24C02, 0x50, &Wire);
 SX1509 io1, io2;
 

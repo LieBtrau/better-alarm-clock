@@ -12,14 +12,14 @@ void setup()
         ;
     ser1->begin(115200);
     ser1->printf("Build %s\r\n", __TIMESTAMP__);
-    initClock();
+    initClockSource();
 }
 
 void loop()
 {
     byte hours, minutes;
     time_t localTime;
-    if (getLocalTimeSeconds(localTime) && splitTime(localTime, hours, minutes))
+    if (getLocalTimeSeconds(localTime) && isNewMinuteStarted(localTime, hours, minutes))
     {
         ser1->printf("%02d%s%02d\r\n", hours, isStillSynced ? ":" : "v", minutes);
     }
