@@ -16,11 +16,11 @@ void Stm32RtcWrapper::begin()
 bool Stm32RtcWrapper::get(Chronos::EpochTime& epoch)
 {
     epoch = rtc.getEpoch();
-    return Chronos::DateTime(epoch) - lastSuccessfulSync < DEADRECKONING;
+    return Chronos::DateTime(epoch) - _lastSuccessfulSync < DEADRECKONING;
 }
 
 void Stm32RtcWrapper::setEpoch(Chronos::EpochTime epoch)
 {
     rtc.setEpoch(epoch);
-    lastSuccessfulSync = Chronos::DateTime(epoch);
+    _lastSuccessfulSync = Chronos::DateTime(epoch);
 }

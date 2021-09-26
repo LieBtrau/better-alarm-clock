@@ -26,33 +26,40 @@ void DcfUtcClock::init()
 bool DcfUtcClock::update()
 {
     Chronos::EpochTime rtcepoch;
-    //both millis() timer and RTC need to be set
-    bool mcuTimeValid = (timeStatus() == timeSet) && stmRtc.get(rtcepoch);
     Chronos::DateTime utctimenow = Chronos::DateTime::now();
-    //Resync at 4AM UTC-time
-    bool syncNeeded = mcuTimeValid ? utctimenow.hour() == 4 && utctimenow - lastSuccessfulSync > Chronos::Span::Hours(20) : true;
-    if (syncNeeded)
+    bool mcuTimeValid = (timeStatus() == timeSet) && stmRtc.get(rtcepoch); //stmRtc will return false after DEADRECKONING timeout
+    switch (_syncState)
     {
-        digitalWrite(_disableDcfPin, LOW);
+    case WAITING_FOR_SYNC:
+        //both millis() timer and RTC need to be set
+        if (!mcuTimeValid || (utctimenow.hour() == 0 && utctimenow.minute() == 0))
+        {
+            Serial.println("Start syncing");
+            digitalWrite(_disableDcfPin, LOW);
+            _syncState = SYNC_ONGOING;
+        }
+        break;
+    case SYNC_ONGOING:
         if (_rd.update(rtcepoch))
         {
+            Serial.println("Syncing done.");
             stmRtc.setEpoch(rtcepoch); //update RTC with DCF-data
             setTime(rtcepoch);         //Update MCU-time by RTC: Force set time, otherwise it will only be set after 300s
-            lastSuccessfulSync = Chronos::DateTime(rtcepoch);
             digitalWrite(_disableDcfPin, HIGH);
+            _syncState = WAITING_FOR_SYNC;
         }
+        break;
     }
     return mcuTimeValid;
-}
-
-bool DcfUtcClock::isLastSyncSuccessful()
-{
-    Chronos::DateTime timenow = Chronos::DateTime::now();
-    return timenow - lastSuccessfulSync < DEADRECKONING;
 }
 
 time_t getRtcTime()
 {
     Chronos::EpochTime epoch;
     return stmRtc.get(epoch) ? epoch : 0;
+}
+
+bool DcfUtcClock::isStillSynced()
+{
+    return getRtcTime() != 0;
 }

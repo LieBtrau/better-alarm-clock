@@ -21,7 +21,7 @@ void loop()
     time_t localTime;
     if (getLocalTimeSeconds(localTime) && isNewMinuteStarted(localTime, hours, minutes))
     {
-        ser1->printf("%02d%s%02d\r\n", hours, isStillSynced ? ":" : "v", minutes);
+        ser1->printf("%02d%s%02d\r\n", hours, isStillSynced() ? ":" : "v", minutes);
     }
     else
     {

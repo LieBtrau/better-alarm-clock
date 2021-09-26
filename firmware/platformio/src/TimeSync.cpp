@@ -43,5 +43,5 @@ bool isNewMinuteStarted(time_t t, byte &hours, byte &minutes)
 
 bool isStillSynced()
 {
-    return dcfclock.isLastSyncSuccessful();
+    return dcfclock.isStillSynced();
 }

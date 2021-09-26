@@ -10,6 +10,6 @@ class Stm32RtcWrapper
     bool get(Chronos::EpochTime& epoch);
     void setEpoch(Chronos::EpochTime epoch);
   private:
-    Chronos::DateTime lastSuccessfulSync;
-    const Chronos::Span::Days DEADRECKONING = 1;
+    Chronos::DateTime _lastSuccessfulSync;
+    const Chronos::Span::Hours DEADRECKONING = 25;
 };

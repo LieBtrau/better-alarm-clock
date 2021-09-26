@@ -7,12 +7,16 @@ public:
     DcfUtcClock(uint32_t dcfPin, bool activeHigh, uint32_t disableDcfPin);
     void init();
     bool update();
-    bool isLastSyncSuccessful();
+    bool isStillSynced();
 
 private:
     const Chronos::Span::Days DEADRECKONING = 1;
     bool dcfReady();
-    Chronos::DateTime lastSuccessfulSync;
     RobustDcf _rd;
     uint32_t _disableDcfPin;
+    enum
+    {
+        SYNC_ONGOING,
+        WAITING_FOR_SYNC
+    } _syncState = WAITING_FOR_SYNC;
 };
