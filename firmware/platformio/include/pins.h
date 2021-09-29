@@ -2,7 +2,7 @@
 #include "Arduino.h"
 
 //DCF
-const byte pin_DCF = PA8;
+const byte pin_DCF = PB4;
 const byte pin_nEn_DCF = PB1;
 
 //GPIO
@@ -33,7 +33,7 @@ const byte pin_RX2 = PA3;
 //Sunrise simulation
 const byte pin_pwmh = PB8;
 const byte pin_pwml = PB9;
-const byte pin_en_sun = PB4;
+const byte pin_en_sun = PA8;
 
 //SX1509 LED pins
 const byte pin_sunlight = 7;

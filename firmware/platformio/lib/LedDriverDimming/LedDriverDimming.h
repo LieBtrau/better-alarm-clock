@@ -10,7 +10,7 @@ public:
     void enable(bool enable);
     bool setBrightness(float brightness);
 private:
-    const float MAX_PWM_VALUE = 64000;
+    const float MAX_PWM_VALUE = 65535;
     const float MIN_PWM_VALUE = 12500;
     byte _pinEn;
     byte _pinPwmH;
