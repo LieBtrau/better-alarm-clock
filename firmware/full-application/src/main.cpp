@@ -124,8 +124,11 @@ void clockloop(DISPLAY_STATE ds, bool buttonPressed)
 	else
 	{
 		//Time is not valid
-		//Redraw LED array
-		showClockTime(0, 0, false, false, false);
+		if (ds == DISPLAY_ON)
+		{
+			//Redraw LED array
+			showClockTime(0, 0, false, false, false);
+		}
 		//Redraw alarm LCD
 		showAlarmDisplay(AL_BOTH_OFF);
 		//Handle music
