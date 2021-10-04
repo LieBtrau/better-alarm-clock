@@ -17,12 +17,12 @@ void LedDriverDimming::init()
     pinMode(_pinEn, OUTPUT);
     analogWrite(_pinPwmH, 255);
     analogWrite(_pinPwmL, 255);
-    digitalWrite(_pinEn, LOW); //disabled by default
+    analogWrite(_pinEn, 0); //disabled by default
 }
 
 void LedDriverDimming::enable(bool enable)
 {
-    digitalWrite(_pinEn, enable ? HIGH : LOW);
+    analogWrite(_pinEn, enable ? 255 : 0);
 }
 
 /* Set perceived brightness.
@@ -37,15 +37,7 @@ bool LedDriverDimming::setBrightness(float perceivedBrightness)
     }
     float multiplicator = (MAX_PWM_VALUE - MIN_PWM_VALUE) / 10000;
     int lightValue = MAX_PWM_VALUE - (multiplicator * perceivedBrightness * perceivedBrightness);
-    if(lightValue>64000)
-    {
-        lightValue=64000;
-        analogWrite(_pinEn, 1);
-    }
-    else
-    {
-        digitalWrite(_pinEn, HIGH);
-    }
+    analogWrite(_pinEn, lightValue > 64000 ? 1 : 255);
     analogWrite(_pinPwmH, highByte(lightValue));
     analogWrite(_pinPwmL, lowByte(lightValue));
     return true;
