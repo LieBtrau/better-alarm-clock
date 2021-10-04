@@ -1,1 +1,1 @@
-../../../platformio/src/ControlVisualElements.cpp
+../../../full-application/src/ControlVisualElements.cpp

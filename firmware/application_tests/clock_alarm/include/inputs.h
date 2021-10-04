@@ -1,1 +1,1 @@
-../../../platformio/include/inputs.h
+../../../full-application/include/inputs.h

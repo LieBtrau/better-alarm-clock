@@ -1,1 +1,1 @@
-../../../platformio/include/pins.h
+../../../full-application/include/pins.h

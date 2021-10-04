@@ -1,1 +1,1 @@
-../../../platformio/include/VisualElements.h
+../../../full-application/include/VisualElements.h

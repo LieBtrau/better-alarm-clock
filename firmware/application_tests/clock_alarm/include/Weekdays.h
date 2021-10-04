@@ -1,1 +1,1 @@
-../../../platformio/include/Weekdays.h
+../../../full-application/include/Weekdays.h

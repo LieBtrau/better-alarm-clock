@@ -1,1 +1,1 @@
-../../../platformio/src/TimeSync.cpp
+../../../full-application/src/TimeSync.cpp

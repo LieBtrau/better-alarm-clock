@@ -20,30 +20,39 @@ void setup()
 
 void loop()
 {
-	// put your main code here, to run repeatedly:
-	delay(100);
-	//Serial.printf("lightValue: %d\r\n", lightValue);
-	if (directionUp)
+	if (millis() < 25000)
 	{
-		if (lightValue < 5)
+		// put your main code here, to run repeatedly:
+		delay(100);
+		//Serial.printf("lightValue: %d\r\n", lightValue);
+		if (directionUp)
 		{
-			lightValue += 1;
+			if (lightValue < 100)
+			{
+				lightValue += 1;
+			}
+			else
+			{
+				directionUp = false;
+			}
 		}
 		else
 		{
-			directionUp = false;
+			if (lightValue > 0)
+			{
+				lightValue -= 1;
+			}
+			else
+			{
+				directionUp = true;
+			}
 		}
+		ldd.setBrightness(lightValue);
 	}
 	else
 	{
-		if (lightValue > 0)
-		{
-			lightValue -= 1;
-		}
-		else
-		{
-			directionUp = true;
-		}
+		Serial.printf("done");
+		ldd.enable(false);
+		while(true);
 	}
-	ldd.setBrightness(lightValue);
 }

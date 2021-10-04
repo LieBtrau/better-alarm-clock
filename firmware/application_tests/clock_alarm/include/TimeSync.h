@@ -1,1 +1,1 @@
-../../../platformio/include/TimeSync.h
+../../../full-application/include/TimeSync.h

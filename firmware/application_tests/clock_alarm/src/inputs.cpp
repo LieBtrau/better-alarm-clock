@@ -1,1 +1,1 @@
-../../../platformio/src/inputs.cpp
+../../../full-application/src/inputs.cpp
